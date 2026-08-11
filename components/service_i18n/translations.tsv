@@ -1,0 +1,160 @@
+key	zh-CN	en
+主菜单	主菜单	Main Menu
+设置	设置	Settings
+关于	关于	About
+禅模式	禅模式	Zen Mode
+X-Y	X-Y	X-Y
+音感挑战	音感挑战	Ear Trainer
+五度圈	五度圈	Circle of Fifths
+和弦练习	和弦练习	Chord Trainer
+鼓垫	鼓垫	Drum Pad
+小钢琴	小钢琴	Tiny Piano
+AI 导师	AI 导师	AI Mentor
+时钟日历	时钟日历	Clock & Calendar
+MIDI 播放器	MIDI 播放器	MIDI Player
+节拍器	节拍器	Metronome
+有喵喵陪伴的音乐小世界	有喵喵陪伴的音乐小世界	A Musical World with Meow meow
+喵喵在睡梦中吃瓜子...	喵喵在睡梦中吃瓜子...	Meow meow is dreaming...
+截图已保存	截图已保存	Screenshot saved
+无 SD 卡，无法截图	无 SD 卡，无法截图	"No SD card, screenshot unavailable"
+截图目录创建失败	截图目录创建失败	Screenshot directory creation failed
+截图失败	截图失败	Screenshot failed
+截图文件创建失败	截图文件创建失败	Failed to create screenshot file
+截图内存不足	截图内存不足	Not enough memory for screenshot
+TAB5 Music Box	TAB5 Music Box	TAB5 Music Box
+TAB5 音乐盒	TAB5 音乐盒	TAB5 Music Box
+上一步	上一步	Back
+跳过	跳过	Skip
+下一步	下一步	Next
+欢迎来到Tab5 Music Box	欢迎来到Tab5 Music Box	Welcome to Tab5 Music Box
+我是喵喵，你的音乐小伙伴	我是喵喵，你的音乐小伙伴	"I'm Meow meow, your music buddy"
+让我们一起完成几个简单的设置，开启音乐之旅...	让我们一起完成几个简单的设置，开启音乐之旅...	Let's finish a few simple settings and start your music journey...
+步骤：2/5	步骤：2/5	Step 2/5
+设置日期和时间	设置日期和时间	Date & Time
+喵喵需要知道正确的时间才能准确指导你的练习哦...	喵喵需要知道正确的时间才能准确指导你的练习哦...	Meow meow needs the right time to guide your practice...
+小时	小时	Hour
+分钟	分钟	Minute
+当前选择：	当前选择：	Selected:
+秒	秒	Second
+保存	保存	Save
+年	年	Year
+月	月	Month
+日	日	Day
+步骤：3/5	步骤：3/5	Step 3/5
+设置亮度和音量	设置亮度和音量	Brightness & Volume
+让喵喵的表现更适合你的眼睛和耳朵...	让喵喵的表现更适合你的眼睛和耳朵...	Tune Meow meow to your eyes and ears...
+屏幕亮度：	屏幕亮度：	Brightness:
+主音量：	主音量：	Volume:
+步骤：4/5	步骤：4/5	Step 4/5
+个性化你的Music Box	个性化你的Music Box	Personalize your Music Box
+让喵喵记住你的偏好设置	让喵喵记住你的偏好设置	Let Meow meow remember your preferences
+主题：	主题：	Theme:
+开机页面：	开机页面：	Boot screen:
+自动熄屏时间：	自动熄屏时间：	Screen-off after:
+自动休眠（熄屏后5min触发）：	自动休眠（熄屏后5min触发）：	Auto sleep (5 min after screen off):
+步骤：5/5	步骤：5/5	Step 5/5
+设置网络连接	设置网络连接	Network Setup
+联网后喵喵会自动帮你调整时间，还可以使用AI超强Buff哦...	联网后喵喵会自动帮你调整时间，还可以使用AI超强Buff哦...	"Online, Meow meow auto-syncs time and unlocks AI powers..."
+Wifi总开关：	Wifi总开关：	Wi-Fi:
+设置完成啦	设置完成啦	All Set!
+喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	"Meow meow will reboot in 5 seconds, then your music journey begins"
+练耳	练耳	Ear Trainer
+组鼓	组鼓	Drum Kit
+AI导师	AI导师	AI Mentor
+答案之书	答案之书	Book of Answers
+语言/Language：	语言/Language：	Language:
+网络设置：	网络设置：	Network:
+全局重置：	全局重置：	Factory reset:
+长按重置	长按重置	Hold to reset
+硬件：	硬件：	Hardware:
+软件：	软件：	Software:
+作者：	作者：	Author:
+模式：	模式：	Mode:
+调式：	调式：	Mode:
+速度：	速度：	Tempo:
+试听次数	试听次数	Trials
+得分	得分	Score
+难度：	难度：	Difficulty:
+标识：	标识：	Label:
+大三度+小三度+小三度+小三度+小三度+小三度	大三度+小三度+小三度+小三度+小三度+小三度	Maj3+min3+min3+min3+min3+min3
+C大调/Am小调	C大调/Am小调	C major / A minor
+调号：0	调号：0	Key: 0
+音阶：	音阶：	Scale:
+属	属	Dominant
+平行	平行	Parallel
+下属	下属	Subdominant
+根音:	根音:	Root:
+显示样式：	显示样式：	Layout:
+调式（仅矩阵按键生效）：	调式（仅矩阵按键生效）：	Scale (pads only):
+音调：	音调：	Pitch:
+音色：	音色：	Sound:
+鼓类型：	鼓类型：	Drum kit:
+Midi播放器	Midi播放器	MIDI Player
+Midi歌曲列表	Midi歌曲列表	MIDI Songs
+录音列表	录音列表	Recordings
+文件：	文件：	File:
+轨道数量: 	轨道数量: 	Tracks:
+播放内容：	播放内容：	Play:
+X-Y模式	X-Y模式	X-Y Mode
+步长：	步长：	Step:
+拍号:	拍号:	Time sig:
+节拍音色：	节拍音色：	Click sound:
+Hi，喵喵。	Hi，喵喵。	"Hi, Miao Miao."
+"你好，我是喵喵。你的设备还没有绑定，请用设备ID: %6d, 在 xiaozhi.me 完成绑定~"	"你好，我是喵喵。你的设备还没有绑定，请用设备ID: %6d, 在 xiaozhi.me 完成绑定~"	"Hi, I'm Miao Miao. Your device is not bound. Use device ID: %6d at xiaozhi.me to bind~"
+存储对话（需要使用SD卡）：	存储对话（需要使用SD卡）：	Save chats (needs SD card):
+重置AI配置：	重置AI配置：	Reset AI config:
+日历&时钟	日历&时钟	Calendar & Clock
+上午	上午	AM
+明天: 	明天: 	Tomorrow:
+倾盆大雨	倾盆大雨	Heavy rain
+后天: 	后天: 	Day after:
+鹅毛大雪鹅鹅鹅饿	鹅毛大雪鹅鹅鹅饿	Heavy snow
+宜	宜	Good
+忌	忌	Avoid
+-1分钟	-1分钟	-1 min
++1分钟	+1分钟	+1 min
+1分钟	1分钟	1 min
+3分钟	3分钟	3 min
+5分钟	5分钟	5 min
+10分钟	10分钟	10 min
+20分钟	20分钟	20 min
+30分钟	30分钟	30 min
+40分钟	40分钟	40 min
+50分钟	50分钟	50 min
+60分钟	60分钟	60 min
+重置	重置	Reset
+开始	开始	Start
+时间显示：	时间显示：	Time format:
+时间数字：	时间数字：	Digits:
+时钟	时钟	Clock
+万年历	万年历	Calendar
+计时器	计时器	Timer
+答案之书&塔罗牌	答案之书&塔罗牌	Book & Tarot
+= 答案之书 =	= 答案之书 =	= Book of Answers =
+过去	过去	Past
+审判	审判	Judgement
+正位	正位	Upright
+现在	现在	Present
+权杖骑士	权杖骑士	Knight of Wands
+逆位	逆位	Reversed
+未来	未来	Future
+星币十	星币十	Ten of Pentacles
+塔罗牌	塔罗牌	Tarot
+ 请将设备翻转，心中默念你的疑问之后，翻开设备 	 请将设备翻转，心中默念你的疑问之后，翻开设备 	" Flip the device, focus on your question, then flip it back"
+喵喵起床啦！	喵喵起床啦！	Meow meow is awake!
+喵喵正在起床...	喵喵正在起床...	Meow meow is waking up...
+开始录制	开始录制	Recording started
+录音已保存	录音已保存	Recording saved
+录制时间过短，已丢弃	录制时间过短，已丢弃	"Too short, discarded"
+停止录制失败	停止录制失败	Stop recording failed
+未检测到 SD 卡	未检测到 SD 卡	No SD card
+正在录制中	正在录制中	Already recording
+录制启动失败	录制启动失败	Start recording failed
+能量已耗尽，明日自动回满	能量已耗尽，明日自动回满	"Energy depleted, refills tomorrow"
+能量耗尽，明日恢复后再抽取	能量耗尽，明日恢复后再抽取	"Energy depleted, try again tomorrow"
+能量耗尽，明日恢复后再抽卡	能量耗尽，明日恢复后再抽卡	"Energy depleted, try again tomorrow"
+本次消耗 %d 能量，剩余 %d%%	本次消耗 %d 能量，剩余 %d%%	"Used %d energy, %d%% left"
+请翻转设备，心中默念疑问后翻回，查看答案	请翻转设备，心中默念疑问后翻回，查看答案	"Flip the device, think of your question, then flip back"
+请翻转设备，心中默念疑问后翻回，抽取塔罗牌	请翻转设备，心中默念疑问后翻回，抽取塔罗牌	"Flip the device, think of your question, then flip back to draw"
+再次翻转查看下一则答案	再次翻转查看下一则答案	Flip again for the next answer
+三张牌已抽出，再次翻转抽新牌	三张牌已抽出，再次翻转抽新牌	"3 cards drawn, flip again for a new draw"

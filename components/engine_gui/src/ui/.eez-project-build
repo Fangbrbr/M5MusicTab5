@@ -1,0 +1,29 @@
+{
+  "files": [
+    "actions.h",
+    "eez-flow.cpp",
+    "eez-flow.h",
+    "fonts.h",
+    "images.c",
+    "images.h",
+    "screens.c",
+    "screens.h",
+    "structs.h",
+    "styles.c",
+    "styles.h",
+    "ui.c",
+    "ui.h",
+    "ui_font_chinese_30.bin",
+    "ui_font_chinese_40.bin",
+    "ui_font_clock_150.bin",
+    "ui_font_clock_150_a.bin",
+    "ui_font_icon_70.bin",
+    "ui_image_bg_day.bin",
+    "ui_image_bg_night.bin",
+    "ui_image_cheer.bin",
+    "ui_image_icon.bin",
+    "ui_image_sleepy.bin",
+    "ui_image_wifi_qrcode.bin",
+    "vars.h"
+  ]
+}

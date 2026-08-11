@@ -1,0 +1,114 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.4.4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Trap: 容器内 run 步骤的 HOME（/github/home）与 checkout（node 动作）不同，
+      # 不显式声明则构建期 git 全部报 dubious ownership，版本号静默退化为 unknown
+      - name: Mark workspace as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # Contract: release tag 必须是 va.b.c 格式，否则关于页版本与固件文件名语义错乱
+      - name: Validate tag format
+        if: github.ref_type == 'tag'
+        run: |
+          if ! echo "${{ github.ref_name }}" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Tag '${{ github.ref_name }}' 不符合 va.b.c 格式（正确示例：v1.0.1）"
+            exit 1
+          fi
+
+      - name: Cache managed components
+        uses: actions/cache@v4
+        with:
+          path: managed_components
+          key: ${{ runner.os }}-idf-${{ hashFiles('dependencies.lock') }}
+
+      - name: Build firmware
+        run: |
+          . /opt/esp/idf/export.sh
+          # 构建前自检：git 必须能读到 tag/commit，否则立即失败而不是产出 unknown 固件
+          git rev-parse --short=7 HEAD
+          git tag --points-at HEAD --list 'v*'
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            export FW_VERSION_OVERRIDE="${{ github.ref_name }}"
+          fi
+          idf.py build
+
+      - name: Package full image (0x0) and app image (0x10000)
+        run: |
+          . /opt/esp/idf/export.sh
+          cd build
+          # 整片 16M 镜像：首次烧录 / 救砖
+          python -m esptool --chip esp32p4 merge_bin \
+            --fill-flash-size 16MB \
+            @flash_args \
+            -o ../0x0_full_TAB5_Music_Pad_${{ github.ref_name }}.bin
+          # 应用固件：升级用，从 0x10000 烧录，保留 nvs 参数
+          cp TAB5_Music_Pad.bin ../0x10000_app_TAB5_Music_Pad_${{ github.ref_name }}.bin
+          # 固定文件名副本：供在线烧录页永远指向最新版
+          cp ../0x0_full_TAB5_Music_Pad_${{ github.ref_name }}.bin ../0x0_full_TAB5_Music_Pad.bin
+          cp TAB5_Music_Pad.bin ../0x10000_app_TAB5_Music_Pad.bin
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: |
+            0x0_full_*.bin
+            0x10000_app_*.bin
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            0x0_full_*.bin
+            0x10000_app_*.bin
+          generate_release_notes: true
+          body: |
+            ## 烧录说明
+
+            | 文件 | 烧录地址 | 用途 | 是否清空设置 |
+            |---|---|---|---|
+            | `0x0_full_*.bin` | `0x0` | 首次烧录 / 救砖 | ⚠️ 会清空（恢复出厂） |
+            | `0x10000_app_*.bin` | `0x10000` | 日常升级 | ✅ 保留所有设置 |
+
+            ### 命令行烧录示例
+
+            全新烧录（整片）：
+            ```
+            esptool.py --chip esp32p4 -p COMx write_flash 0x0 0x0_full_xxx.bin
+            ```
+
+            只升级固件（设置不丢）：
+            ```
+            esptool.py --chip esp32p4 -p COMx write_flash 0x10000 0x10000_app_xxx.bin
+            ```
+
+            图形工具用户：在 ESP Flash Download Tool 里选中文件，右侧地址栏填文件名开头的地址即可。
