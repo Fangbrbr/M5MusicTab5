@@ -117,6 +117,11 @@ esp_err_t service_voice_decoder_open(uint32_t sample_rate);
 void service_voice_decoder_close(void);
 
 /**
+ * @brief 复位下行重采样跨帧相位（句末调用，防下一句首帧从尾采样插值出 click）
+ */
+void service_voice_decoder_reset_phase(void);
+
+/**
  * @brief Decode one downlink Opus packet and write to service_audio aux mix stream
  *
  * Contract: Can be called from any task context (internally uses service_audio_aux_write).

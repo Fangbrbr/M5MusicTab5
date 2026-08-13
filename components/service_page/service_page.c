@@ -8,6 +8,7 @@
 #include "service_page_setting.h"
 #include "service_page_onboard.h"
 #include "service_page_about.h"
+#include "service_page_ftp.h"
 #include "screens.h"
 #include "eez-flow.h"
 #include "esp_lvgl_port.h"
@@ -29,6 +30,8 @@ static void service_page_tick_cb(lv_timer_t *timer)
         service_page_setting_tick();
     } else if (scr == objects.about) {
         service_page_about_tick();
+    } else if (scr == objects.ftp) {
+        service_page_ftp_tick();
     }
 }
 
@@ -51,6 +54,7 @@ void service_page_init(void)
     service_page_setting_init();
     service_page_onboard_init();
     service_page_about_init();
+    service_page_ftp_init();
 
     lvgl_port_lock(portMAX_DELAY);
     if (s_tick_timer == NULL) {
@@ -74,5 +78,7 @@ void service_page_feed_event(lv_event_t *e)
         service_page_onboard_event(e);
     } else if (scr == objects.about) {
         service_page_about_event(e);
+    } else if (scr == objects.ftp) {
+        service_page_ftp_event(e);
     }
 }

@@ -718,6 +718,75 @@ static void player_play_step(int delta)
     player_load_and_play(s_mp.play_type, next);
 }
 
+/* -------------------- LVGL 事件请求环 -------------------- */
+
+/* Trap: LVGL 事件回调跑在 task_gui，不得直接触碰 s_mp.smf/rec 与播放状态。
+ * on_init/restore 的整文件解析（task_app，lifecycle 锁内，可达数秒）与点击
+ * 回调并发，曾把 events 指针中途腾空（Core0 Store fault, MTVAL=0x4）。
+ * 统一登记到 SPSC 请求环，由 on_update（task_app，lifecycle 锁内）串行消化。 */
+typedef enum {
+    MP_REQ_NONE = 0,
+    MP_REQ_LOAD_PLAY,   /* player_load_and_play(type, index) */
+    MP_REQ_PLAY_TOGGLE,
+    MP_REQ_PLAY_STEP,   /* player_play_step(value=delta) */
+    MP_REQ_SEEK,        /* player_seek_percent(value=percent) */
+} mp_req_action_t;
+
+typedef struct {
+    mp_req_action_t action;
+    play_type_t type;
+    int index;
+    int value;
+} mp_req_t;
+
+#define MP_REQ_RING_CAP 8
+static mp_req_t s_req_ring[MP_REQ_RING_CAP];
+static volatile uint8_t s_req_head = 0;   /* 仅消费者 on_update（task_app）写 */
+static volatile uint8_t s_req_tail = 0;   /* 仅生产者 LVGL 回调（task_gui）写 */
+
+static void player_post_request(mp_req_action_t action, play_type_t type,
+                                int index, int value)
+{
+    uint8_t tail = s_req_tail;
+    uint8_t next = (uint8_t)((tail + 1) % MP_REQ_RING_CAP);
+    if (next == s_req_head) {
+        /* 满则丢弃本次（连点只丢一拍意图，优于并发踩内存） */
+        ESP_LOGW(TAG, "request ring full, drop action=%d", (int)action);
+        return;
+    }
+    s_req_ring[tail].action = action;
+    s_req_ring[tail].type = type;
+    s_req_ring[tail].index = index;
+    s_req_ring[tail].value = value;
+    __sync_synchronize();   /* 数据先行落笔，再发布尾指针（SPSC 无锁协议） */
+    s_req_tail = next;
+}
+
+static void player_drain_requests(void)
+{
+    while (s_req_head != s_req_tail) {
+        mp_req_t req = s_req_ring[s_req_head];
+        __sync_synchronize();
+        s_req_head = (uint8_t)((s_req_head + 1) % MP_REQ_RING_CAP);
+        switch (req.action) {
+        case MP_REQ_LOAD_PLAY:
+            player_load_and_play(req.type, req.index);
+            break;
+        case MP_REQ_PLAY_TOGGLE:
+            player_play_toggle();
+            break;
+        case MP_REQ_PLAY_STEP:
+            player_play_step(req.value);
+            break;
+        case MP_REQ_SEEK:
+            player_seek_percent(req.value);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 /* -------------------- 事件回调 -------------------- */
 
 static void app_midi_player_home_cb(lv_event_t *e)
@@ -729,24 +798,24 @@ static void app_midi_player_home_cb(lv_event_t *e)
 static void app_midi_player_file_cb(lv_event_t *e)
 {
     int index = (int)(intptr_t)lv_event_get_user_data(e);
-    player_load_and_play(PLAY_TYPE_MIDI, index);
+    player_post_request(MP_REQ_LOAD_PLAY, PLAY_TYPE_MIDI, index, 0);
 }
 
 static void app_midi_player_rec_cb(lv_event_t *e)
 {
     int index = (int)(intptr_t)lv_event_get_user_data(e);
-    player_load_and_play(PLAY_TYPE_HMR, index);
+    player_post_request(MP_REQ_LOAD_PLAY, PLAY_TYPE_HMR, index, 0);
 }
 
 static void app_midi_player_control_cb(lv_event_t *e)
 {
     lv_obj_t *target = lv_event_get_target_obj(e);
     if (target == s_midi_ui.prev) {
-        player_play_step(-1);
+        player_post_request(MP_REQ_PLAY_STEP, s_mp.play_type, 0, -1);
     } else if (target == s_midi_ui.next) {
-        player_play_step(1);
+        player_post_request(MP_REQ_PLAY_STEP, s_mp.play_type, 0, 1);
     } else if (target == s_midi_ui.play_stop) {
-        player_play_toggle();
+        player_post_request(MP_REQ_PLAY_TOGGLE, s_mp.play_type, 0, 0);
     }
 }
 
@@ -756,7 +825,8 @@ static void app_midi_player_seek_cb(lv_event_t *e)
         lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) {
         return;
     }
-    player_seek_percent(lv_slider_get_value(s_midi_ui.progress));
+    player_post_request(MP_REQ_SEEK, s_mp.play_type, 0,
+                        lv_slider_get_value(s_midi_ui.progress));
 }
 
 static void app_midi_player_set_open_cb(lv_event_t *e)
@@ -890,6 +960,11 @@ static bool app_midi_player_on_init(app_base_t *self, void *screen_ctx)
     (void)self;
     ESP_LOGI(TAG, "init");
 
+    /* 清空上次会话遗留的请求：此时控件回调尚未注册（on_destroy 已移除），
+     * 无生产者，直接复位指针 */
+    s_req_head = 0;
+    s_req_tail = 0;
+
     /* 每次进入重新扫描：录音随时可能在其他 App 产生，缓存扫描结果会导致
      * 新录音不显示（目录列表开销小，仅遍历文件名）；当前曲目索引保留 */
     s_mp.cur_midi_index = -1;
@@ -942,6 +1017,9 @@ static bool app_midi_player_on_init(app_base_t *self, void *screen_ctx)
 static void app_midi_player_on_update(app_base_t *self)
 {
     (void)self;
+
+    /* 先消化 LVGL 事件请求（task_app 串行执行解析/控制，与生命周期同锁） */
+    player_drain_requests();
 
     if (s_mp.state != PLAYER_STATE_PLAYING) {
         return;

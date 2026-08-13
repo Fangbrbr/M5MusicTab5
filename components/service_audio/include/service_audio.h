@@ -176,6 +176,15 @@ void service_audio_get_out_stats(int16_t *peak_abs, uint32_t *knee_cnt);
 void service_audio_aux_clear(void);
 
 /**
+ * @brief 标记辅助流已结束（tts_stop）：一次性解除预充门，立即排出残余尾音
+ *
+ * Why: 预充门（攒够 ~400ms 才出声）对"不会再有新数据"的流末尾是死锁——
+ * 尾音不足门限会永久卡住，跨轮残留成下一轮开头的插播。tts_stop 时调用。
+ * 幂等；仅置位标志，由 Core 1 渲染侧应用，任意任务上下文可调。
+ */
+void service_audio_aux_end_of_stream(void);
+
+/**
  * @brief 启动 AEC 参考信号采集
  *
  * 混音出口的立体声 PCM 会实时下混为单声道并写入 PSRAM 环形缓冲，

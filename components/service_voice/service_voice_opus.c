@@ -196,6 +196,15 @@ esp_err_t service_voice_opus_decoder_open(uint32_t sample_rate)
     return ESP_OK;
 }
 
+void service_voice_opus_reset_phase(void)
+{
+    /* 句末复位：下一句首帧不再从本句尾采样插值（帧间电平跳变即 click 爆音）。
+     * 同会话相邻回复间解码器不重开，此状态必须由句边界显式清理。
+     * 调用点（xz_task 句末）与解码（task_comm）天然时序错开，无需锁 */
+    s_rs_prev = 0;
+    s_rs_frac = 0;
+}
+
 /**
  * @brief 单声道线性插值重采样并复制为立体声
  *

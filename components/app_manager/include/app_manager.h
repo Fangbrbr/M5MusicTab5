@@ -93,6 +93,16 @@ void app_manager_request_launch(const char *name);
 void app_manager_request_kill_active(void);
 
 /**
+ * @brief 设置 App 启动锁（FTP 等独占系统屏期间禁止新 App 启动）
+ *
+ * 锁定期间 app_manager_launch 丢弃请求并告警；kill_active 不受影响，
+ * 独占屏进入时仍可靠异步 kill 清场。退出路径须先解锁再切屏。
+ */
+void app_manager_set_launch_locked(bool locked);
+
+/** @brief 查询 App 启动锁 */
+bool app_manager_is_launch_locked(void);
+/**
  * @brief 按屏幕名请求启动 App（异步）
  * @param[in] screen_name 注册 App 的 screen_name
  *

@@ -12,6 +12,7 @@ idf_component_register(SRCS "main.c"
                                 service_sd
                                 service_rtc
                                 service_recorder
+                                service_ftp
                                 service_i2c
                                 service_wifi
                                 service_http_client

@@ -237,7 +237,7 @@ UI 字体/图片二进制资源（`components/engine_gui/src/ui/*.bin`）通过 
 | `task_gui` | 10 | 0 | 8192 B | 10 ms | LVGL tick/刷新 |
 | `task_input` | 7 | 0 | 8192 B | 10 ms | 输入处理 + 触摸分发 |
 | `task_app` | 4 | 0 | 12288 B | 10 ms | App 生命周期、`app_manager_process_requests()`、各路 `service_*_process()` |
-| `task_comm` | 4 | 0 | 16384 B | 10 ms | USB Host、`engine_midi_process()`、`service_ws_process()`（含 TTS Opus 解码回调） |
+| `task_comm` | 4 | 0 | 16384 B | 10 ms | USB Host、`engine_midi_process()`、`service_ws_process()`（含 TTS Opus 解码回调）、`service_ftp_process()`（FTP 状态机轮询） |
 | `task_ai` | 5 | 0 | 24576 B | 命令队列 | 小智协议状态机 |
 | `task_audio` | 最高 | 1 | 24576 B | 死循环 | 音频渲染 + 语音前端 |
 
@@ -265,6 +265,7 @@ FreeRTOS tick 1000 Hz，双核。`task_comm` 栈扩至 16 KB 以容纳 Opus/CELT
 - `task_app` 每周期调用 `app_manager_process_requests()` 执行实际的 `launch`/`kill`。
 - `app_manager_request_launch_by_screen(screen_name)` 按注册 App 的 `screen_name` 匹配唤醒。
 - 生命周期回调（`on_init`、`on_render`、`on_update`、`on_pause`、`on_resume`、`on_destroy`、`on_input`、`on_sysex` 等）受递归互斥锁保护，防止并发访问。
+- **Trap：LVGL 事件回调跑在 task_gui，不在该锁内**，不得直接触碰 App 的解析/播放状态。范式（2026-08 app_midi_player 空指针 panic 修复）：LVGL 回调只登记到 SPSC 请求环（`player_post_request`），由 `on_update`（task_app，锁内）串行消化（`player_drain_requests`）；整文件解析（数秒级）期间点击不再并发踩内存。
 - 每个 App 必须实现 `app_base_t base` 作为结构体第一个字段，并通过 `app_manager_register()` 注册。
 
 ### 3.6 音频路由
@@ -278,6 +279,7 @@ FreeRTOS tick 1000 Hz，双核。`task_comm` 栈扩至 16 KB 以容纳 Opus/CELT
 - Aux 缓冲区约 2 秒深度，并设有预充电阈值（约 400 ms）以吸收网络抖动。
 - xiaozhi 下行 TTS：ws 二进制帧在 `task_comm`（`service_ws_process()` 分发）上下文经裸 libopus `opus_decode` 整包解码、线性插值重采样到 44.1 kHz 后写 aux。服务器实际按 BinaryProtocol3（4 字节头）封包下发；ws 握手必须带 `Protocol-Version: 1` 头，且接收侧保留 v3 防御性剥离，否则封包头被误当 opus TOC，TTS 只剩噪声碎片。
 - 下行反压链（防服务器突发丢音频）：`xz_on_ws_audio` 在 aux 剩余空间不足一个最长包（`XZ_AUX_BACKPRESSURE_FREE_FRAMES`）时等播放端排水（10ms 切片、上限 `XZ_AUX_BACKPRESSURE_MAX_MS`，期间离开 SPEAKING 立即丢帧防残留）；积压倒灌回 ws 事件队列（64 深，编码包 ~200B/60ms 是最廉价缓冲层）；队列满后 ws 任务入队阻塞（`SERVICE_WS_EVT_SEND_BLOCK_MS`）经 TCP 接收窗口反压服务器。队列满丢包告警已按 1s 窗口限流，逐条刷屏会进一步挤占 CPU。
+- aux 预充门与流尾（2026-08 尾音残留修复）：欠载即重新预充（攒够 ~400ms 再出声），但"流已结束"时尾音不足门限会永久卡门、跨轮残留成下轮开头插播。`tts_stop` 时 `service_audio_aux_end_of_stream()` 一次性解除预充放尾音（置位式，Core 1 消费侧应用，`s_aux_priming` 保持单写者）；auto 续听 2500ms 兜底命中时 `service_audio_aux_clear()` 清场；按钮打断与唤醒打断均已对齐 aux_clear。
 
 ### 3.7 AI 对话 LED 指示器（xx_led_ai）
 
@@ -301,6 +303,18 @@ FreeRTOS tick 1000 Hz，双核。`task_comm` 栈扩至 16 KB 以容纳 Opus/CELT
 - 缓冲放 PSRAM 而非官方默认的内部 DMA RAM：官方 `buff_dma=true` 需 3×72KB 内部 RAM，本项目内部 RAM 预算被 AFE(~110KB)/WS TLS(~50KB) 占满（运行时 free ~74KB），只能 PSRAM——这也是必须守上面两条红线的原因。刷新周期调到 16ms 对 underrun 无影响（突发长度才是主因），保持默认 33。
 - 触摸：`multi_touch_read_cb` 上报物理原生坐标，LVGL 按 display rotation 自动换算；`gui_publish_touch` 的 App 输入事件经 `touch_to_logical` 手动转换（随反向开关分 90°/270° 两式）。
 - 显示反向硬开关：设置项 `setting_invert_display` → NVS `SERVICE_NVS_FLAG_INVERT_DISPLAY`（bit 8）→ `engine_gui_set_display_inverted()` 即时切换 `ROTATION_90/270`；开机由 `engine_gui_init` 读取应用。渲染与触摸均由 LVGL 旋转自动联动，App 无感。
+
+### 3.9 FTP 无线文件管理（service_ftp）
+
+`components/service_ftp/` 是 lwIP 原生单会话 FTP 服务器（协议语义参考 `tools/SimpleFTPServer`，MIT；socket/文件层为本项目非阻塞轮询模式重写），管理 `/sdcard` 整卡（虚拟路径沙箱，`..` 逃逸回 550）。
+
+- **无独立任务**：`service_ftp_process()` 挂 `task_comm` 10 ms 循环，全 O_NONBLOCK socket + 回包 pending 缓冲，数据通道每拍 ≤4 块 × 8 KB（PSRAM 缓冲，start 时 `heap_caps_malloc(MALLOC_CAP_SPIRAM)`），严禁忙等。仅被动模式（PASV/EPSV，ephemeral 端口），固定凭据 `musicpad/musicpad`，仅局域网 STA 场景。
+- **独占系统屏**：`ftp` 屏（EEZ）走 service_page 体系（`service_page_ftp.c`），非 App。设置页 `setting_btn_ftp` → `engine_gui_switch_screen("ftp")`；`engine_gui_on_screen_loaded` 的 ftp 分支**不带 return**，落尾部自动 kill active App 完成独占。进入时 `service_power_idle_set_enabled(false)` + `service_xiaozhi_set_suspended(true)` + `service_ftp_start()` + 双锁；退出（`ftp_btn_back2setting`）随时可点：stop（中止传输断客户端）→ 解锁 → 恢复熄屏/语音 → 回 setting。
+- **双锁 API**：`app_manager_set_launch_locked()`（guard `app_manager_launch`，kill 不锁——独占屏进入靠异步 kill 清场）与 `engine_gui_set_screen_locked()`（guard `engine_gui_switch_screen`）；退出路径先解锁再切屏。
+- **AI 暂停**：`service_xiaozhi_set_suspended(true)` 停止活跃会话（异步收尾回 IDLE，ws 断开释放 socket/TLS）并关唤醒检出；`xz_enter_standby`/`process`/`set_wake_anywhere`/`set_ai_ui_active` 等 re-arm 点全部被 `s_suspended` 门控，唤醒事件直接丢弃。
+- **socket 预算**：`CONFIG_LWIP_MAX_SOCKETS=10`；常开 httpd 占 2，FTP 占 4（cmd listen/cmd/pasv listen/data），AI 暂停期 ws 不占。
+- **板级门控**：`CONFIG_BOARD_HAS_WIFI=n` 时整体 stub 降级（start 返回 `ESP_ERR_NOT_SUPPORTED`）。
+- **已知边界**：中文长文件名需 `CONFIG_FATFS_API_ENCODING_UTF_8=y`（当前 CP437，非 ASCII 名经 POSIX 层读出为乱码，FTP 原样透传）。STOR 上传长度服务端不可预知（status `file_size=0`），进度条锯齿滚动仅指示活跃，真实进度看 label 已传字节；下载（RETR）按百分比正常显示。
 
 ---
 
@@ -378,6 +392,7 @@ idf_component_register(
 | **C6 提前上电** | `components/service_power/service_power.c:219` 中 `service_power_c6_early_enable()` 在调度器启动前操作 GPIO，不能调用 FreeRTOS API；仅 `CONFIG_BOARD_HAS_POWER_MGMT=y` 时编译。 |
 | **音频任务独占 Core 1** | `components/task_audio/task_audio.c` 运行在 Core 1 最高优先级。 |
 | **MIDI 录音** | `components/service_recorder/service_recorder.c:24` 将 MIDI 流以明文 `.hmr` 写入 SD 卡 `/record/`，路径与内容未经加密。 |
+| **FTP 明文服务** | `components/service_ftp/service_ftp.c:43-44` 固定凭据 `musicpad/musicpad`，FTP 协议明文传输，仅面向路由器级局域网（FTP 屏独占期间才监听 21 端口，退出即关）；严禁暴露公网。 |
 
 ---
 

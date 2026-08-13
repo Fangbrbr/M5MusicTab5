@@ -21,6 +21,7 @@
 #include "service_power.h"
 #include "service_rtc.h"
 #include "service_recorder.h"
+#include "service_ftp.h"
 #include "service_sd.h"
 #include "service_usb_host.h"
 #include "service_voice.h"
@@ -84,6 +85,10 @@ void app_main(void)
 
     service_i18n_init();
     service_recorder_init();
+    /* FTP 仅初始化状态，socket/缓冲等进入 FTP 页才分配；失败降级不影响开机 */
+    if (service_ftp_init() != ESP_OK) {
+        ESP_LOGW(TAG, "service_ftp_init failed, ftp disabled");
+    }
     /* 必须早于 WiFi/AFE：任务栈落内部 RAM，AFE/WiFi 启动后枯竭会分配失败；
      * USB MIDI 键盘仅为输入路径之一，失败降级 */
     ESP_ERROR_CHECK_WITHOUT_ABORT(service_usb_host_init());

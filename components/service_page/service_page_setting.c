@@ -62,6 +62,13 @@ static void setting_about_cb(lv_event_t *e)
     engine_gui_switch_screen("about");
 }
 
+static void setting_ftp_cb(lv_event_t *e)
+{
+    (void)e;
+    ESP_LOGI(TAG, "open ftp");
+    engine_gui_switch_screen("ftp");
+}
+
 static void setting_language_cb(lv_event_t *e)
 {
     (void)e;
@@ -476,6 +483,9 @@ void service_page_setting_init(void)
     }
     if (objects.setting_btn_wifi_detail != NULL) {
         lv_obj_add_event_cb(objects.setting_btn_wifi_detail, setting_wifi_detail_show_cb, LV_EVENT_CLICKED, NULL);
+    }
+    if (objects.setting_btn_ftp != NULL) {
+        lv_obj_add_event_cb(objects.setting_btn_ftp, setting_ftp_cb, LV_EVENT_CLICKED, NULL);
     }
     if (objects.wifi_set_panel_return != NULL) {
         lv_obj_add_event_cb(objects.wifi_set_panel_return, setting_wifi_detail_hide_cb, LV_EVENT_CLICKED, NULL);

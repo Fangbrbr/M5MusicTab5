@@ -811,6 +811,11 @@ void service_voice_decoder_close(void)
     service_voice_opus_decoder_close();
 }
 
+void service_voice_decoder_reset_phase(void)
+{
+    service_voice_opus_reset_phase();
+}
+
 const char *service_voice_get_wake_word(void)
 {
     return service_voice_wake_get_word();

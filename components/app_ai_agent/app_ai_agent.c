@@ -584,7 +584,12 @@ static bool ai_mcp_set_volume(int v, void *user_data)
 {
     (void)user_data;
     esp_err_t ret = service_audio_set_volume(v);
-    return ret == ESP_OK;
+    if (ret != ESP_OK) {
+        return false;
+    }
+    /* MCP 改音量与设置页滑条同权持久化（旧版只调 audio 不写 NVS，重启即丢） */
+    service_nvs_set_volume((int16_t)service_audio_get_volume());
+    return true;
 }
 
 static bool ai_mcp_set_brightness(int v, void *user_data)
@@ -1241,6 +1246,10 @@ static void app_ai_agent_on_pause(app_base_t *self)
 
     /* 会话常驻：切出不再 stop，保持全局唤醒词监听（开机即常驻，
      * 对齐原版 Idle 常驻行为）；仅凭据重置流程才显式 stop */
+    /* Trap: pause 后 on_update 停轮询，UI 事件队列无消费者；不清此标志
+     * 后台对话会把 s_evt_queue 打满刷 drop 告警（真机实测）。重新进入
+     * 由 on_init 重新置位 */
+    service_xiaozhi_set_ai_ui_active(false);
 }
 
 static void app_ai_agent_on_resume(app_base_t *self)

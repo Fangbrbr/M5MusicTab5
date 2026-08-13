@@ -158,6 +158,15 @@ bool service_xiaozhi_get_wake_anywhere(void);
 void service_xiaozhi_set_ai_ui_active(bool active);
 
 /**
+ * @brief 系统级暂停/恢复（FTP 独占页等场景）
+ *
+ * 暂停：会话非 IDLE 则异步 stop 收尾，关闭唤醒检出，唤醒事件直接丢弃；
+ * 恢复：清除暂停位并按激活状态重新武装唤醒检出。
+ * 可从任意任务上下文调用（仅写标志位 + 既有异步 API）。
+ */
+void service_xiaozhi_set_suspended(bool suspended);
+
+/**
  * @brief Check if using auto mode (no AEC enabled)
  * @return true if auto mode, false if realtime mode
  */

@@ -7,6 +7,7 @@
 #include "engine_midi.h"
 #include "service_usb_host.h"
 #include "service_ws.h"
+#include "service_ftp.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_heap_caps.h"
@@ -60,6 +61,7 @@ static void task_comm_entry(void *arg)
         service_usb_host_process();  /* USB Host MIDI/HID 事件非阻塞处理 */
         engine_midi_process();
         service_ws_process();          /* WebSocket 事件出队并回调（非阻塞） */
+        service_ftp_process();         /* FTP 状态机轮询（非阻塞，有界返回） */
         vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(TASK_COMM_PERIOD_MS));
     }
 }

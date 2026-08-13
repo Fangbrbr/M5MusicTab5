@@ -120,6 +120,9 @@ static volatile uint32_t         s_aux_head = 0;
 static volatile uint32_t         s_aux_tail = 0;
 /* 抖动缓冲预充标志（仅消费者 Core 1 渲染访问）：true 表示正在攒够门限再出声 */
 static bool                      s_aux_priming = true;
+/* 流结束（tts_stop）一次性解除预充请求：xz_task（Core 0）置位、消费者
+ * Core 1 应用并自清，保持 s_aux_priming 单写者 */
+static volatile bool             s_aux_eos_pending = false;
 
 /* 临时遥测：auxstruct 写入/丢弃/混出/预充计数，3s 窗口有活动即打印，
  * 定位 TTS 播放异常（滋滋声/无声）是写端丢帧还是混端欠载 */
@@ -421,6 +424,13 @@ static void service_audio_mix_aux(float *buffer_lr, uint32_t frames)
         return;
     }
 
+    /* 流结束一次性解除预充：tts_stop 意味着不会再有新数据，尾音不足 400ms
+     * 门限也必须立即排出——否则尾音永久卡门、跨轮残留成下一句开头的插播 */
+    if (s_aux_eos_pending) {
+        s_aux_eos_pending = false;
+        s_aux_priming = false;
+    }
+
     uint32_t tail = s_aux_tail;
     uint32_t head = s_aux_head;   /* 快照，生产者可能并发推进 */
     uint32_t avail = (head >= tail) ? (head - tail) : (AUX_RING_FRAMES - (tail - head));
@@ -543,6 +553,13 @@ void service_audio_aux_clear(void)
     s_aux_head = 0;
     s_aux_tail = 0;
     s_aux_priming = true;
+    s_aux_eos_pending = false;
+}
+
+void service_audio_aux_end_of_stream(void)
+{
+    /* 仅置位，消费者在 Core 1 上下文应用（见 mix_aux 顶部），跨核无撕裂 */
+    s_aux_eos_pending = true;
 }
 
 /* ---------------------------------------------------------------------------

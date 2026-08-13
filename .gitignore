@@ -92,8 +92,8 @@ Desktop.ini
 # 上游 SF2 引擎参考克隆（本地参考，勿入库）
 tools/ESP32_SF2_Sampler_Synthesizer/
 tools/xiaozhi-esp32/
-# 板卡参考包（本地临时资料，勿入库）
-临时/
+tools/web-midi-player
+tools/SimpleFTPServer
 
 # JC4880P443 独立构建目录
 build-jc4880p443/

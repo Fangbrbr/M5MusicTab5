@@ -47,6 +47,13 @@ void service_voice_opus_encoder_close(void);
 esp_err_t service_voice_opus_decoder_open(uint32_t sample_rate);
 
 /**
+ * @brief 复位重采样跨帧相位（句末调用）
+ *
+ * 同会话相邻回复间解码器不重开，末采样残留会让下一句首帧插值出 click。
+ */
+void service_voice_opus_reset_phase(void);
+
+/**
  * @brief 解码一个 Opus 裸帧并重采样写入辅助混音流
  *
  * 解码（sample_rate 单声道）→ 线性插值重采样到 44.1kHz → 复制双声道 →

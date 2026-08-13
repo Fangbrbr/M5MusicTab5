@@ -22,6 +22,7 @@
 #include "service_page_boot.h"
 #include "service_page_screenshot.h"
 #include "service_page_about.h"
+#include "service_page_ftp.h"
 #include "service_wifi.h"
 #include "service_i2c.h"
 #include "service_power.h"
@@ -120,6 +121,10 @@ static char s_sys_wifi_list[256] = {0};
  * 不用 SCREEN_LOADED，它在实际渲染开始前就触发了，起不到隐藏作用。 */
 static uint8_t s_backlight_saved_brightness = 0;
 static bool s_backlight_load_dimmed = false;
+
+/* 切屏锁：FTP 等独占系统屏期间为 true，engine_gui_switch_screen 直接丢弃。
+ * 独占页退出路径先解锁再切屏，不受影响。 */
+static bool s_screen_locked = false;
 
 void engine_gui_translate_obj_tree(lv_obj_t *obj);
 
@@ -1921,6 +1926,9 @@ int16_t engine_gui_screen_name_to_id(const char *name)
     if (strcmp(name, "app_fun") == 0) {
         return SCREEN_ID_APP_FUN;
     }
+    if (strcmp(name, "ftp") == 0) {
+        return SCREEN_ID_FTP;
+    }
 
     return -1;
 }
@@ -1966,6 +1974,12 @@ void engine_gui_translate_obj_tree(lv_obj_t *obj)
 
 void engine_gui_switch_screen(const char *screen_name)
 {
+    if (s_screen_locked) {
+        ESP_LOGW(TAG, "screen switch locked, drop: %s",
+                 screen_name != NULL ? screen_name : "launcher");
+        return;
+    }
+
     lvgl_port_lock(0);
 
     if (screen_name == NULL) {
@@ -1987,6 +2001,17 @@ void engine_gui_switch_screen(const char *screen_name)
     engine_gui_translate_obj_tree(lv_screen_active());
 
     lvgl_port_unlock();
+}
+
+void engine_gui_set_screen_locked(bool locked)
+{
+    s_screen_locked = locked;
+    ESP_LOGI(TAG, "screen locked: %d", (int)locked);
+}
+
+bool engine_gui_is_screen_locked(void)
+{
+    return s_screen_locked;
 }
 
 /* 开机默认页面映射：与 EEZ 下拉框顺序一致 */
@@ -2063,6 +2088,13 @@ void engine_gui_on_screen_loaded(lv_obj_t *screen)
         ESP_LOGI(TAG, "onboard screen loaded");
         service_page_onboard_on_screen_loaded();
         return;
+    }
+
+    /* FTP 独占屏：进入即启动服务并锁系统；不加 return，落到尾部自动
+     * kill active App 完成独占（kill 走异步 request，不受 launch 锁影响） */
+    if (screen == objects.ftp) {
+        ESP_LOGI(TAG, "ftp screen loaded");
+        service_page_ftp_on_screen_loaded();
     }
 
     if (app_manager_get_active() != NULL) {

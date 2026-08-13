@@ -222,6 +222,17 @@ int16_t engine_gui_screen_name_to_id(const char *name);
 void engine_gui_switch_screen(const char *screen_name);
 
 /**
+ * @brief 设置切屏锁（FTP 等独占系统屏期间禁止一切切屏）
+ *
+ * 锁定期间 engine_gui_switch_screen 丢弃请求并告警；
+ * 独占页退出路径须先解锁再切屏。
+ */
+void engine_gui_set_screen_locked(bool locked);
+
+/** @brief 查询切屏锁 */
+bool engine_gui_is_screen_locked(void);
+
+/**
  * @brief 递归翻译对象树内所有 label 静态文案（按当前语言）
  *
  * 未命中词条表的文本原样保留；zh-CN 下为恒等映射零副作用。

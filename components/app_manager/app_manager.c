@@ -178,6 +178,10 @@ static portMUX_TYPE s_pending_mux = portMUX_INITIALIZER_UNLOCKED;
 static app_manager_switch_screen_cb_t s_switch_screen_cb = NULL;
 static app_manager_find_widget_cb_t s_find_widget_cb = NULL;
 
+/* App 启动锁：FTP 等独占系统屏期间为 true，app_manager_launch 直接丢弃请求。
+ * 只锁 launch 不锁 kill_active——独占屏进入时靠异步 kill 清场，退出不留活口。 */
+static bool s_launch_locked = false;
+
 /* 递归锁：保护 active 指针读写以及 on_init/on_pause/on_resume/on_destroy/on_input/on_sysex
  * 等生命周期回调的调用，防止 task_comm（分发 SysEx）与 task_app（on_update）并发
  * 修改/访问同一个 App 实例导致数据竞争或 Use-After-Free。 */
@@ -674,8 +678,24 @@ void app_manager_process_requests(void)
     }
 }
 
+void app_manager_set_launch_locked(bool locked)
+{
+    s_launch_locked = locked;
+    ESP_LOGI(TAG, "launch locked: %d", (int)locked);
+}
+
+bool app_manager_is_launch_locked(void)
+{
+    return s_launch_locked;
+}
+
 bool app_manager_launch(const char *name)
 {
+    if (s_launch_locked) {
+        ESP_LOGW(TAG, "launch locked, drop: %s", name != NULL ? name : "(null)");
+        return false;
+    }
+
     if (!lifecycle_take()) {
         return false;
     }

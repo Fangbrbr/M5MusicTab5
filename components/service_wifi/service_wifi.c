@@ -511,6 +511,31 @@ service_wifi_sta_state_t service_wifi_get_sta_state(int *reason)
     return s_sta_state;
 }
 
+esp_err_t service_wifi_get_sta_ip_str(char *buf, size_t len)
+{
+#if !CONFIG_BOARD_HAS_WIFI
+    /* 板型无 WiFi：无 STA netif，统一降级 */
+    (void)buf;
+    (void)len;
+    return ESP_ERR_NOT_SUPPORTED;
+#else
+    if (buf == NULL || len == 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!s_connected || s_sta_netif == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    esp_netif_ip_info_t ip;
+    if (esp_netif_get_ip_info(s_sta_netif, &ip) != ESP_OK) {
+        return ESP_FAIL;
+    }
+    if (snprintf(buf, len, IPSTR, IP2STR(&ip.ip)) >= (int)len) {
+        return ESP_ERR_INVALID_SIZE;
+    }
+    return ESP_OK;
+#endif /* CONFIG_BOARD_HAS_WIFI */
+}
+
 void service_wifi_set_sta_callback(service_wifi_sta_cb_t cb)
 {
     s_sta_cb = cb;

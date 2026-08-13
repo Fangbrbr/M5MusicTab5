@@ -123,6 +123,11 @@ static bool s_wake_anywhere = false;
 /* AI App UI 是否在前台（由 app_ai_agent 生命周期同步） */
 static volatile bool s_ai_ui_active = false;
 
+/* 系统级暂停（FTP 独占页等）：置位时停止会话、关闭唤醒检出并丢弃唤醒
+ * 事件，re-arm 点（enter_standby/process/set_wake_anywhere/set_ai_ui_active）
+ * 全部跳过 enable_wake；清除后按激活状态恢复检出 */
+static bool s_suspended = false;
+
 /* 待重放的激活码：当 AI 屏不在前台时收到的激活码暂存此处，
  * AI 屏回前台时自动重放，防止事件被丢弃导致绑定气泡不显示 */
 #define XZ_ACTIVATION_CODE_LEN 16
@@ -626,6 +631,11 @@ static void xz_voice_poll(void)
             if (!s_use_auto) {
                 break;
             }
+            if (s_suspended) {
+                /* 系统暂停期（FTP 独占页）：唤醒事件直接丢弃，检出本就关闭 */
+                ESP_LOGI(TAG, "唤醒丢弃: suspended");
+                break;
+            }
             ESP_LOGI(TAG, "唤醒词命中: %s", evt.text ? evt.text : "?");
             /* 命中沿已被语音前端消费（s_wake_pending 去重，一次命中只进一
              * 个事件），检出保持开启：门控丢弃时（未激活/全局唤醒关且非 AI
@@ -710,6 +720,8 @@ static void xz_handle_cmd(xz_cmd_t cmd)
         }
         if (s_state == SERVICE_XIAOZHI_STATE_SPEAKING) {
             xz_send_abort();
+            /* 对齐唤醒打断路径：按钮打断同样清 aux，防被掐播报残留到下一句 */
+            service_audio_aux_clear();
         }
         xz_begin_conversation(s_use_auto ? "auto" : "manual");
         break;
@@ -1033,7 +1045,9 @@ static void xz_enter_standby(void)
         /* 唤醒使能按激活状态门控：未激活设备的唤醒必然被门控丢弃，留着
          * 检测只会对残响/噪声反复误触发刷屏；激活成功后的 enter_standby
          * 会重新打开 */
-        service_voice_enable_wake(service_xiaozhi_is_activated());
+        if (!s_suspended) {
+            service_voice_enable_wake(service_xiaozhi_is_activated());
+        }
     }
     xz_set_state(SERVICE_XIAOZHI_STATE_READY, "enter_standby");
 }
@@ -1112,6 +1126,9 @@ static void xz_handle_msg(xz_msg_t *msg)
         break;
     }
     case XZ_MSG_TTS_START:
+        /* 新一句开播清场：异常收尾（断链无 tts_stop）时 aux 可躺 ≤2s 旧音频，
+         * 开播即播旧渣；正常路径尾音已随 end_of_stream 排完，此处为幂等兜底 */
+        service_audio_aux_clear();
         /* 播报期停止编码上行（省 CPU/带宽）并关闭唤醒检测。
          * Why 不做唤醒打断：当前 AEC 为 SR_LOW_COST+NLP_OFF（保上行实时
          * 的代价），扬声器回声压不干净，回声会被 VAD 当成人声、WakeNet
@@ -1131,6 +1148,12 @@ static void xz_handle_msg(xz_msg_t *msg)
         s_last_activity = xTaskGetTickCount();
         break;
     case XZ_MSG_TTS_STOP:
+        /* 流已结束（音频帧同序先于本消息落 aux）：立即解除预充门放尾音，
+         * 否则不足 400ms 门限的尾音永久卡住，跨轮残留成下一句开头的插播；
+         * auto 续听也能在几百 ms 内等到 aux 排空，不再吃 2500ms 兜底 */
+        service_audio_aux_end_of_stream();
+        /* 同复位：下一句首帧重采样不再从本句尾采样插值（帧间断续 click） */
+        service_voice_decoder_reset_phase();
         ESP_LOGI(TAG, "[对话] TTS 播报结束（累计下行 %lu 帧 %lu 字节）",
                  (unsigned long)s_dl_audio_frames, (unsigned long)s_dl_audio_bytes);
         if (s_standby_pending) {
@@ -1215,7 +1238,10 @@ static void xz_app_loop(void)
         /* 唤醒命中：SPEAKING 打断播报并续听；STANDBY 开对话；
          * 激活/连接中保留触发位待就绪重试（不重入阻塞流程、不刷屏） */
         if (s_trigger_conv) {
-            if (!service_xiaozhi_is_activated()) {
+            if (s_suspended) {
+                /* 系统暂停期：唤醒裁决直接丢弃，不开对话不拉屏 */
+                s_trigger_conv = false;
+            } else if (!service_xiaozhi_is_activated()) {
                 /* 设备未激活（未配网/未注册）：直接放弃唤醒指令，
                  * 不补激活、不拉屏、不刷通知；激活走 AI App 手动流程 */
                 xz_wake_drop();
@@ -1303,6 +1329,11 @@ static void xz_app_loop(void)
             if (service_audio_aux_is_idle() ||
                 (now - s_pending_listen_at) > pdMS_TO_TICKS(2500)) {
                 s_pending_listen = false;
+                if (!service_audio_aux_is_idle()) {
+                    /* 2500ms 兜底仍带渣：清场防跨轮残留（正常路径
+                     * end_of_stream 已在几百 ms 内排空，走不到这里） */
+                    service_audio_aux_clear();
+                }
                 if (s_state == SERVICE_XIAOZHI_STATE_SPEAKING) {
                     xz_begin_conversation("auto");
                 }
@@ -1465,12 +1496,19 @@ void service_xiaozhi_process(void)
      * 识别到唤醒词即自动启动会话并请求拉起 AI App UI，避免「唤醒词
      * 只能在会话内消费」的先有鸡还是先有蛋问题。
      * 未激活设备关闭检出（唤醒必然被丢弃，留着只会反复误触发刷屏）。 */
-    service_voice_enable_wake(service_xiaozhi_is_activated());
+    if (!s_suspended) {
+        service_voice_enable_wake(service_xiaozhi_is_activated());
+    }
     while (!s_start_pending && !s_shutdown) {
         service_voice_event_t evt;
         if (service_voice_poll_event(&evt)) {
             switch (evt.type) {
             case SERVICE_VOICE_EVT_WAKE:
+                if (s_suspended) {
+                    /* 系统暂停期（FTP 独占页）：不启动会话 */
+                    ESP_LOGI(TAG, "待机唤醒丢弃: suspended");
+                    break;
+                }
                 ESP_LOGI(TAG, "待机唤醒命中: %s", evt.text ? evt.text : "?");
                 s_start_pending = true;
                 s_trigger_conv = true;
@@ -1656,7 +1694,8 @@ void service_xiaozhi_set_wake_anywhere(bool enable)
      * 但对话中（LISTENING/SPEAKING）不重开：播报期重开会被扬声器回声
      * 自触发打断 TTS，对话期唤醒本就由生命周期统一管理（回待机才开）。 */
     if (enable) {
-        if (s_state != SERVICE_XIAOZHI_STATE_LISTENING &&
+        if (!s_suspended &&
+            s_state != SERVICE_XIAOZHI_STATE_LISTENING &&
             s_state != SERVICE_XIAOZHI_STATE_SPEAKING) {
             service_voice_enable_wake(service_xiaozhi_is_activated());
         }
@@ -1683,7 +1722,8 @@ void service_xiaozhi_set_ai_ui_active(bool active)
             ESP_LOGI(TAG, "replaying pending activation code: %s", s_pending_activation_code);
             xz_post_event(SERVICE_XIAOZHI_EVT_ACTIVATION_CODE, s_pending_activation_code);
         }
-        if (s_state != SERVICE_XIAOZHI_STATE_LISTENING &&
+        if (!s_suspended &&
+            s_state != SERVICE_XIAOZHI_STATE_LISTENING &&
             s_state != SERVICE_XIAOZHI_STATE_SPEAKING) {
             service_voice_enable_wake(service_xiaozhi_is_activated());
         }
@@ -1695,6 +1735,24 @@ void service_xiaozhi_set_ai_ui_active(bool active)
     } else {
         /* AI 屏退出：清除激活请求，防止后台继续获取激活码 */
         s_activation_requested = false;
+    }
+}
+
+void service_xiaozhi_set_suspended(bool suspended)
+{
+    if (suspended) {
+        s_suspended = true;
+        ESP_LOGI(TAG, "xiaozhi suspended (state=%d)", (int)s_state);
+        /* 会话活跃则异步收尾回 IDLE（SHUTDOWN 经命令队列，任务侧收敛后退出），
+         * ws 随之断开释放 socket/TLS；唤醒检出立即关闭 */
+        if (s_state != SERVICE_XIAOZHI_STATE_IDLE) {
+            service_xiaozhi_stop();
+        }
+        service_voice_enable_wake(false);
+    } else {
+        s_suspended = false;
+        ESP_LOGI(TAG, "xiaozhi resumed");
+        service_voice_enable_wake(service_xiaozhi_is_activated());
     }
 }
 

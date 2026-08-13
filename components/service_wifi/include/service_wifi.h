@@ -8,6 +8,7 @@
 
 #include "esp_err.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -135,6 +136,15 @@ typedef enum {
  * @return  当前状态
  */
 service_wifi_sta_state_t service_wifi_get_sta_state(int *reason);
+
+/**
+ * @brief 获取 STA 当前 IP 字符串（如 "192.168.1.100"）
+ *
+ * @param[out] buf 输出缓冲
+ * @param[in]  len 缓冲长度（至少 16）
+ * @return ESP_OK 成功；ESP_ERR_INVALID_STATE 未连接/未初始化
+ */
+esp_err_t service_wifi_get_sta_ip_str(char *buf, size_t len);
 
 /**
  * @brief STA 状态变化回调（单次注册，NULL 注销）
