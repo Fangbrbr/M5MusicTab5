@@ -1,0 +1,57 @@
+name: Deploy Pages
+
+on:
+  # Trap: 公开仓库全部用孤儿分支强推，路径过滤在强制推送的 diff 计算下不可靠，
+  # 曾因漏触发导致站点未更新；main 有任何推送即重部署（镜像步骤幂等）
+  push:
+    branches: [main]
+  # Trap: action-gh-release 用 GITHUB_TOKEN 创建的 release 不会触发 release 事件，
+  # 只能用 workflow_run 在固件发布后刷新站点固件
+  workflow_run:
+    workflows: ["Build and Release"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Why: GitHub release 资产无 CORS 头，页面不能跨域 fetch；
+      # 部署时经 curl 把最新 release 固件镜像进站点，页面同源拉取（.bin 已被 .gitignore 排除，不入库）。
+      # 另生成预压缩 .gz：Fastly 传输压缩会让浏览器拿不到真实进度，页面改下 .gz
+      # （百分比准确、体积小 60%），再用 DecompressionStream 自行解压
+      - name: Mirror latest release firmware into the site
+        run: |
+          cd doc/web_flash
+          for f in 0x0_full_TAB5_Music_Pad.bin 0x10000_app_TAB5_Music_Pad.bin; do
+            if curl -fSL --retry 3 -o "$f" \
+              "https://github.com/${{ github.repository }}/releases/latest/download/$f"; then
+              echo "mirrored $f"
+              gzip -9 -c "$f" > "$f.gz"
+            else
+              echo "::warning::$f 下载失败（可能尚无 release），页面将提示固件下载失败"
+            fi
+          done
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc/web_flash
+      - uses: actions/deploy-pages@v4
+        id: deployment

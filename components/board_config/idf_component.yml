@@ -1,0 +1,3 @@
+## JC4880P443 面板驱动依赖（Tab5 构建不会链接，仅组件管理器下载）
+dependencies:
+  espressif/esp_lcd_st7701: ^1

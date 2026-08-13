@@ -1,0 +1,16 @@
+{
+  "name": "M5MusicTab5 整机固件",
+  "version": "latest",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-P4",
+      "parts": [
+        {
+          "path": "0x0_full_TAB5_Music_Pad.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

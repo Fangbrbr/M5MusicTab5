@@ -1,0 +1,1083 @@
+/**
+ * @file app_midi_player.c
+ * @brief MIDI 播放器：SD 卡 .mid / .hmr 扫描与播放
+ *
+ * 左侧文件清单分 Midi音乐 与 录音文件 两类，通过设置面板下拉切换；
+ * 右侧播放控制视图显示曲名/路径/通道数/BPM/进度/时间。
+ * SMF 解析由 engine_midi_smf 完成，HMR 录音解析由 engine_midi_rec 完成，
+ * 合成统一交给 engine_sf2，App 只发标准 MIDI 事件。
+ */
+
+#include "app_midi_player.h"
+#include "app_manager.h"
+#include "engine_gui.h"
+#include "engine_midi.h"
+#include "engine_midi_rec.h"
+#include "engine_midi_smf.h"
+#include "esp_log.h"
+#include "esp_timer.h"
+#include "esp_lvgl_port.h"
+#include "service_nvs.h"
+#include "lvgl.h"
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <time.h>
+
+static const char *TAG = "app_midi_player";
+
+#define MIDI_SCAN_DIR_MIDI      "/sdcard/midi"
+#define MIDI_SCAN_DIR_RECORD    "/sdcard/record"
+#define MIDI_SCAN_DIR_FALLBACK  "/sdcard"
+#define MIDI_MAX_FILES          64
+#define MIDI_FILE_ICON          "\xEF\x87\x87 "   /* 与 EEZ 示例条目一致的图标前缀 */
+#define MIDI_UI_REFRESH_MS      200
+
+/* -------------------- UI -------------------- */
+
+typedef struct {
+    lv_obj_t *btn_home;
+    lv_obj_t *btn_set;
+    lv_obj_t *panel_mid_list;
+    lv_obj_t *list;
+    lv_obj_t *file_example;
+    lv_obj_t *panel_hmr_list;
+    lv_obj_t *list_record;
+    lv_obj_t *name_label;
+    lv_obj_t *path_label;
+    lv_obj_t *track_count;
+    lv_obj_t *bpm_num;
+    lv_obj_t *prev;
+    lv_obj_t *play_stop;
+    lv_obj_t *play_stop_label;
+    lv_obj_t *next;
+    lv_obj_t *progress;
+    lv_obj_t *time_now;
+    lv_obj_t *time_total;
+    lv_obj_t *panel_set;
+    lv_obj_t *set_btn_return;
+    lv_obj_t *play_type;
+} ui_screen_midi_t;
+
+static ui_screen_midi_t s_midi_ui = {0};
+
+static const widget_binding_t s_midi_bindings[] = {
+    WIDGET_BIND(ui_screen_midi_t, btn_home,        "midi_btn_home",          WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, btn_set,         "midi_btn_set",           WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, panel_mid_list,  "midi_panel_mid_list",    WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, list,            "midi_list_music_file",   WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, file_example,    "midi_file_example",      WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, panel_hmr_list,  "midi_panel_hmr_list",    WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, list_record,     "midi_list_record_file",  WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, name_label,      "midi_music_name_label",  WIDGET_KIND_LABEL),
+    WIDGET_BIND(ui_screen_midi_t, path_label,      "midi_music_path_label",  WIDGET_KIND_LABEL),
+    WIDGET_BIND(ui_screen_midi_t, track_count,     "midi_music_track_count", WIDGET_KIND_LABEL),
+    WIDGET_BIND(ui_screen_midi_t, bpm_num,         "midi_music_bpm_num",     WIDGET_KIND_LABEL),
+    WIDGET_BIND(ui_screen_midi_t, prev,            "midi_prev",              WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, play_stop,       "midi_play_stop",         WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, play_stop_label, "midi_play_stop_label",   WIDGET_KIND_LABEL),
+    WIDGET_BIND(ui_screen_midi_t, next,            "midi_next",              WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, progress,        "midi_progress",           WIDGET_KIND_SLIDER),
+    WIDGET_BIND(ui_screen_midi_t, time_now,        "midi_play_time_now",     WIDGET_KIND_LABEL),
+    WIDGET_BIND(ui_screen_midi_t, time_total,      "midi_play_time_total",   WIDGET_KIND_LABEL),
+    WIDGET_BIND(ui_screen_midi_t, panel_set,       "midi_set",               WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, set_btn_return,  "midi_set_btn_return",    WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, play_type,       "midi_play_type",         WIDGET_KIND_DROPDOWN),
+    WIDGET_BINDING_END,
+};
+
+/* -------------------- 文件扫描缓存 -------------------- */
+
+typedef struct {
+    char name[96];    /* 文件名（含后缀） */
+    char path[192];   /* 完整路径 */
+    time_t mtime;     /* 文件修改时间，用于录音按时间排序 */
+} midi_file_item_t;
+
+typedef enum {
+    PLAY_TYPE_MIDI = 0,
+    PLAY_TYPE_HMR,
+} play_type_t;
+
+/**
+ * @brief 播放器状态
+ */
+typedef enum {
+    PLAYER_STATE_IDLE,      /* 未加载文件 */
+    PLAYER_STATE_READY,     /* 已加载文件，停止 */
+    PLAYER_STATE_PLAYING,   /* 播放中 */
+    PLAYER_STATE_FINISHED,  /* 已播放到末尾 */
+    PLAYER_STATE_SEEKING,   /* 跳转中（临时状态，屏蔽滑块 VALUE_CHANGED） */
+    PLAYER_STATE_COUNT,
+} player_state_t;
+
+typedef struct {
+    midi_file_item_t midi_files[MIDI_MAX_FILES];
+    midi_file_item_t rec_files[MIDI_MAX_FILES];
+    int midi_file_count;
+    int rec_file_count;
+    bool scanned;
+    int cur_midi_index;                  /* 当前 MIDI 选中，-1 无 */
+    int cur_rec_index;                   /* 当前录音选中，-1 无 */
+    play_type_t play_type;               /* 当前显示/操作类别 */
+
+    engine_midi_smf_t smf;               /* 当前 MIDI 解析结果 */
+    engine_midi_rec_t rec;               /* 当前 HMR 解析结果 */
+    bool is_rec;                         /* 当前曲目为 .hmr 录音 */
+
+    player_state_t state;                /* 当前播放状态 */
+    player_state_t state_before_seek;    /* 进入 SEEKING 前的状态 */
+    uint32_t play_idx;
+    int64_t play_time_us;
+    int64_t last_pump_us;
+    uint32_t last_ui_ms;
+} midi_player_state_t;
+
+static midi_player_state_t s_mp = {0};
+
+/* 仅用于遮罩 UI 刷新对 progress 滑块赋值引发的 VALUE_CHANGED，
+ * 不得借道 SEEKING 状态机（leave(PLAYING) 会 all_notes_off，
+ * 曾导致播放中每 200ms 全场断音：长音变短促、XY 弯音流被掐断） */
+static bool s_ui_progress_mask = false;
+
+/* -------------------- MIDI 总线 -------------------- */
+
+static void midi_send(uint8_t type, uint8_t ch, uint8_t d1, uint8_t d2)
+{
+    engine_midi_event_t midi = {0};
+    midi.type = type;
+    midi.channel = ch;
+    midi.data1 = d1;
+    midi.data2 = d2;
+    midi.source_port = ENGINE_MIDI_PORT_APP;
+    engine_midi_publish(&midi, 0);
+}
+
+static void midi_send_bend(uint8_t ch, uint16_t value14)
+{
+    engine_midi_event_t midi = {0};
+    midi.type = ENGINE_MIDI_MSG_PITCH_BEND;
+    midi.channel = ch;
+    midi.value = value14;
+    midi.source_port = ENGINE_MIDI_PORT_APP;
+    engine_midi_publish(&midi, 0);
+}
+
+static void midi_all_notes_off(void)
+{
+    for (int ch = 0; ch < 16; ch++) {
+        midi_send(ENGINE_MIDI_MSG_CONTROL_CHANGE, (uint8_t)ch, 123, 0);
+    }
+}
+
+/* -------------------- 状态机 -------------------- */
+
+static const char *player_state_name(player_state_t state)
+{
+    switch (state) {
+        case PLAYER_STATE_IDLE:     return "IDLE";
+        case PLAYER_STATE_READY:    return "READY";
+        case PLAYER_STATE_PLAYING:  return "PLAYING";
+        case PLAYER_STATE_FINISHED: return "FINISHED";
+        case PLAYER_STATE_SEEKING:  return "SEEKING";
+        default:                    return "UNKNOWN";
+    }
+}
+
+static void player_ui_set_icon(bool playing)
+{
+    lvgl_port_lock(portMAX_DELAY);
+    if (s_midi_ui.play_stop_label != NULL) {
+        lv_label_set_text(s_midi_ui.play_stop_label, playing ? LV_SYMBOL_PAUSE : LV_SYMBOL_PLAY);
+    }
+    lvgl_port_unlock();
+}
+
+static void player_enter_state(player_state_t prev_state)
+{
+    switch (s_mp.state) {
+        case PLAYER_STATE_IDLE:
+        case PLAYER_STATE_READY:
+        case PLAYER_STATE_FINISHED:
+            player_ui_set_icon(false);
+            break;
+        case PLAYER_STATE_PLAYING:
+            s_mp.last_pump_us = esp_timer_get_time();
+            player_ui_set_icon(true);
+            break;
+        case PLAYER_STATE_SEEKING:
+            s_mp.state_before_seek = prev_state;
+            break;
+        default:
+            break;
+    }
+    ESP_LOGD(TAG, "state %s -> %s", player_state_name(prev_state), player_state_name(s_mp.state));
+}
+
+static void player_leave_state(player_state_t prev_state)
+{
+    switch (prev_state) {
+        case PLAYER_STATE_PLAYING:
+            /* 离开播放态前强制静音，避免暂停/跳转/切出时音符悬挂 */
+            midi_all_notes_off();
+            break;
+        default:
+            break;
+    }
+}
+
+static void player_set_state(player_state_t new_state)
+{
+    if (s_mp.state == new_state) {
+        return;
+    }
+    player_state_t prev = s_mp.state;
+    player_leave_state(prev);
+    s_mp.state = new_state;
+    player_enter_state(prev);
+}
+
+static void player_begin_seek(void)
+{
+    player_set_state(PLAYER_STATE_SEEKING);
+}
+
+static void player_end_seek(void)
+{
+    player_set_state(s_mp.state_before_seek);
+}
+
+/* -------------------- 播放抽象（MIDI / HMR） -------------------- */
+
+static int64_t player_total_us(void)
+{
+    if (s_mp.is_rec) {
+        return (int64_t)s_mp.rec.total_us;
+    }
+    return (int64_t)s_mp.smf.total_us;
+}
+
+static uint32_t player_event_count(void)
+{
+    if (s_mp.is_rec) {
+        return s_mp.rec.event_count;
+    }
+    return s_mp.smf.event_count;
+}
+
+static uint32_t player_find_index_at_time(int64_t target_us)
+{
+    uint32_t idx = 0;
+    if (s_mp.is_rec) {
+        while (idx < s_mp.rec.event_count && s_mp.rec.events[idx].time_us <= (uint64_t)target_us) {
+            idx++;
+        }
+    } else {
+        while (idx < s_mp.smf.event_count && (int64_t)s_mp.smf.events[idx].time_us <= target_us) {
+            idx++;
+        }
+    }
+    return idx;
+}
+
+static void player_collect_state_at(uint32_t idx, uint8_t *last_pc, uint8_t *last_cc0, uint8_t *last_cc32)
+{
+    if (s_mp.is_rec) {
+        for (uint32_t i = 0; i < idx; i++) {
+            const engine_midi_rec_event_t *ev = &s_mp.rec.events[i];
+            if (ev->type == ENGINE_MIDI_MSG_PROGRAM_CHANGE) {
+                last_pc[ev->channel] = ev->data1;
+            } else if (ev->type == ENGINE_MIDI_MSG_CONTROL_CHANGE) {
+                if (ev->data1 == 0) last_cc0[ev->channel] = ev->data2;
+                if (ev->data1 == 32) last_cc32[ev->channel] = ev->data2;
+            }
+        }
+    } else {
+        for (uint32_t i = 0; i < idx; i++) {
+            const engine_midi_smf_event_t *ev = &s_mp.smf.events[i];
+            if (ev->type == 0xC0) {
+                last_pc[ev->channel] = ev->data1;
+            } else if (ev->type == 0xB0) {
+                if (ev->data1 == 0) last_cc0[ev->channel] = ev->data2;
+                if (ev->data1 == 32) last_cc32[ev->channel] = ev->data2;
+            }
+        }
+    }
+}
+
+static void player_send_rec_initial_state(void)
+{
+    if (!s_mp.is_rec) {
+        return;
+    }
+
+    for (int ch = 0; ch < 16; ch++) {
+        uint8_t bank_msb = s_mp.rec.channel_init[ch][ENGINE_MIDI_REC_CH_INIT_BANK_MSB];
+        uint8_t bank_lsb = s_mp.rec.channel_init[ch][ENGINE_MIDI_REC_CH_INIT_BANK_LSB];
+        uint8_t program  = s_mp.rec.channel_init[ch][ENGINE_MIDI_REC_CH_INIT_PROGRAM];
+
+        if (bank_msb != ENGINE_MIDI_REC_CH_INIT_NONE) {
+            midi_send(ENGINE_MIDI_MSG_CONTROL_CHANGE, (uint8_t)ch, 0, bank_msb);
+        }
+        if (bank_lsb != ENGINE_MIDI_REC_CH_INIT_NONE) {
+            midi_send(ENGINE_MIDI_MSG_CONTROL_CHANGE, (uint8_t)ch, 32, bank_lsb);
+        }
+        if (program != ENGINE_MIDI_REC_CH_INIT_NONE) {
+            midi_send(ENGINE_MIDI_MSG_PROGRAM_CHANGE, (uint8_t)ch, program, 0);
+        }
+    }
+}
+
+static void player_set_stopped_state(void)
+{
+    player_set_state((player_event_count() > 0) ? PLAYER_STATE_READY : PLAYER_STATE_IDLE);
+}
+
+static void player_stop(void)
+{
+    player_set_stopped_state();
+}
+
+/* -------------------- 文件扫描 -------------------- */
+
+static bool midi_name_is_hmr(const char *name)
+{
+    const char *dot = strrchr(name, '.');
+    return dot != NULL && strcasecmp(dot, ".hmr") == 0;
+}
+
+static bool midi_name_is_mid(const char *name)
+{
+    const char *dot = strrchr(name, '.');
+    return dot != NULL && (strcasecmp(dot, ".mid") == 0 || strcasecmp(dot, ".midi") == 0);
+}
+
+static int midi_file_cmp_alpha(const void *a, const void *b)
+{
+    return strcasecmp(((const midi_file_item_t *)a)->name, ((const midi_file_item_t *)b)->name);
+}
+
+static int midi_file_cmp_mtime_desc(const void *a, const void *b)
+{
+    time_t ta = ((const midi_file_item_t *)a)->mtime;
+    time_t tb = ((const midi_file_item_t *)b)->mtime;
+    if (ta > tb) return -1;
+    if (ta < tb) return 1;
+    return strcasecmp(((const midi_file_item_t *)a)->name, ((const midi_file_item_t *)b)->name);
+}
+
+static void midi_scan_dir(const char *dir_path, midi_file_item_t *out, int *out_count, bool accept_mid)
+{
+    DIR *dir = opendir(dir_path);
+    if (dir == NULL) {
+        return;
+    }
+
+    struct dirent *entry;
+    while (*out_count < MIDI_MAX_FILES && (entry = readdir(dir)) != NULL) {
+        if (entry->d_type != DT_REG) {
+            continue;
+        }
+        bool is_mid = midi_name_is_mid(entry->d_name);
+        bool is_hmr = midi_name_is_hmr(entry->d_name);
+        if (accept_mid && !is_mid) {
+            continue;
+        }
+        if (!accept_mid && !is_hmr) {
+            continue;
+        }
+
+        midi_file_item_t *it = &out[*out_count];
+        size_t name_len = strnlen(entry->d_name, sizeof(it->name) - 1);
+        memcpy(it->name, entry->d_name, name_len);
+        it->name[name_len] = '\0';
+        size_t dir_len = strlen(dir_path);
+        memcpy(it->path, dir_path, dir_len);
+        it->path[dir_len] = '/';
+        memcpy(it->path + dir_len + 1, it->name, name_len + 1);
+
+        struct stat st;
+        it->mtime = (stat(it->path, &st) == 0) ? st.st_mtime : 0;
+
+        (*out_count)++;
+    }
+    closedir(dir);
+}
+
+static void midi_scan_files(void)
+{
+    s_mp.midi_file_count = 0;
+    s_mp.rec_file_count = 0;
+
+    /* MIDI 优先扫描 /sdcard/midi，缺失则回退 /sdcard 根目录 */
+    DIR *probe = opendir(MIDI_SCAN_DIR_MIDI);
+    bool midi_dir_exists = (probe != NULL);
+    if (probe != NULL) {
+        closedir(probe);   /* 存在性探测后立即释放，防 fd 泄漏 */
+    }
+    if (midi_dir_exists) {
+        midi_scan_dir(MIDI_SCAN_DIR_MIDI, s_mp.midi_files, &s_mp.midi_file_count, true);
+    }
+    if (s_mp.midi_file_count == 0) {
+        midi_scan_dir(MIDI_SCAN_DIR_FALLBACK, s_mp.midi_files, &s_mp.midi_file_count, true);
+    }
+
+    /* 录音固定扫描 /sdcard/record */
+    midi_scan_dir(MIDI_SCAN_DIR_RECORD, s_mp.rec_files, &s_mp.rec_file_count, false);
+
+    if (s_mp.midi_file_count > 0) {
+        qsort(s_mp.midi_files, s_mp.midi_file_count, sizeof(midi_file_item_t), midi_file_cmp_alpha);
+    }
+    if (s_mp.rec_file_count > 0) {
+        qsort(s_mp.rec_files, s_mp.rec_file_count, sizeof(midi_file_item_t), midi_file_cmp_mtime_desc);
+    }
+
+    s_mp.scanned = true;
+    ESP_LOGI(TAG, "scan midi=%d rec=%d", s_mp.midi_file_count, s_mp.rec_file_count);
+}
+
+/* -------------------- UI 辅助 -------------------- */
+
+static void midi_format_time(uint32_t us, char *out, size_t len)
+{
+    uint32_t sec = us / 1000000;
+    snprintf(out, len, "%02lu:%02lu", (unsigned long)(sec / 60), (unsigned long)(sec % 60));
+}
+
+static void player_ui_refresh_progress(void)
+{
+    char buf[16];
+    int64_t total = player_total_us();
+    int percent = (total > 0)
+        ? (int)((int64_t)s_mp.play_time_us * 100 / total) : 0;
+    if (percent > 100) {
+        percent = 100;
+    }
+
+    lvgl_port_lock(portMAX_DELAY);
+    s_ui_progress_mask = true;
+    if (s_midi_ui.progress != NULL) {
+        lv_slider_set_value(s_midi_ui.progress, percent, LV_ANIM_OFF);
+    }
+    s_ui_progress_mask = false;
+    midi_format_time((uint32_t)s_mp.play_time_us, buf, sizeof(buf));
+    if (s_midi_ui.time_now != NULL) {
+        lv_label_set_text(s_midi_ui.time_now, buf);
+    }
+    midi_format_time((uint32_t)total, buf, sizeof(buf));
+    if (s_midi_ui.time_total != NULL) {
+        lv_label_set_text(s_midi_ui.time_total, buf);
+    }
+    lvgl_port_unlock();
+}
+
+/* -------------------- 播放控制 -------------------- */
+
+static void player_midi_save_state(void);
+
+static void player_seek_percent(int percent)
+{
+    int64_t total = player_total_us();
+    if (total <= 0 || player_event_count() == 0) {
+        return;
+    }
+    if (percent < 0) percent = 0;
+    if (percent > 100) percent = 100;
+
+    player_begin_seek();
+    midi_all_notes_off();
+
+    int64_t target = total * percent / 100;
+
+    uint32_t idx = player_find_index_at_time(target);
+
+    uint8_t last_pc[16], last_cc0[16], last_cc32[16];
+    memset(last_pc, 0xFF, sizeof(last_pc));
+    memset(last_cc0, 0xFF, sizeof(last_cc0));
+    memset(last_cc32, 0xFF, sizeof(last_cc32));
+    player_collect_state_at(idx, last_pc, last_cc0, last_cc32);
+    for (int ch = 0; ch < 16; ch++) {
+        if (last_cc0[ch] != 0xFF) midi_send(ENGINE_MIDI_MSG_CONTROL_CHANGE, (uint8_t)ch, 0, last_cc0[ch]);
+        if (last_cc32[ch] != 0xFF) midi_send(ENGINE_MIDI_MSG_CONTROL_CHANGE, (uint8_t)ch, 32, last_cc32[ch]);
+        if (last_pc[ch] != 0xFF) midi_send(ENGINE_MIDI_MSG_PROGRAM_CHANGE, (uint8_t)ch, last_pc[ch], 0);
+    }
+
+    s_mp.play_idx = idx;
+    s_mp.play_time_us = target;
+    s_mp.last_pump_us = esp_timer_get_time();
+    player_ui_refresh_progress();
+
+    player_end_seek();
+}
+
+static void player_load_file(play_type_t type, int index)
+{
+    midi_file_item_t *files = (type == PLAY_TYPE_HMR) ? s_mp.rec_files : s_mp.midi_files;
+    int count = (type == PLAY_TYPE_HMR) ? s_mp.rec_file_count : s_mp.midi_file_count;
+    int *cur_index = (type == PLAY_TYPE_HMR) ? &s_mp.cur_rec_index : &s_mp.cur_midi_index;
+
+    if (index < 0 || index >= count) {
+        return;
+    }
+
+    player_stop();
+    if (s_mp.is_rec) {
+        engine_midi_rec_free(&s_mp.rec);
+    } else {
+        engine_midi_smf_free(&s_mp.smf);
+    }
+    s_mp.is_rec = false;
+    player_set_state(PLAYER_STATE_IDLE);
+    s_mp.play_time_us = 0;
+    s_mp.play_idx = 0;
+
+    char fallback[96];
+    snprintf(fallback, sizeof(fallback), "%s", files[index].name);
+    char *dot = strrchr(fallback, '.');
+    if (dot != NULL) {
+        *dot = '\0';
+    }
+    const char *title = fallback;
+
+    if (type == PLAY_TYPE_HMR) {
+        if (engine_midi_rec_parse_file(files[index].path, &s_mp.rec) != ESP_OK) {
+            app_manager_show_notification_timeout("录音文件解析失败", 2000);
+            return;
+        }
+        s_mp.is_rec = true;
+        s_mp.smf.channels_used = s_mp.rec.channels_used;
+        s_mp.smf.bpm = 120;
+        player_send_rec_initial_state();
+    } else {
+        if (engine_midi_smf_parse_file(files[index].path, &s_mp.smf) != ESP_OK) {
+            app_manager_show_notification_timeout("MIDI 文件解析失败", 2000);
+            return;
+        }
+        s_mp.is_rec = false;
+        /* 直接使用文件名作为标题，不再尝试从 MIDI 元数据解析 */
+    }
+
+    *cur_index = index;
+    s_mp.play_type = type;
+
+    char buf[192];
+    lvgl_port_lock(portMAX_DELAY);
+    if (s_midi_ui.name_label != NULL) {
+        lv_label_set_text(s_midi_ui.name_label, title);
+    }
+    if (s_midi_ui.path_label != NULL) {
+        snprintf(buf, sizeof(buf), "%s", files[index].path);
+        lv_label_set_text(s_midi_ui.path_label, buf);
+    }
+    if (s_midi_ui.track_count != NULL) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)s_mp.smf.channels_used);
+        lv_label_set_text(s_midi_ui.track_count, buf);
+    }
+    if (s_midi_ui.bpm_num != NULL) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)s_mp.smf.bpm);
+        lv_label_set_text(s_midi_ui.bpm_num, buf);
+    }
+    lvgl_port_unlock();
+
+    player_midi_save_state();
+
+    player_set_state(PLAYER_STATE_READY);
+    player_seek_percent(0);
+}
+
+static void player_load_and_play(play_type_t type, int index)
+{
+    player_load_file(type, index);
+    if (s_mp.state == PLAYER_STATE_READY) {
+        player_set_state(PLAYER_STATE_PLAYING);
+    }
+}
+
+static void player_midi_save_state(void)
+{
+    const midi_file_item_t *files = (s_mp.play_type == PLAY_TYPE_HMR) ? s_mp.rec_files : s_mp.midi_files;
+    int index = (s_mp.play_type == PLAY_TYPE_HMR) ? s_mp.cur_rec_index : s_mp.cur_midi_index;
+
+    service_nvs_midi_player_t state = {0};
+    state.play_type = (uint8_t)s_mp.play_type;
+    if (index >= 0 && index < ((s_mp.play_type == PLAY_TYPE_HMR) ? s_mp.rec_file_count : s_mp.midi_file_count)) {
+        snprintf(state.filename, sizeof(state.filename), "%s", files[index].name);
+    }
+
+    esp_err_t ret = service_nvs_set_midi_player(&state);
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "save midi player state failed: %d", ret);
+    }
+}
+
+static int midi_find_index_by_name(const midi_file_item_t *files, int count, const char *name)
+{
+    for (int i = 0; i < count; i++) {
+        if (strcmp(files[i].name, name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void midi_restore_last_state(void)
+{
+    service_nvs_midi_player_t saved = {0};
+    if (service_nvs_get_midi_player(&saved) != ESP_OK) {
+        return;
+    }
+    if (saved.filename[0] == '\0') {
+        return;
+    }
+
+    play_type_t type = (saved.play_type == PLAY_TYPE_HMR) ? PLAY_TYPE_HMR : PLAY_TYPE_MIDI;
+    const midi_file_item_t *files = (type == PLAY_TYPE_HMR) ? s_mp.rec_files : s_mp.midi_files;
+    int count = (type == PLAY_TYPE_HMR) ? s_mp.rec_file_count : s_mp.midi_file_count;
+
+    int idx = midi_find_index_by_name(files, count, saved.filename);
+    if (idx < 0) {
+        /* 保存的曲目已删除，回退到同类型第一首 */
+        if (count > 0) {
+            idx = 0;
+        } else {
+            /* 同类型为空，尝试另一类型 */
+            type = (type == PLAY_TYPE_HMR) ? PLAY_TYPE_MIDI : PLAY_TYPE_HMR;
+            files = (type == PLAY_TYPE_HMR) ? s_mp.rec_files : s_mp.midi_files;
+            count = (type == PLAY_TYPE_HMR) ? s_mp.rec_file_count : s_mp.midi_file_count;
+            if (count > 0) {
+                idx = 0;
+            } else {
+                return;
+            }
+        }
+    }
+
+    s_mp.play_type = type;
+    player_load_file(type, idx);
+    ESP_LOGI(TAG, "restore last: type=%s file=%s", (type == PLAY_TYPE_HMR) ? "hmr" : "midi", files[idx].name);
+}
+
+static int player_current_count(void)
+{
+    return (s_mp.play_type == PLAY_TYPE_HMR) ? s_mp.rec_file_count : s_mp.midi_file_count;
+}
+
+static int player_current_index(void)
+{
+    return (s_mp.play_type == PLAY_TYPE_HMR) ? s_mp.cur_rec_index : s_mp.cur_midi_index;
+}
+
+static void player_play_toggle(void)
+{
+    if (player_event_count() == 0) {
+        int count = player_current_count();
+        if (count > 0) {
+            int idx = (player_current_index() >= 0) ? player_current_index() : 0;
+            player_load_and_play(s_mp.play_type, idx);
+        } else {
+            const char *msg = (s_mp.play_type == PLAY_TYPE_HMR)
+                ? "未找到录音文件" : "未找到 MIDI 文件";
+            app_manager_show_notification_timeout(msg, 0);
+        }
+        return;
+    }
+
+    switch (s_mp.state) {
+        case PLAYER_STATE_PLAYING:
+            player_set_state(PLAYER_STATE_READY);
+            break;
+        case PLAYER_STATE_READY:
+            player_set_state(PLAYER_STATE_PLAYING);
+            break;
+        case PLAYER_STATE_FINISHED:
+            player_seek_percent(0);
+            player_set_state(PLAYER_STATE_PLAYING);
+            break;
+        case PLAYER_STATE_SEEKING:
+            /* 跳转中不响应播放/暂停 */
+            break;
+        default:
+            break;
+    }
+}
+
+static void player_play_step(int delta)
+{
+    int count = player_current_count();
+    if (count == 0) {
+        return;
+    }
+    int next = player_current_index() + delta;
+    if (next < 0 || next >= count) {
+        app_manager_show_notification_timeout(delta < 0 ? "已经是第一首" : "已经是最后一首", 2000);
+        return;
+    }
+    player_load_and_play(s_mp.play_type, next);
+}
+
+/* -------------------- 事件回调 -------------------- */
+
+static void app_midi_player_home_cb(lv_event_t *e)
+{
+    (void)e;
+    app_manager_request_kill_active();
+}
+
+static void app_midi_player_file_cb(lv_event_t *e)
+{
+    int index = (int)(intptr_t)lv_event_get_user_data(e);
+    player_load_and_play(PLAY_TYPE_MIDI, index);
+}
+
+static void app_midi_player_rec_cb(lv_event_t *e)
+{
+    int index = (int)(intptr_t)lv_event_get_user_data(e);
+    player_load_and_play(PLAY_TYPE_HMR, index);
+}
+
+static void app_midi_player_control_cb(lv_event_t *e)
+{
+    lv_obj_t *target = lv_event_get_target_obj(e);
+    if (target == s_midi_ui.prev) {
+        player_play_step(-1);
+    } else if (target == s_midi_ui.next) {
+        player_play_step(1);
+    } else if (target == s_midi_ui.play_stop) {
+        player_play_toggle();
+    }
+}
+
+static void app_midi_player_seek_cb(lv_event_t *e)
+{
+    if (s_ui_progress_mask || s_mp.state == PLAYER_STATE_SEEKING ||
+        lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) {
+        return;
+    }
+    player_seek_percent(lv_slider_get_value(s_midi_ui.progress));
+}
+
+static void app_midi_player_set_open_cb(lv_event_t *e)
+{
+    (void)e;
+    lvgl_port_lock(portMAX_DELAY);
+    if (s_midi_ui.panel_set != NULL) {
+        lv_obj_clear_flag(s_midi_ui.panel_set, LV_OBJ_FLAG_HIDDEN);
+        /* 设置面板吸收点击，防止穿透触发主界面控件 */
+        lv_obj_add_flag(s_midi_ui.panel_set, LV_OBJ_FLAG_CLICKABLE);
+    }
+    lvgl_port_unlock();
+}
+
+static void app_midi_player_set_close_cb(lv_event_t *e)
+{
+    (void)e;
+    lvgl_port_lock(portMAX_DELAY);
+    if (s_midi_ui.panel_set != NULL) {
+        lv_obj_add_flag(s_midi_ui.panel_set, LV_OBJ_FLAG_HIDDEN);
+    }
+    lvgl_port_unlock();
+}
+
+static void midi_update_panel_visibility(void)
+{
+    lvgl_port_lock(portMAX_DELAY);
+    if (s_midi_ui.panel_mid_list != NULL) {
+        if (s_mp.play_type == PLAY_TYPE_MIDI) {
+            lv_obj_clear_flag(s_midi_ui.panel_mid_list, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(s_midi_ui.panel_mid_list, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+    if (s_midi_ui.panel_hmr_list != NULL) {
+        if (s_mp.play_type == PLAY_TYPE_HMR) {
+            lv_obj_clear_flag(s_midi_ui.panel_hmr_list, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(s_midi_ui.panel_hmr_list, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+    lvgl_port_unlock();
+}
+
+static void app_midi_player_play_type_cb(lv_event_t *e)
+{
+    (void)e;
+    if (s_midi_ui.play_type == NULL) {
+        return;
+    }
+
+    lvgl_port_lock(portMAX_DELAY);
+    uint32_t sel = lv_dropdown_get_selected(s_midi_ui.play_type);
+    lvgl_port_unlock();
+
+    play_type_t new_type = (sel == 0) ? PLAY_TYPE_MIDI : PLAY_TYPE_HMR;
+    if (new_type != s_mp.play_type) {
+        s_mp.play_type = new_type;
+        midi_update_panel_visibility();
+        player_midi_save_state();
+        ESP_LOGI(TAG, "play_type=%s", (new_type == PLAY_TYPE_HMR) ? "hmr" : "midi");
+    }
+}
+
+/* -------------------- 文件清单 -------------------- */
+
+static void midi_populate_list(lv_obj_t *list)
+{
+    if (list == NULL) {
+        return;
+    }
+
+    lvgl_port_lock(portMAX_DELAY);
+
+    lv_color_t btn_bg = engine_gui_theme_color(COLOR_CARD);
+    lv_color_t btn_text = engine_gui_theme_color(COLOR_TEXT_PRIMARY);
+    int32_t btn_shadow = 0;
+    if (s_midi_ui.file_example != NULL) {
+        btn_bg = lv_obj_get_style_bg_color(s_midi_ui.file_example, LV_PART_MAIN | LV_STATE_DEFAULT);
+        btn_text = lv_obj_get_style_text_color(s_midi_ui.file_example, LV_PART_MAIN | LV_STATE_DEFAULT);
+        btn_shadow = lv_obj_get_style_shadow_width(s_midi_ui.file_example, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    /* Trap: file_example 是 EEZ 隐藏样式模板，也是列表子控件；lv_obj_clean 会
+     * 连它一起删，后续读其样式即 UAF，改选择性删除保留模板 */
+    if (list == s_midi_ui.list && s_midi_ui.file_example != NULL) {
+        uint32_t child_cnt = lv_obj_get_child_count(list);
+        for (int32_t i = (int32_t)child_cnt - 1; i >= 0; i--) {
+            lv_obj_t *ch = lv_obj_get_child(list, i);
+            if (ch != NULL && ch != s_midi_ui.file_example) {
+                lv_obj_delete(ch);
+            }
+        }
+    } else {
+        lv_obj_clean(list);
+    }
+
+    midi_file_item_t *files = (list == s_midi_ui.list_record) ? s_mp.rec_files : s_mp.midi_files;
+    int count = (list == s_midi_ui.list_record) ? s_mp.rec_file_count : s_mp.midi_file_count;
+    void (*cb)(lv_event_t *) = (list == s_midi_ui.list_record) ? app_midi_player_rec_cb : app_midi_player_file_cb;
+
+    for (int i = 0; i < count; i++) {
+        lv_obj_t *btn = lv_button_create(list);
+        lv_obj_set_size(btn, LV_PCT(100), 50);
+        lv_obj_set_style_bg_color(btn, btn_bg, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(btn, btn_text, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_shadow_width(btn, btn_shadow, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+        lv_obj_t *label = lv_label_create(btn);
+        lv_obj_set_size(label, LV_PCT(99), 34);
+        lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
+        lv_obj_set_style_align(label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_label_set_text_fmt(label, MIDI_FILE_ICON "%s", files[i].name);
+        lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+
+        lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, (void *)(intptr_t)i);
+    }
+    lvgl_port_unlock();
+}
+
+static void midi_populate_all_lists(void)
+{
+    midi_populate_list(s_midi_ui.list);
+    midi_populate_list(s_midi_ui.list_record);
+}
+
+/* -------------------- 生命周期 -------------------- */
+
+static bool app_midi_player_on_init(app_base_t *self, void *screen_ctx)
+{
+    (void)self;
+    ESP_LOGI(TAG, "init");
+
+    /* 每次进入重新扫描：录音随时可能在其他 App 产生，缓存扫描结果会导致
+     * 新录音不显示（目录列表开销小，仅遍历文件名）；当前曲目索引保留 */
+    s_mp.cur_midi_index = -1;
+    s_mp.cur_rec_index = -1;
+    s_mp.play_idx = 0;
+    s_mp.play_time_us = 0;
+    s_mp.last_ui_ms = 0;
+    player_set_state(PLAYER_STATE_IDLE);
+
+    midi_scan_files();
+    midi_populate_all_lists();
+    midi_update_panel_visibility();
+    midi_restore_last_state();
+
+    lvgl_port_lock(portMAX_DELAY);
+
+    if (s_midi_ui.btn_home != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.btn_home, app_midi_player_home_cb, LV_EVENT_CLICKED, NULL);
+    }
+    if (s_midi_ui.btn_set != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.btn_set, app_midi_player_set_open_cb, LV_EVENT_CLICKED, NULL);
+    }
+    if (s_midi_ui.set_btn_return != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.set_btn_return, app_midi_player_set_close_cb, LV_EVENT_CLICKED, NULL);
+    }
+    if (s_midi_ui.prev != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.prev, app_midi_player_control_cb, LV_EVENT_CLICKED, NULL);
+    }
+    if (s_midi_ui.play_stop != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.play_stop, app_midi_player_control_cb, LV_EVENT_CLICKED, NULL);
+    }
+    if (s_midi_ui.next != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.next, app_midi_player_control_cb, LV_EVENT_CLICKED, NULL);
+    }
+    if (s_midi_ui.progress != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.progress, app_midi_player_seek_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    }
+    if (s_midi_ui.play_type != NULL) {
+        lv_obj_add_event_cb(s_midi_ui.play_type, app_midi_player_play_type_cb, LV_EVENT_VALUE_CHANGED, NULL);
+        lv_dropdown_set_selected(s_midi_ui.play_type, (s_mp.play_type == PLAY_TYPE_HMR) ? 1 : 0);
+    }
+    lvgl_port_unlock();
+
+    player_ui_set_icon(false);
+    player_ui_refresh_progress();
+
+    return true;
+}
+
+static void app_midi_player_on_update(app_base_t *self)
+{
+    (void)self;
+
+    if (s_mp.state != PLAYER_STATE_PLAYING) {
+        return;
+    }
+
+    int64_t now = esp_timer_get_time();
+    s_mp.play_time_us += now - s_mp.last_pump_us;
+    s_mp.last_pump_us = now;
+
+    if (s_mp.is_rec) {
+        if (s_mp.rec.events == NULL || s_mp.rec.event_count == 0) {
+            return;
+        }
+
+        while (s_mp.play_idx < s_mp.rec.event_count &&
+               s_mp.rec.events[s_mp.play_idx].time_us <= (uint64_t)s_mp.play_time_us) {
+            engine_midi_rec_event_t *ev = &s_mp.rec.events[s_mp.play_idx];
+            if (ev->type == ENGINE_MIDI_MSG_PITCH_BEND) {
+                midi_send_bend(ev->channel, ev->value);
+            } else if (ev->type != ENGINE_MIDI_MSG_SYSEX) {
+                midi_send(ev->type, ev->channel, ev->data1, ev->data2);
+            }
+            s_mp.play_idx++;
+        }
+
+        if (s_mp.play_idx >= s_mp.rec.event_count) {
+            player_set_state(PLAYER_STATE_FINISHED);
+            ESP_LOGI(TAG, "playback finished");
+            return;
+        }
+    } else {
+        if (s_mp.smf.events == NULL || s_mp.smf.event_count == 0) {
+            return;
+        }
+
+        while (s_mp.play_idx < s_mp.smf.event_count &&
+               s_mp.smf.events[s_mp.play_idx].time_us <= s_mp.play_time_us) {
+            engine_midi_smf_event_t *ev = &s_mp.smf.events[s_mp.play_idx];
+            if (ev->type == 0xE0) {
+                midi_send_bend(ev->channel, (uint16_t)(ev->data1 | ((uint16_t)ev->data2 << 7)));
+            } else {
+                midi_send(ev->type, ev->channel, ev->data1, ev->data2);
+            }
+            s_mp.play_idx++;
+        }
+
+        if (s_mp.play_idx >= s_mp.smf.event_count) {
+            player_set_state(PLAYER_STATE_FINISHED);
+            ESP_LOGI(TAG, "playback finished");
+            return;
+        }
+    }
+
+    uint32_t now_ms = (uint32_t)(now / 1000);
+    if (now_ms - s_mp.last_ui_ms >= MIDI_UI_REFRESH_MS) {
+        s_mp.last_ui_ms = now_ms;
+        player_ui_refresh_progress();
+    }
+}
+
+static void app_midi_player_on_pause(app_base_t *self)
+{
+    (void)self;
+    /* 切出即暂停并静音，保留进度，回来后点播放继续 */
+    player_stop();
+    ESP_LOGI(TAG, "pause");
+}
+
+static void app_midi_player_on_resume(app_base_t *self)
+{
+    (void)self;
+    player_ui_refresh_progress();
+    ESP_LOGI(TAG, "resume");
+}
+
+static void app_midi_player_on_destroy(app_base_t *self)
+{
+    (void)self;
+    player_set_state(PLAYER_STATE_IDLE);
+    midi_all_notes_off();
+
+    /* 移除 on_init 注册的事件回调：EEZ 屏幕对象持久存在，
+     * 不移除会在再次进入时重复注册导致一次事件多次触发 */
+    lvgl_port_lock(portMAX_DELAY);
+    if (s_midi_ui.btn_home != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.btn_home, app_midi_player_home_cb);
+    }
+    if (s_midi_ui.btn_set != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.btn_set, app_midi_player_set_open_cb);
+    }
+    if (s_midi_ui.set_btn_return != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.set_btn_return, app_midi_player_set_close_cb);
+    }
+    if (s_midi_ui.prev != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.prev, app_midi_player_control_cb);
+    }
+    if (s_midi_ui.play_stop != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.play_stop, app_midi_player_control_cb);
+    }
+    if (s_midi_ui.next != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.next, app_midi_player_control_cb);
+    }
+    if (s_midi_ui.progress != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.progress, app_midi_player_seek_cb);
+    }
+    if (s_midi_ui.play_type != NULL) {
+        lv_obj_remove_event_cb(s_midi_ui.play_type, app_midi_player_play_type_cb);
+    }
+    lvgl_port_unlock();
+
+    /* 事件缓冲随曲目释放；扫描缓存按设计保留到下次开机 */
+    if (s_mp.is_rec) {
+        engine_midi_rec_free(&s_mp.rec);
+    } else {
+        engine_midi_smf_free(&s_mp.smf);
+    }
+    s_mp.is_rec = false;
+    s_mp.cur_midi_index = -1;
+    s_mp.cur_rec_index = -1;
+
+    ESP_LOGI(TAG, "destroy");
+}
+
+esp_err_t app_midi_player_register(void)
+{
+    static app_base_t app = {
+        .name = "MIDI Player",
+        .screen_name = "app_midi_player",
+        .screen_ctx = &s_midi_ui,
+        .screen_ctx_size = sizeof(s_midi_ui),
+        .widget_bindings = s_midi_bindings,
+        .on_init = app_midi_player_on_init,
+        .on_update = app_midi_player_on_update,
+        .on_pause = app_midi_player_on_pause,
+        .on_resume = app_midi_player_on_resume,
+        .on_destroy = app_midi_player_on_destroy,
+    };
+    return app_manager_register(&app);
+}

@@ -1,0 +1,29 @@
+menu "Service Power Management"
+
+    config SERVICE_POWER_ENABLE
+        bool "Enable power management service"
+        default y
+        help
+            Enable INA226 battery monitor, charge/5V control and power-off for M5Stack Tab5.
+
+    config SERVICE_POWER_INA226_I2C_ADDR
+        hex "INA226 I2C address"
+        default 0x41
+
+    config SERVICE_POWER_INA226_SHUNT_MILLIOHM
+        int "INA226 shunt resistor (milliohm)"
+        default 5
+
+    config SERVICE_POWER_INA226_MAX_CURRENT_MA
+        int "INA226 max current (mA)"
+        default 8192
+
+    config SERVICE_POWER_BAT_LOW_MV
+        int "Low battery threshold (mV)"
+        default 3300
+
+    config SERVICE_POWER_POLL_PERIOD_MS
+        int "Battery poll period (ms)"
+        default 100
+
+endmenu

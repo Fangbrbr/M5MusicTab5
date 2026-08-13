@@ -1,0 +1,15 @@
+{
+  "name": "M5MusicTab5 应用固件",
+  "version": "latest",
+  "builds": [
+    {
+      "chipFamily": "ESP32-P4",
+      "parts": [
+        {
+          "path": "0x10000_app_TAB5_Music_Pad.bin",
+          "offset": 65536
+        }
+      ]
+    }
+  ]
+}

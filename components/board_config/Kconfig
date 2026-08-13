@@ -1,0 +1,80 @@
+menu "Board Selection"
+
+    choice BOARD_TYPE
+        prompt "Board Type"
+        default BOARD_TYPE_TAB5
+        help
+            选择目标开发板。切换板卡后必须执行 idf.py fullclean 重新配置构建，
+            否则 CMake 缓存中的组件依赖不会更新。
+
+    config BOARD_TYPE_TAB5
+        bool "M5Stack Tab5 (5.0 inch 1280x720)"
+
+    config BOARD_TYPE_JC4880P443
+        bool "Guition JC4880P443 (4.3 inch 800x480)"
+
+    endchoice
+
+    # 外设能力按板派生。JC4880P443 无 IMU/RTC/SD/电池管理/耳机孔，
+    # WiFi(C6 协处理器) 硬件连接未确认，v1 全部关闭，确认硬件后逐个打开。
+    config BOARD_HAS_POWER_MGMT
+        bool "Board has IO-expander power management (INA226/charge/shutdown)"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_BATTERY
+        bool "Board has battery fuel gauge"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_HEADPHONE
+        bool "Board has headphone jack detect"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_IMU
+        bool "Board has BMI270 IMU"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_RTC
+        bool "Board has RX8130CE RTC"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_SD
+        bool "Board has SD card slot"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_MIC
+        bool "Board has microphone input for voice frontend"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_WIFI
+        bool "Board has WiFi/BLE coprocessor (esp_hosted)"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_USB_HOST
+        bool "Board has USB-A host port"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_USB_DEVICE
+        bool "Board has USB device (MSC) support"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_HAS_UART_MIDI
+        bool "Board has UART MIDI in/out pins"
+        default y if BOARD_TYPE_TAB5
+        default n
+
+    config BOARD_NAME
+        string
+        default "tab5" if BOARD_TYPE_TAB5
+        default "jc4880p443" if BOARD_TYPE_JC4880P443
+
+endmenu
