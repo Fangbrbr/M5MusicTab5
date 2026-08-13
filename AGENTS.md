@@ -86,6 +86,7 @@ $env:PATH = 'S:\Espressif\python_env\idf5.4_py3.11_env\Scripts;S:\Espressif\tool
 | `sf2_list_presets.py` | 列出 SF2 音色 bank/program/名称 |
 | `sync_ui_bins.py` | 同步 UI 二进制资源：维护 `EMBED_FILES`、VFS 嵌入表 |
 | `gen_arch.py` | 生成/刷新 `doc/项目架构.md` 骨架 |
+| `public_release.sh` | 开源仓一次性发布：公仓 tip 为父压单提交 + 打 tag 推送（默认 dry-run，`--push` 才执行；仅用户明确要公开更新时用） |
 
 ---
 
@@ -167,6 +168,14 @@ UI 字体/图片二进制资源（`components/engine_gui/src/ui/*.bin`）通过 
 - 关于页显示与 `main.c` 启动日志均使用编译宏 `FIRMWARE_VERSION`；构建日期取 `esp_app_desc_t.date`。
 - git 完全不可用（如源码 zip 构建）→ 版本为 `unknown` 并在构建期输出 WARNING。
 - `FW_VERSION_OVERRIDE` 仅在 cmake configure 时读取；本地用过 override 后须 `idf.py reconfigure`（或 fullclean）才能回到 git 版本。
+
+公仓发布流（`tools/public_release.sh`，v1.0.2 起）：
+
+- **红线：仅在用户明确决定公开更新时执行**；日常开发只走本地 `main` + 私有 remote（MusicPad5）。**禁止把本地 main 直接 push 到公仓**——公仓历史必须是一串"版本快照"单提交，私有历史绝不外传。
+- 用法：`tools/public_release.sh vX.Y.Z -m "英文提交信息" --push`（不带 `--push` 为 dry-run，只展示计划与两版 diff）。
+- 机制：新提交 tree = 本地 HEAD、父 = 公仓 main tip（脚本护栏强制校验父链，历史泄漏即中止）；tag 必须 `va.b.c` 且未占用，推送即触发 release CI。
+- 剔除：`.publicignore`（每行一个仓库相对路径）中的路径仅保留在本地/私有仓，公仓 tree 构建时剔除（当前含 `tools/public_release.sh` 自身——内部工具不属于开源门面）。
+- 前置条件：工作区干净、公仓与本地存在内容差异；提交信息按本次迭代内容准确撰写（公仓历史为英文风格）。
 
 ---
 

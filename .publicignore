@@ -1,0 +1,4 @@
+# 公仓发布剔除清单（tools/public_release.sh 使用）
+# 每行一个仓库相对路径：仅在公仓 tree 中排除，本地/私有仓保留
+# 内部发布工具自身（含私有 remote 名与内部工作流，不属于开源门面）
+tools/public_release.sh
