@@ -24,10 +24,10 @@
 - **12 个内置 App** — 禅模式 / 练耳 / 和弦练习 / 五度圈 / 小钢琴 / 组鼓 / MIDI 播放器 / XY Pad / 节拍器 / AI 语音助手 / 时钟日历 / 趣味抽卡
 - **SF2 采样合成器** — 基于 SoundFont 2 的真实乐器采样合成
 - **全局 MIDI 总线** — 支持 USB Host、蓝牙、UART 多路 MIDI 输入，生产者/消费者解耦架构
-- **演奏录制与回放** — 支持录制的 App 点击录制按钮开始、再点停止；演奏以 .hmr（MIDI 事件流）存入 SD 卡，MIDI 播放器中一键回放
+- **演奏录制与回放** — 支持录制的 App 点击录制按钮开始、再点停止，你的灵感不再随风而逝；演奏以 .hmr（MIDI 事件流）存入 SD 卡，MIDI 播放器App中一键回放
 - **FTP 无线文件管理** — 设置页一键开启，免拔卡免接线，局域网内用 FileZilla / 资源管理器直接管理 SD 卡全部文件（传 MIDI 曲、取演奏录音等）
 - **EEZ Studio 可视化 UI** — 前后端完全隔离，所见即所得的界面设计
-- **小智 AI 语音 + MCP 设备控制** — 语音对话 + 设备控制（查询设备信息、软件信息，控制亮度/音量/主题/启动 App）
+- **小智 AI 语音 + MCP 设备控制** — 语音对话 + 设备控制（查询设备与固件信息，控制亮度/音量/主题/启动 App）
 - **实时时钟 + 联网功能** — 天气/新闻/农历/黄历
 
 ---
@@ -413,6 +413,16 @@ esptool.py --chip esp32p4 -p COMx write_flash 0x10000 xxx_app.bin
 ### 数据接口
 - [一言 Hitokoto](https://hitokoto.cn) — 每日一言 API
 - [uAPI 天气](https://uapis.cn) — 实时天气 API
+
+### 大模型
+
+本项目开发过程中使用了以下大模型 / AI 工具辅助设计、编码与调试：
+
+- [Kimi](https://www.kimi.com) — 月之暗面（Moonshot AI）AI 助手
+- [豆包 Seedance](https://seed.bytedance.com/zh/) — 字节跳动 Seed 团队多模态大模型
+- [Qwen 3.8](https://qwen.ai) — 阿里通义千问大模型
+- [Trae](https://www.trae.ai) — 字节跳动 AI 编程 IDE
+- [美团 LongCat](https://longcat.ai) — 美团 LongCat 开源大模型
 
 ---
 
