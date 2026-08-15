@@ -171,6 +171,23 @@ static void ear_midi_note(uint8_t note, uint8_t velocity)
     engine_midi_publish(&midi, 0);
 }
 
+/* Why: 本 App 不设音色，channel 0 会继承上一个 App 的 Program（如 XY Pad
+ * 退出后试听全变弦乐）；初始化显式回 GM 默认（Bank MSB/LSB=0 + PC=0） */
+static void ear_reset_timbre(void)
+{
+    engine_midi_event_t evt = {0};
+    evt.type = ENGINE_MIDI_MSG_CONTROL_CHANGE;
+    evt.channel = 0;
+    evt.data1 = 0;   /* CC0 Bank MSB */
+    evt.source_port = ENGINE_MIDI_PORT_APP;
+    engine_midi_publish(&evt, 0);
+    evt.data1 = 32;  /* CC32 Bank LSB */
+    engine_midi_publish(&evt, 0);
+    evt.type = ENGINE_MIDI_MSG_PROGRAM_CHANGE;
+    evt.data1 = 0;
+    engine_midi_publish(&evt, 0);
+}
+
 static void ear_play_note(uint8_t note, uint32_t duration_ms, uint32_t delay_ms)
 {
     if (s_active_note_count >= EAR_ACTIVE_NOTES_MAX) {
@@ -714,6 +731,8 @@ static bool app_ear_trainer_on_init(app_base_t *self, void *screen_ctx)
     s_state.practice_mode = true; /* 默认练习模式，对应 ear_trainer_test 下拉框索引 1 */
     s_state.welcome_until_us = esp_timer_get_time() + (int64_t)EAR_WELCOME_MS * 1000;
     s_state.welcome_switched = false;
+
+    ear_reset_timbre();
 
     /* 新开局：重置分数/血量、应用控件可见性、生成首题并贴引导通知 */
     ear_restart_game();

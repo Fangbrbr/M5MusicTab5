@@ -225,6 +225,23 @@ static void zen_send_note_off(uint8_t note)
     engine_midi_publish(&midi, 0);
 }
 
+/* Why: 本 App 不设音色，channel 0 会继承上一个 App 的 Program（如 XY Pad
+ * 退出后试听全变弦乐）；初始化显式回 GM 默认（Bank MSB/LSB=0 + PC=0） */
+static void zen_reset_timbre(void)
+{
+    engine_midi_event_t evt = {0};
+    evt.type = ENGINE_MIDI_MSG_CONTROL_CHANGE;
+    evt.channel = 0;
+    evt.data1 = 0;   /* CC0 Bank MSB */
+    evt.source_port = ENGINE_MIDI_PORT_APP;
+    engine_midi_publish(&evt, 0);
+    evt.data1 = 32;  /* CC32 Bank LSB */
+    engine_midi_publish(&evt, 0);
+    evt.type = ENGINE_MIDI_MSG_PROGRAM_CHANGE;
+    evt.data1 = 0;
+    engine_midi_publish(&evt, 0);
+}
+
 /* 槽位单音限制：新音触发前必须关闭该槽位正在发声的音，note_off 由 zen_update 统一计时 */
 static void zen_note_trigger(uint8_t note, uint8_t velocity,
                              uint8_t *playing_note, uint32_t *note_on_ms,
@@ -1084,6 +1101,8 @@ static bool app_zen_on_init(app_base_t *self, void *screen_ctx)
     s_zen.speed_sel = 2;
     s_zen.last_update_ms = zen_now_ms();
 
+    zen_reset_timbre();
+
     ui_screen_zen_t *ui = (ui_screen_zen_t *)screen_ctx;
 
     if (ui->canvas == NULL || lv_obj_get_class(ui->canvas) != &lv_canvas_class) {
@@ -1095,6 +1114,7 @@ static bool app_zen_on_init(app_base_t *self, void *screen_ctx)
     s_zen.canvas_buf = heap_caps_calloc(1, buf_size, MALLOC_CAP_SPIRAM);
     if (s_zen.canvas_buf == NULL) {
         ESP_LOGE(TAG, "canvas buf alloc failed");
+        app_manager_show_notification_timeout("内存不足，禅模式无法打开（音源过大时请换小音源）", 3000);
         return false;
     }
 

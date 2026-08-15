@@ -40,6 +40,7 @@ static const char *TAG = "service_nvs";
 #define SERVICE_NVS_KEY_BOOT_SCREEN     "boot_screen"
 #define SERVICE_NVS_KEY_PIANO           "piano"
 #define SERVICE_NVS_KEY_DRUM            "drum_pad"
+#define SERVICE_NVS_KEY_SF2_SOURCE      "sf2_src"
 
 #define SERVICE_NVS_DIRTY_INIT      (1U << 0)
 #define SERVICE_NVS_DIRTY_BOOTCNT   (1U << 1)
@@ -1447,6 +1448,55 @@ esp_err_t service_nvs_set_midi_player(const service_nvs_midi_player_t *in)
     }
 
     esp_err_t ret = nvs_set_blob(s_handle, SERVICE_NVS_KEY_MIDI_PLAYER, in, sizeof(*in));
+    if (ret == ESP_OK) {
+        ret = nvs_commit(s_handle);
+    }
+
+    service_nvs_give();
+    return ret;
+}
+
+/* SF2 音源选择：直写直提（同 midi_player），空串 = 内部预设 */
+esp_err_t service_nvs_get_sf2_source(char *out, size_t len)
+{
+    if (out == NULL || len == 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (s_handle == 0) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if (!service_nvs_take()) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    size_t actual = len;
+    esp_err_t ret = nvs_get_str(s_handle, SERVICE_NVS_KEY_SF2_SOURCE, out, &actual);
+    if (ret == ESP_ERR_NVS_NOT_FOUND) {
+        out[0] = '\0';
+        ret = ESP_OK;
+    }
+
+    service_nvs_give();
+    return ret;
+}
+
+esp_err_t service_nvs_set_sf2_source(const char *name)
+{
+    if (name == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (s_handle == 0) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if (!service_nvs_take()) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    esp_err_t ret = nvs_set_str(s_handle, SERVICE_NVS_KEY_SF2_SOURCE, name);
     if (ret == ESP_OK) {
         ret = nvs_commit(s_handle);
     }

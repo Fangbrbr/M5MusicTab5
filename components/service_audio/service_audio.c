@@ -57,6 +57,11 @@ static int32_t                   s_volume = 70;
 static int32_t                   s_pending_volume = 70;
 static volatile bool             s_volume_pending = false;
 
+/* 耳机插入时音量自动衰减系数：实际应用档位 = 显示档位 × 0.6（线性 -4.4 dB）。
+ * 经 perceptual 曲线后高音量档衰减更明显（UI 70 → 42 → codec≈56 ≈ -16 dB），
+ * 显示音量与 NVS 保持不变，拔出耳机恢复原值。听感偏大/偏小调此处系数。 */
+#define SERVICE_AUDIO_HEADPHONE_VOL_SCALE  0.6f
+
 /* Perceptual 音量曲线：UI 档位 (0-100) → ES8388 codec 档位 (0-100)
  *
  * 假设 esp_codec_dev_set_out_vol(v) 内部把 0-100 线性映射到 -60 dB ~ 0 dB
@@ -149,6 +154,7 @@ static const audio_source_ops_t *service_audio_find_ops(audio_source_t source);
 static esp_err_t service_audio_codec_open(void);
 static void service_audio_headphone_route_update(void);
 static void service_audio_apply_pending_volume(void);
+static int32_t service_audio_effective_volume(int32_t ui);
 static void service_audio_power_event_cb(service_power_event_t evt, void *user_data);
 static inline float service_audio_soft_limit(float x);
 static void service_audio_mix_aux(float *buffer_lr, uint32_t frames);
@@ -192,7 +198,8 @@ esp_err_t service_audio_init(void)
         return ESP_FAIL;
     }
 
-    esp_codec_dev_set_out_vol(s_spk_codec, service_audio_ui_to_codec(s_volume));
+    esp_codec_dev_set_out_vol(s_spk_codec,
+                              service_audio_ui_to_codec(service_audio_effective_volume(s_volume)));
 
     /* 根据耳机插入状态初始化扬声器/耳机路由 */
     bool headphone_connected = service_power_is_headphone_connected();
@@ -298,12 +305,22 @@ audio_source_t service_audio_get_active_source(void)
     return s_active_source;
 }
 
-void service_audio_process(void)
+esp_err_t service_audio_deactivate_sf2(void)
 {
-    if (s_active_ops == NULL || s_active_ops->render_stereo == NULL) {
-        return;
+    if (s_active_source != AUDIO_SOURCE_SF2) {
+        return ESP_ERR_INVALID_STATE;
     }
 
+    /* 不调 s_active_ops->deinit()：保留 SF2 源注册与音色缓存，
+     * 仅置 active 为 NONE 使渲染路径静音；恢复走 activate_sf2 轻量重入 */
+    s_active_ops = NULL;
+    s_active_source = AUDIO_SOURCE_NONE;
+    ESP_LOGI(TAG, "deactivate source (render muted)");
+    return ESP_OK;
+}
+
+void service_audio_process(void)
+{
     /* 全双工路径（mic 与扬声器同采样率）：I2S TX/RX 并行，渲染继续。
      * 半双工路径（旧 16kHz mic）：扬声器 I2S 被占用，跳过渲染。 */
     if (s_mic_recording && !s_mic_full_duplex) {
@@ -320,9 +337,14 @@ void service_audio_process(void)
         xSemaphoreGive(s_codec_mutex);
     }
 
-    /* 渲染当前源（float 域），混入辅助 PCM 流（TTS/MP3 第二发声通道） */
+    /* 渲染当前源（float 域），混入辅助 PCM 流（TTS/MP3 第二发声通道）。
+     * 无活跃源时主声道保持静音，但 aux 仍须照常输出：MP3 独占播放期
+     * SF2 被 deactivate（active=NONE），若在此短路则整个 I2S 输出被跳过，
+     * aux 的 MP3 PCM 也不会有声音。 */
     memset(s_render_buffer, 0, sizeof(s_render_buffer));
-    s_active_ops->render_stereo(s_render_buffer, SERVICE_AUDIO_FRAMES_PER_PERIOD);
+    if (s_active_ops != NULL && s_active_ops->render_stereo != NULL) {
+        s_active_ops->render_stereo(s_render_buffer, SERVICE_AUDIO_FRAMES_PER_PERIOD);
+    }
     service_audio_mix_aux(s_render_buffer, SERVICE_AUDIO_FRAMES_PER_PERIOD);
 
     /* 软限幅收口后转 int16 输出，顺带统计峰值/拐点次数 */
@@ -384,6 +406,16 @@ esp_err_t service_audio_set_volume(int32_t volume)
     return ESP_OK;
 }
 
+/* 实际应用的 UI 音量档位：耳机插入时按系数衰减，显示音量（s_volume）不变。
+ * 无耳机检测硬件的板（service_power stub 返回 false）恒为不衰减。 */
+static int32_t service_audio_effective_volume(int32_t ui)
+{
+    if (service_power_is_headphone_connected()) {
+        ui = (int32_t)(ui * SERVICE_AUDIO_HEADPHONE_VOL_SCALE);
+    }
+    return ui;
+}
+
 static void service_audio_apply_pending_volume(void)
 {
     if (!s_volume_pending) {
@@ -397,7 +429,8 @@ static void service_audio_apply_pending_volume(void)
     }
 
     int ret = esp_codec_dev_set_out_vol(s_spk_codec,
-                                        service_audio_ui_to_codec(s_pending_volume));
+                                        service_audio_ui_to_codec(
+                                            service_audio_effective_volume(s_pending_volume)));
     if (ret != 0) {
         ESP_LOGW(TAG, "set volume failed: %d", ret);
     }
@@ -803,6 +836,11 @@ static void service_audio_headphone_route_update(void)
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "speaker route failed: %d", ret);
     }
+
+    /* 耳机音量自动衰减策略：插入/拔出后重应用当前音量，实际输出按耳机状态缩放
+     * （显示音量不变）。复用 Core 1 pending 机制，事件上下文不直接写 codec */
+    s_pending_volume = s_volume;
+    s_volume_pending = true;
 }
 
 static void service_audio_power_event_cb(service_power_event_t evt, void *user_data)

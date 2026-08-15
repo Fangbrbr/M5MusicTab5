@@ -88,7 +88,7 @@ typedef struct {
 typedef struct {
     uint8_t sound_type;       /*!< 钢琴音色类型 0~15 (0=三角大钢琴，1=亮音钢琴，...,15=扬琴) */
     uint8_t display;          /*!< 显示布局 0=矩阵垫，1=钢琴键盘 */
-    uint8_t scale;            /*!< 音阶索引 0~4 */
+    uint8_t scale;            /*!< 音阶索引 0~5（大调/小调/中国五声/埃及调式/多利亚/日本调式） */
     uint8_t root_oct;         /*!< 根音符八度 0~6 */
     uint8_t pitch;            /*!< 键盘根音音名 0~11（0=C，1=C#，…，11=B） */
     uint8_t reserved[3];      /*!< 对齐保留 */
@@ -387,6 +387,21 @@ void service_nvs_get_drum(service_nvs_drum_t *out);
 
 /** @brief 写入鼓垫 App 参数（标记脏，由 service_nvs_commit 统一落盘） */
 esp_err_t service_nvs_set_drum(const service_nvs_drum_t *params);
+
+/** @brief SF2 音源文件名最大长度（与 engine_sf2 扫描缓存一致） */
+#define SERVICE_NVS_SF2_SOURCE_MAX_LEN 96
+
+/**
+ * @brief 读取 SF2 音源选择
+ * @param[out] out 文件名输出（不含路径）；空串 = 内部预设（含未初始化）
+ */
+esp_err_t service_nvs_get_sf2_source(char *out, size_t len);
+
+/**
+ * @brief 写入 SF2 音源选择（setter 内直接提交落盘）
+ * @param[in] name SD 文件名（不含路径）；空串 = 内部预设
+ */
+esp_err_t service_nvs_set_sf2_source(const char *name);
 
 
 /**

@@ -26,6 +26,7 @@
 #include "config.h"
 #include <float.h>
 #include <math.h>
+#include "esp_timer.h"
 #include <FS.h>
 #include <SD_MMC.h>
 #include <LittleFS.h>
@@ -64,7 +65,9 @@ Synth::Synth(SF2Parser& parserRef) : parser(parserRef) {
         voices[i].init();
     }
 
-    volume_scaler = 1.0f / sqrtf(MAX_VOICES);
+    // PATCH(P18): 增益基准固定为 48 声部（SF2_VOICE_GAIN_REF），与 MAX_VOICES 解耦：
+    // 扩容到 96 后仍按 1/sqrt(48) 归一，避免全局响度随声部数上调而下掉 ~3dB
+    volume_scaler = 1.0f / sqrtf(SF2_VOICE_GAIN_REF);
 }
 
 // PATCH(P1): 移除 Synth::begin()（依赖已剔除的 loadSynthState；适配层直接调 loadSf2File）
@@ -130,6 +133,16 @@ void Synth::noteOn(uint8_t ch, uint8_t note, uint8_t vel) {
         }
     } else {
         // Polyphonic: start new voices normally
+        // PATCH(P21): 同音 re-trigger 清理——同 channel 同 note 且已松开（noteHeld==false、
+        // release 余音）的旧 voice 先 kill 再启动新声。必须用 kill()（END_NOW+active=false）
+        // 而非 die()：die() 只进快释放、active 仍 true，尾音 voice 持续占槽位。大型音源
+        // 一个键映射 6 个 zone（力度分层），快速连击时余音 voice 不释放会把 64 复音池塞满，
+        // 新 noteOn 被迫 steal score=0 的 voice 而被掐音（只剩尾音）。kill 立即释放槽位根治此问题
+        for (Voice& v : voices) {
+            if (v.active && v.channel == ch && v.note == note && !v.noteHeld) {
+                v.kill();
+            }
+        }
         for (auto& zone : zones) {
             if (!zone.sample) continue;
             float score = vel * DIV_127;
@@ -574,8 +587,18 @@ Voice* Synth::findWeakestVoiceOnNote(uint8_t ch, uint8_t note, float newScore, u
         }
     }
 
-    if (count >= MAX_VOICES_PER_NOTE && weakest)// && weakestScore < newScore)
+    if (count >= MAX_VOICES_PER_NOTE && weakest) {
+        // PATCH(P19): 同音复音耗尽诊断——同一 note 已有 MAX_VOICES_PER_NOTE 个活跃 voice
+        // 仍被再次触发，返回最弱 voice 供 startNew 复用（startNew 会完整重置包络/相位）
+        // 限频 1 条/秒，防密集复音刷屏
+        static int64_t last_log_us = 0;
+        int64_t now_us = esp_timer_get_time();
+        if (now_us - last_log_us > 1000000LL) {
+            last_log_us = now_us;
+            ESP_LOGW(TAG, "voice reuse same-note: count=%d weakestScore=%.4f", count, weakestScore);
+        }
         return weakest;
+    }
 
     return nullptr;
 }
@@ -594,6 +617,16 @@ Voice* Synth::findWorstVoice() {
         }
     }
 
+    // PATCH(P19): 全局复音耗尽诊断——所有 voice 均活跃/运行中才走到这里，
+    // 被迫偷取最低分 voice。若连击轻音与"polyphony exhausted"日志同步出现，
+    // 即为复音池耗尽；扩容 MAX_VOICES 是对策。限频 1 条/秒
+    static int64_t last_log_us = 0;
+    int64_t now_us = esp_timer_get_time();
+    if (now_us - last_log_us > 1000000LL) {
+        last_log_us = now_us;
+        ESP_LOGW(TAG, "polyphony exhausted: steal voice score=%.4f active=%d",
+                 worst ? worst->score : -1.0f, MAX_VOICES);
+    }
     return worst;
 }
 

@@ -23,6 +23,10 @@
  */
 
 #include "SF2Parser.h"
+
+// PATCH(P20): 采样分配失败时的共享静音缓冲（2 帧零样本）。
+// 静态存储，clear() 不释放；绑定后 zone 静音发声、立即结束
+static uint8_t s_silence_data[4] = {0, 0, 0, 0};
 #include "esp_log.h"
 #include "operators.h"
 
@@ -690,8 +694,6 @@ bool SF2Parser::loadSampleDataToMemory() {
 
     ESP_LOGI(TAG, "Reading sample data: offset=%u size=%u", smplStart, smplSize);
 
-    SampleHeader* fallback = nullptr;
-
     for (size_t i = 0; i < samples.size(); ++i) {
 
         // PATCH(P3): 采样加载进度上报（0-100），供 boot 进度条
@@ -714,26 +716,21 @@ bool SF2Parser::loadSampleDataToMemory() {
         if (!s.data) {
             ESP_LOGE(TAG, "PSRAM allocation failed for sample %zu (%s), size=%u", i, s.name, length * 2);
 
-            if (fallback) {
-                // Fallback: bind to first loaded sample
-                s.data = fallback->data;
-                s.dataSize = fallback->dataSize;
-                s.start = fallback->start;
-                s.end = fallback->end;
-                s.startLoop = fallback->startLoop;
-                s.endLoop = fallback->endLoop;
-                s.sampleRate = fallback->sampleRate;
-                s.originalPitch = fallback->originalPitch;
-                s.pitchCorrection = fallback->pitchCorrection;
-                s.sampleLink = fallback->sampleLink;
-                s.sampleType = fallback->sampleType;
-
-                ESP_LOGW(TAG, "Sample %zu (%s) will use fallback sample", i, s.name);
-                continue;
-            } else {
-                ESP_LOGE(TAG, "No fallback sample available — aborting");
-                return false;
-            }
+            // PATCH(P20): 分配失败绑定共享静音采样，而非首个已加载采样——
+            // 上游 fallback 别名让大量 zone 共享同一波形，复音时多个 voice 相位
+            // 重叠、相互干扰产生刺耳噪音；静音绑定后该 zone 静音发声并立即结束
+            s.data = s_silence_data;
+            s.dataSize = sizeof(s_silence_data);
+            s.start = 0;
+            s.end = 2;               /* 2 帧静音，NO_LOOP 一瞬即止 */
+            s.startLoop = 0;
+            s.endLoop = 0;
+            s.sampleRate = 44100;
+            s.originalPitch = 60;
+            s.pitchCorrection = 0;
+            s.sampleLink = 0;
+            s.sampleType = 0;
+            continue;
         }
 
         file.seek(smplStart + s.start * 2); // 16-bit PCM
@@ -741,9 +738,6 @@ bool SF2Parser::loadSampleDataToMemory() {
         s.dataSize = length * 2;
 
         ESP_LOGD(TAG, "Loaded sample %zu: %s (offset=%u length=%u)", i, s.name, s.start, length);
-
-        if (!fallback)
-            fallback = &s;
     }
 
     return true;
@@ -751,11 +745,14 @@ bool SF2Parser::loadSampleDataToMemory() {
 
 
 void SF2Parser::clear() {
-    // PATCH(P8): 修复双重释放——PSRAM 不足时 fallback 别名会让多个 header 共享
-    // 同一 data 指针，只释放唯一指针；比较基于原始指针值（free 不改已存值），
-    // 全部判定完再统一清空
+    // PATCH(P8/P20): 防重复释放——分配失败可能绑定共享静音采样，多 header 共享
+    // 同一指针；只释放唯一指针（比较原始指针值），静音静态缓冲跳过，全部判定完再清空
     for (size_t i = 0; i < samples.size(); ++i) {
         if (samples[i].data == nullptr) {
+            continue;
+        }
+        // PATCH(P20): 共享静音采样为静态存储，不得释放
+        if (samples[i].data == s_silence_data) {
             continue;
         }
         bool alias = false;

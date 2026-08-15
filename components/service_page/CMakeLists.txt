@@ -9,6 +9,7 @@ idf_component_register(SRCS "service_page.c"
                        INCLUDE_DIRS "include"
                        REQUIRES app_manager
                                 engine_gui
+                                engine_sf2
                                 service_nvs
                                 service_audio
                                 service_i18n

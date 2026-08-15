@@ -137,6 +137,23 @@ static void fifth_midi_note(uint8_t note, uint8_t velocity)
     engine_midi_publish(&midi, 0);
 }
 
+/* Why: 本 App 不设音色，channel 0 会继承上一个 App 的 Program（如 XY Pad
+ * 退出后试听全变弦乐）；初始化显式回 GM 默认（Bank MSB/LSB=0 + PC=0） */
+static void fifth_reset_timbre(void)
+{
+    engine_midi_event_t evt = {0};
+    evt.type = ENGINE_MIDI_MSG_CONTROL_CHANGE;
+    evt.channel = 0;
+    evt.data1 = 0;   /* CC0 Bank MSB */
+    evt.source_port = ENGINE_MIDI_PORT_APP;
+    engine_midi_publish(&evt, 0);
+    evt.data1 = 32;  /* CC32 Bank LSB */
+    engine_midi_publish(&evt, 0);
+    evt.type = ENGINE_MIDI_MSG_PROGRAM_CHANGE;
+    evt.data1 = 0;
+    engine_midi_publish(&evt, 0);
+}
+
 static void fifth_stop_all_notes(void)
 {
     for (int i = 0; i < s_fifth.note_count; i++)
@@ -575,6 +592,8 @@ static bool app_circle_of_fifths_on_init(app_base_t *self, void *screen_ctx)
     (void)screen_ctx;
     ESP_LOGI(TAG, "init");
     memset(&s_fifth, 0, sizeof(s_fifth));
+
+    fifth_reset_timbre();
 
     lvgl_port_lock(portMAX_DELAY);
     if (s_fifth_ui.canvas_piano)

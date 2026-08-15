@@ -9,6 +9,8 @@
 #include "service_page_setting.h"
 #include "screens.h"
 #include "engine_gui.h"
+#include "engine_sf2.h"
+#include "app_manager.h"
 #include "service_nvs.h"
 #include "service_power.h"
 #include "service_audio.h"
@@ -293,6 +295,208 @@ static void setting_wifi_switch_cb(lv_event_t *e)
     setting_update_wifi_tip();
 }
 
+/* -------------------- SF2 音源选择 -------------------- */
+
+/* 下拉文件名显示上限 15 字节：超出截前 12 字节 + "..."（UTF-8 序列不切半） */
+#define SETTING_SF2_DISPLAY_MAX   15
+#define SETTING_SF2_DISPLAY_CUT   12
+
+static char s_sf2_options[ENGINE_SF2_SD_MAX_FILES * (ENGINE_SF2_SD_NAME_MAX_LEN + 8) + 16];
+static bool s_sf2_ui_syncing = false;     /* 程序化 set_selected 期间屏蔽伪 VALUE_CHANGED */
+static int  s_sf2_pending = -1;           /* 待执行的音源选择（-1 无），process 异步消化 */
+static bool s_sf2_need_validate = false;  /* SD 内容变更后校验当前音源 */
+static int  s_sf2_last_percent = -1;      /* 进度节流：整百分比变化才刷通知，跨加载复位 */
+
+/* 文件名 → 下拉显示文本：超 15 字节截为 12 + "..."，回退避免切断 UTF-8 序列 */
+static void setting_sf2_format_display(const char *name, char *out, size_t out_len)
+{
+    size_t len = strlen(name);
+    if (len <= SETTING_SF2_DISPLAY_MAX) {
+        snprintf(out, out_len, "%s", name);
+        return;
+    }
+    size_t cut = SETTING_SF2_DISPLAY_CUT;
+    while (cut > 0 && ((unsigned char)name[cut] & 0xC0) == 0x80) {
+        cut--;
+    }
+    snprintf(out, out_len, "%.*s...", (int)cut, name);
+}
+
+/* 当前生效音源对应的下拉索引：0=内部预设，i+1=SD 文件；未匹配（陈旧）归 0 */
+static uint16_t setting_sf2_current_index(void)
+{
+    const char *cur = engine_sf2_current_source();
+    if (cur[0] == '\0') {
+        return 0;
+    }
+    for (int i = 0; i < ENGINE_SF2_SD_MAX_FILES; i++) {
+        const char *name = engine_sf2_sd_name_at(i);
+        if (name == NULL) {
+            break;
+        }
+        if (strcmp(name, cur) == 0) {
+            return (uint16_t)(i + 1);
+        }
+    }
+    return 0;
+}
+
+/* 重建下拉选项并同步选中项；调用方须已持 LVGL 锁 */
+static void setting_sf2_rebuild_options(void)
+{
+    if (objects.setting_sf2_source == NULL) {
+        return;
+    }
+
+    int count = engine_sf2_sd_rescan();
+    size_t pos = 0;
+    int n = snprintf(s_sf2_options, sizeof(s_sf2_options), "内部预设");
+    pos += (n > 0) ? (size_t)n : 0;
+    for (int i = 0; i < count && pos < sizeof(s_sf2_options) - 24; i++) {
+        char disp[SETTING_SF2_DISPLAY_MAX + 4];
+        setting_sf2_format_display(engine_sf2_sd_name_at(i), disp, sizeof(disp));
+        n = snprintf(s_sf2_options + pos, sizeof(s_sf2_options) - pos, "\n%s", disp);
+        pos += (n > 0) ? (size_t)n : 0;
+    }
+    /* 下拉列表展开时 set_options 会重建列表项，可能被渲染撕裂成半屏乱码；
+     * 先收起列表再重建选项（含阻塞加载完成后的重建，避免"刷一半乱码卡到加载完"） */
+    lv_dropdown_close(objects.setting_sf2_source);
+    lv_dropdown_set_options(objects.setting_sf2_source, s_sf2_options);
+
+    s_sf2_ui_syncing = true;
+    lv_dropdown_set_selected(objects.setting_sf2_source, setting_sf2_current_index());
+    s_sf2_ui_syncing = false;
+}
+
+static void setting_sf2_source_cb(lv_event_t *e)
+{
+    (void)e;
+    if (s_sf2_ui_syncing || objects.setting_sf2_source == NULL) {
+        return;
+    }
+    uint16_t sel = lv_dropdown_get_selected(objects.setting_sf2_source);
+    if (sel == setting_sf2_current_index()) {
+        return;
+    }
+    /* Trap: LVGL 回调在 task_gui，加载是秒级阻塞，只登记由 process 消化 */
+    s_sf2_pending = (int)sel;
+}
+
+/* 加载进度回调（task_app 上下文）：整百分比变化才刷通知栏 */
+static void setting_sf2_progress(int percent, void *user_data)
+{
+    (void)user_data;
+    if (percent != s_sf2_last_percent) {
+        s_sf2_last_percent = percent;
+        /* timeout 用 0 会被 app_manager 视为"不显示"直接忽略；加载需常驻，
+         * 用大 timeout 保证全程可见，完成态通知会覆盖 */
+        app_manager_show_notificationf_timeout(60000, "音色加载 %d%%", percent);
+    }
+}
+
+/* 执行音源切换：成功持久化，失败回退内部预设；结果实时写通知栏 */
+static void setting_sf2_apply(int sel)
+{
+    const char *name = (sel > 0) ? engine_sf2_sd_name_at(sel - 1) : NULL;
+    if (sel > 0 && name == NULL) {
+        /* 扫描缓存已变（文件被删等）：刷新选项即可，不执行加载 */
+        lvgl_port_lock(portMAX_DELAY);
+        setting_sf2_rebuild_options();
+        lvgl_port_unlock();
+        return;
+    }
+
+    /* PSRAM 预算闸门：大音源加载后会挤爆内存导致 Zen/鼓组等功能缺失，
+     * 先预检，不过则明确提示并保留当前音源 */
+    if (sel > 0) {
+        char fit_path[ENGINE_SF2_SD_NAME_MAX_LEN + 32];
+        snprintf(fit_path, sizeof(fit_path), "%s/%s", ENGINE_SF2_SD_DIR, name);
+        if (!engine_sf2_check_fit(fit_path)) {
+            app_manager_show_notification_timeout(
+                "音源过大，内存不足，已保留当前音源", 4000);
+            return;
+        }
+    }
+
+    if (sel == 0) {
+        app_manager_show_notification_timeout("正在加载内部预设音色…", 60000);
+    } else {
+        app_manager_show_notificationf_timeout(60000, "正在加载音色： %s", name);
+    }
+
+    /* 进度节流在每次加载前复位：上次加载可能停在中间百分比，
+     * 不复位会导致本次回调被 s_sf2_last_percent 抑制、通知栏无进度 */
+    s_sf2_last_percent = -1;
+    engine_sf2_set_progress_callback(setting_sf2_progress, NULL);
+    /* 加载秒级阻塞 task_app：与开机加载同纪律，临时放宽 task_wdt */
+    engine_gui_wdt_relax();
+    bool ok = (sel == 0) ? engine_sf2_load_internal() : engine_sf2_load_sd(name);
+    engine_gui_wdt_restore();
+    engine_sf2_set_progress_callback(NULL, NULL);
+
+    if (ok) {
+        service_nvs_set_sf2_source((sel == 0) ? "" : name);
+        if (sel == 0) {
+            app_manager_show_notification_timeout("已切换为内部预设音色", 3000);
+        } else {
+            app_manager_show_notificationf_timeout(3000, "音色已切换： %s", name);
+        }
+    } else {
+        ESP_LOGW(TAG, "sf2 load failed (sel=%d), fallback to internal", sel);
+        if (sel != 0) {
+            /* Trap: 上游加载失败即丢旧音色，必须补载内部预设恢复出声 */
+            app_manager_show_notification_timeout("音色加载失败，回退内部预设", 3000);
+            engine_sf2_load_internal();
+            service_nvs_set_sf2_source("");
+        } else {
+            app_manager_show_notification_timeout("内部预设音色加载失败", 3000);
+        }
+    }
+
+    lvgl_port_lock(portMAX_DELAY);
+    setting_sf2_rebuild_options();
+    lvgl_port_unlock();
+}
+
+void service_page_setting_sf2_on_sd_changed(void)
+{
+    s_sf2_need_validate = true;
+}
+
+void service_page_setting_process(void)
+{
+    /* SD 内容变更校验：当前生效的 SD 音源被删则回退内部预设 */
+    if (s_sf2_need_validate) {
+        s_sf2_need_validate = false;
+        const char *cur = engine_sf2_current_source();
+        if (cur[0] != '\0') {
+            bool exists = false;
+            int count = engine_sf2_sd_rescan();
+            for (int i = 0; i < count; i++) {
+                if (strcmp(engine_sf2_sd_name_at(i), cur) == 0) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists && s_sf2_pending < 0) {
+                ESP_LOGW(TAG, "current sf2 %s removed, fallback to internal", cur);
+                app_manager_show_notification_timeout("音源文件已被移除，回退内部预设", 3000);
+                s_sf2_pending = 0;
+            }
+        }
+        lvgl_port_lock(portMAX_DELAY);
+        setting_sf2_rebuild_options();
+        lvgl_port_unlock();
+    }
+
+    if (s_sf2_pending < 0) {
+        return;
+    }
+    int sel = s_sf2_pending;
+    s_sf2_pending = -1;
+    setting_sf2_apply(sel);
+}
+
 /* -------------------- 系统重置（长按 5s 触发 factory reset） -------------------- */
 
 /* Why 不走 LVGL 默认 LV_EVENT_LONG_PRESSED：
@@ -487,6 +691,9 @@ void service_page_setting_init(void)
     if (objects.setting_btn_ftp != NULL) {
         lv_obj_add_event_cb(objects.setting_btn_ftp, setting_ftp_cb, LV_EVENT_CLICKED, NULL);
     }
+    if (objects.setting_sf2_source != NULL) {
+        lv_obj_add_event_cb(objects.setting_sf2_source, setting_sf2_source_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    }
     if (objects.wifi_set_panel_return != NULL) {
         lv_obj_add_event_cb(objects.wifi_set_panel_return, setting_wifi_detail_hide_cb, LV_EVENT_CLICKED, NULL);
     }
@@ -606,6 +813,9 @@ void service_page_setting_on_screen_loaded(void)
         }
     }
     setting_update_wifi_tip();
+
+    /* SF2 音源下拉：每次进屏重扫 SD 卡重建选项并同步选中项 */
+    setting_sf2_rebuild_options();
 
     lvgl_port_unlock();
 }

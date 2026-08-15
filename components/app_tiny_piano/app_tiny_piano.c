@@ -39,18 +39,21 @@ typedef struct {
     uint8_t len;
 } piano_scale_t;
 
-/* 大调 / 大调五声 / 小调 / 小调五声 / 日本都节调式 */
-static const int8_t s_steps_major[]       = {0, 2, 4, 5, 7, 9, 11};
-static const int8_t s_steps_major_pent[]  = {0, 2, 4, 7, 9};
-static const int8_t s_steps_minor[]       = {0, 2, 3, 5, 7, 8, 10};
-static const int8_t s_steps_minor_pent[]  = {0, 3, 5, 7, 10};
-static const int8_t s_steps_japan[]       = {0, 1, 5, 7, 8};
+/* 大调 / 小调 / 中国五声 / 埃及调式 / 多利亚 / 日本调式
+ * 顺序与 EEZ 下拉 piano_scale_type 选项严格一一对应，改动必须同步两侧 */
+static const int8_t s_steps_major[]      = {0, 2, 4, 5, 7, 9, 11};
+static const int8_t s_steps_minor[]      = {0, 2, 3, 5, 7, 8, 10};
+static const int8_t s_steps_china_pent[] = {0, 2, 4, 7, 9};
+static const int8_t s_steps_egypt[]      = {0, 2, 5, 7, 10};
+static const int8_t s_steps_dorian[]     = {0, 2, 3, 5, 7, 9, 10};
+static const int8_t s_steps_japan[]      = {0, 1, 5, 7, 8};
 
 static const piano_scale_t s_scales[] = {
     { s_steps_major,      7 },
-    { s_steps_major_pent, 5 },
     { s_steps_minor,      7 },
-    { s_steps_minor_pent, 5 },
+    { s_steps_china_pent, 5 },
+    { s_steps_egypt,      5 },
+    { s_steps_dorian,     7 },
     { s_steps_japan,      5 },
 };
 #define PIANO_SCALE_COUNT  (sizeof(s_scales) / sizeof(s_scales[0]))

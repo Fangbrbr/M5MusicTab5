@@ -19,6 +19,7 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_cpu.h"
+#include "esp_heap_caps.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "math.h"
@@ -26,6 +27,7 @@
 #include "stdio.h"
 #include "dirent.h"
 #include "strings.h"
+#include "sys/stat.h"
 
 static const char *TAG = "engine_sf2";
 
@@ -59,6 +61,18 @@ static uint32_t            s_render_blocks = 0;
 /* 输出峰值幅度（乘 master gain 后）：杂音必现时的判别判据——
  * 轻弹单音却长期接近 1.0 = 削波/增益异常；随机满幅 = 采样数据损坏 */
 static float               s_render_peak_amp = 0.0f;
+
+/* SD 音源选择状态：扫描缓存（静态 3KB，免堆分配）、当前生效音源（""=内部预设）、
+ * 开机指定音源（main 按 NVS 在 activate 前写入） */
+static char                s_sd_names[ENGINE_SF2_SD_MAX_FILES][ENGINE_SF2_SD_NAME_MAX_LEN];
+static int                 s_sd_count = 0;
+static char                s_current_source[ENGINE_SF2_SD_NAME_MAX_LEN] = "";
+static char                s_boot_source[ENGINE_SF2_SD_NAME_MAX_LEN] = "";
+
+/* 当前已加载音源实际占用的 PSRAM 字节数（0 = 未加载/内部预设）。
+ * check_fit 用「绝对空间」判断：切换音源时旧音源会先释放，
+ * 可用空间 = 当前剩余 + 当前已占用，否则基准被已占音源低估（2026-08）。 */
+static uint32_t            s_loaded_psram_bytes = 0;
 
 static void s_midi_handler(const engine_midi_event_t *evt, void *user_data);
 static bool s_load_default_soundfont(void);
@@ -204,14 +218,173 @@ bool engine_sf2_load_file(const char *path)
         return false;
     }
 
+    struct stat st;
+    uint64_t file_size = 0;
+    if (stat(path, &st) == 0) {
+        file_size = (uint64_t)st.st_size;
+        if (strncmp(path, ENGINE_SF2_SD_DIR, strlen(ENGINE_SF2_SD_DIR)) == 0) {
+            if (file_size > ENGINE_SF2_SD_MAX_BYTES) {
+                ESP_LOGW(TAG, "sf2 too large: %s (%llu bytes > %lu)", path,
+                         (unsigned long long)file_size, (unsigned long)ENGINE_SF2_SD_MAX_BYTES);
+                return false;
+            }
+            /* PSRAM 预算闸门：加载后需保留安全余量给 App（Zen/Drum canvas 等），
+             * 否则大音源加载后这些功能静默崩溃 */
+            if (!engine_sf2_check_fit(path)) {
+                ESP_LOGW(TAG, "sf2 exceeds PSRAM budget: %s", path);
+                return false;
+            }
+        }
+    } else if (strncmp(path, ENGINE_SF2_SD_DIR, strlen(ENGINE_SF2_SD_DIR)) == 0) {
+        ESP_LOGW(TAG, "stat failed: %s", path);
+        return false;
+    }
+
+    /* 记录加载前的 PSRAM 剩余，用于计算新音源实际占用 */
+    uint32_t free_before = (uint32_t)heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+
     bool ok;
     xSemaphoreTakeRecursive(s_sf2_mutex, portMAX_DELAY);
     s_parser.setProgressCallback((SF2Parser::SF2ProgressCb)s_progress_cb, s_progress_user_data);
     ok = s_synth->loadSf2File(path);
     xSemaphoreGiveRecursive(s_sf2_mutex);
 
+    /* 更新当前音源占用：新占用 = 加载前剩余 + 旧占用 - 加载后剩余。
+     * 旧音源在加载过程中被上游 clear 释放，只看前后差会把新占用记成 0
+     * （2026-08 真机：8MB→内部切换后 s_loaded=0，12.95MB 音源被 check_fit
+     * 按 free+0 误拒）。并发分配/释放由差值自然吸收 */
+    if (ok) {
+        uint32_t free_after = (uint32_t)heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+        uint64_t used = (uint64_t)free_before + (uint64_t)s_loaded_psram_bytes - (uint64_t)free_after;
+        s_loaded_psram_bytes = (used > 0) ? (uint32_t)used : 0;
+        /* 每次导入后打印实际大小与 PSRAM 占用，供容量审计 */
+        ESP_LOGI(TAG, "load %s: ok, file=%llu bytes, psram=%u bytes, free_psram=%u",
+                 path, (unsigned long long)file_size, (unsigned)s_loaded_psram_bytes,
+                 (unsigned)free_after);
+
+        /* 跟踪当前音源：SD 目录下记文件名，其余（内部预设）记空串 */
+        if (strncmp(path, ENGINE_SF2_SD_DIR "/", strlen(ENGINE_SF2_SD_DIR) + 1) == 0) {
+            strncpy(s_current_source, path + strlen(ENGINE_SF2_SD_DIR) + 1,
+                    sizeof(s_current_source) - 1);
+            s_current_source[sizeof(s_current_source) - 1] = '\0';
+        } else {
+            s_current_source[0] = '\0';
+        }
+    } else {
+        s_loaded_psram_bytes = 0;
+    }
+
     ESP_LOGI(TAG, "load %s: %s", path, ok ? "ok" : "FAILED");
     return ok;
+}
+
+int engine_sf2_sd_rescan(void)
+{
+    s_sd_count = 0;
+
+    DIR *dir = opendir(ENGINE_SF2_SD_DIR);
+    if (dir == NULL) {
+        return 0;
+    }
+
+    struct dirent *entry;
+    while (s_sd_count < ENGINE_SF2_SD_MAX_FILES && (entry = readdir(dir)) != NULL) {
+        if (entry->d_type != DT_REG) {
+            continue;
+        }
+        const char *dot = strrchr(entry->d_name, '.');
+        if (dot == NULL || strcasecmp(dot, ".sf2") != 0) {
+            continue;
+        }
+        /* d_name 最大 256 字节，用 memcpy 固定长度拷贝 + 显式终止（避免
+         * -Wstringop-truncation 和 -Wformat-truncation） */
+        memcpy(s_sd_names[s_sd_count], entry->d_name, ENGINE_SF2_SD_NAME_MAX_LEN - 1);
+        s_sd_names[s_sd_count][ENGINE_SF2_SD_NAME_MAX_LEN - 1] = '\0';
+        s_sd_count++;
+    }
+    closedir(dir);
+
+    /* 选择序稳定：按文件名排序，下拉选项不随目录枚举顺序漂移 */
+    for (int i = 1; i < s_sd_count; i++) {
+        char key[ENGINE_SF2_SD_NAME_MAX_LEN];
+        memcpy(key, s_sd_names[i], sizeof(key));
+        int j = i - 1;
+        while (j >= 0 && strcasecmp(s_sd_names[j], key) > 0) {
+            memcpy(s_sd_names[j + 1], s_sd_names[j], sizeof(key));
+            j--;
+        }
+        memcpy(s_sd_names[j + 1], key, sizeof(key));
+    }
+
+    ESP_LOGI(TAG, "sd rescan: %d soundfont(s)", s_sd_count);
+    return s_sd_count;
+}
+
+const char *engine_sf2_sd_name_at(int index)
+{
+    if (index < 0 || index >= s_sd_count) {
+        return NULL;
+    }
+    return s_sd_names[index];
+}
+
+const char *engine_sf2_current_source(void)
+{
+    return s_current_source;
+}
+
+void engine_sf2_set_boot_source(const char *sd_name)
+{
+    if (sd_name == NULL) {
+        s_boot_source[0] = '\0';
+        return;
+    }
+    strncpy(s_boot_source, sd_name, sizeof(s_boot_source) - 1);
+    s_boot_source[sizeof(s_boot_source) - 1] = '\0';
+}
+
+bool engine_sf2_load_internal(void)
+{
+    static const char *SPIFFS_SF2_DEFAULT = "/sys_int/soundfonts/default.sf2";
+    return engine_sf2_load_file(SPIFFS_SF2_DEFAULT);
+}
+
+/* 大音源加载后需保留给 App（Zen/Drum canvas 等）的最小 PSRAM 余量 */
+#define SF2_SAFE_PSRAM_RESERVE  (3u * 1024u * 1024u)
+
+bool engine_sf2_check_fit(const char *path)
+{
+    struct stat st;
+    if (path == NULL || stat(path, &st) != 0) {
+        return false;
+    }
+    uint32_t free_psram = (uint32_t)heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    /* 绝对空间：切换音源时旧音源先被上游释放，可用空间 = 当前剩余 + 当前已占用。
+     * 若只按当前剩余判断，已被占音源会低估基准，导致加载 12M 左右完全可行的
+     * 音源也被误拒（2026-08）。采样数据约等于文件大小（sdta chunk 占大头），
+     * 加载后还需覆盖解析结构开销。 */
+    uint64_t available = (uint64_t)free_psram + (uint64_t)s_loaded_psram_bytes;
+    uint64_t needed = (uint64_t)st.st_size + SF2_SAFE_PSRAM_RESERVE;
+    bool fits = (available >= needed);
+    if (!fits) {
+        ESP_LOGW(TAG, "sf2 %s size=%luMB available=%lluMB (free=%luMB+loaded=%luMB) needed=%lluMB, rejected",
+                 path, (unsigned long)(st.st_size / 1024 / 1024),
+                 (unsigned long long)(available / 1024 / 1024),
+                 (unsigned long)(free_psram / 1024 / 1024),
+                 (unsigned long)(s_loaded_psram_bytes / 1024 / 1024),
+                 (unsigned long long)(needed / 1024 / 1024));
+    }
+    return fits;
+}
+
+bool engine_sf2_load_sd(const char *sd_name)
+{
+    if (sd_name == NULL || sd_name[0] == '\0') {
+        return false;
+    }
+    char path[ENGINE_SF2_SD_NAME_MAX_LEN + 32];
+    snprintf(path, sizeof(path), "%s/%s", ENGINE_SF2_SD_DIR, sd_name);
+    return engine_sf2_load_file(path);
 }
 
 esp_err_t engine_sf2_register_source(void)
@@ -307,42 +480,31 @@ static bool s_file_exists(const char *path)
     return true;
 }
 
-/* 默认音色搜索顺序：SD 卡 default.sf2 → SD 卡 soundfonts 目录首个 .sf2 → SPIFFS 内置 */
+/* 开机音色加载顺序：NVS 指定的 SD 音源 → 内部预设 → 遗留 SD 探测兜底。
+ * 兜底存在的意义：SPIFFS 镜像损坏时仍允许用 SD 出声，不静默死机 */
 static bool s_load_default_soundfont(void)
 {
-    static const char *SD_SF2_DIR = "/sdcard/soundfonts";
-    static const char *SD_SF2_DEFAULT = "/sdcard/soundfonts/default.sf2";
-    static const char *SPIFFS_SF2_DEFAULT = "/sys_int/soundfonts/default.sf2";
+    static const char *SD_SF2_DEFAULT = ENGINE_SF2_SD_DIR "/default.sf2";
     char path[320];
+
+    if (s_boot_source[0] != '\0') {
+        if (engine_sf2_load_sd(s_boot_source)) {
+            return true;
+        }
+        ESP_LOGW(TAG, "boot source %s unavailable, fallback to internal", s_boot_source);
+    }
+
+    if (engine_sf2_load_internal()) {
+        return true;
+    }
 
     if (s_file_exists(SD_SF2_DEFAULT)) {
         return engine_sf2_load_file(SD_SF2_DEFAULT);
     }
 
-    DIR *dir = opendir(SD_SF2_DIR);
-    if (dir != NULL) {
-        bool found = false;
-        struct dirent *entry;
-        while ((entry = readdir(dir)) != NULL) {
-            if (entry->d_type != DT_REG) {
-                continue;
-            }
-            const char *dot = strrchr(entry->d_name, '.');
-            if (dot == NULL || strcasecmp(dot, ".sf2") != 0) {
-                continue;
-            }
-            snprintf(path, sizeof(path), "%s/%s", SD_SF2_DIR, entry->d_name);
-            found = true;
-            break;
-        }
-        closedir(dir);
-        if (found) {
-            return engine_sf2_load_file(path);
-        }
-    }
-
-    if (s_file_exists(SPIFFS_SF2_DEFAULT)) {
-        return engine_sf2_load_file(SPIFFS_SF2_DEFAULT);
+    if (engine_sf2_sd_rescan() > 0) {
+        snprintf(path, sizeof(path), "%s/%s", ENGINE_SF2_SD_DIR, engine_sf2_sd_name_at(0));
+        return engine_sf2_load_file(path);
     }
 
     return false;

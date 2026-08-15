@@ -12,6 +12,7 @@
 #include "engine_gui.h"
 #include "app_manager.h"
 #include "service_ftp.h"
+#include "service_page_setting.h"
 #include "service_power.h"
 #include "service_wifi.h"
 #include "service_xiaozhi.h"
@@ -109,6 +110,8 @@ static void ftp_back_cb(lv_event_t *e)
 
     /* 先停服务（中止传输、断客户端、释缓冲），再解锁，最后恢复系统行为 */
     service_ftp_stop();
+    /* FTP 可能增删过 SD 文件：登记音源重扫/校验（异步，process 消化） */
+    service_page_setting_sf2_on_sd_changed();
     engine_gui_set_screen_locked(false);
     app_manager_set_launch_locked(false);
     service_power_idle_set_enabled(true);

@@ -120,13 +120,31 @@ void compute_thing_level(ctx_t *c)
     }
 
     int32_t tl;
-    if (l == 5) tl = 3;
-    else if (l == 4) tl = c->is_de ? 2 : 3;
-    else if (l == 3) tl = c->is_de ? 1 : 2;
-    else if (l == 2) tl = c->is_de ? 0 : 2;
-    else if (l == 1) tl = c->is_de ? 0 : 1;
-    else if (l == 0) tl = 0;
-    else tl = 1;
+    if (l == 5) {
+        tl = 3;
+    } else if (l == 4) {
+#if CNLUNAR_YIJI_OPTIMIZE_LEVEL >= 2
+        /* 等级 2：下等日不再直接判定为"诸事皆忌"，降级为"从忌不从宜" */
+        tl = 2;
+#else
+        tl = c->is_de ? 2 : 3;
+#endif
+    } else if (l == 3) {
+#if CNLUNAR_YIJI_OPTIMIZE_LEVEL >= 2
+        /* 等级 2：中次等日统一按"从宜亦从忌"处理 */
+        tl = 1;
+#else
+        tl = c->is_de ? 1 : 2;
+#endif
+    } else if (l == 2) {
+        tl = c->is_de ? 0 : 2;
+    } else if (l == 1) {
+        tl = c->is_de ? 0 : 1;
+    } else if (l == 0) {
+        tl = 0;
+    } else {
+        tl = 1;
+    }
 
     c->today_level = l;
     c->thing_level = tl;
@@ -160,9 +178,20 @@ void cleanup_things(ctx_t *c)
     slist_t *gt = &c->good_things, *bt = &c->bad_things;
     const char *d = o->day_ganzhi;
 
+#if CNLUNAR_YIJI_OPTIMIZE_LEVEL >= 1
+    static const char *const COMMON_YI[] = { CNLUNAR_COMMON_YI };
+#endif
+
     if (c->thing_level == 3) {          /* 诸事不宜 */
+#if CNLUNAR_YIJI_OPTIMIZE_LEVEL >= 1
+        /* 等级 1/2 显示优化：把"诸事不宜"处理成"通用宜 + 诸事皆宜"，
+         * 避免"宜：通用宜"与"忌：诸事不宜"自相矛盾。 */
+        for (int i = 0; i < N_(COMMON_YI); i++) sl_add(gt, COMMON_YI[i]);
+        sl_set1(bt, "诸事皆宜");
+#else
         sl_set1(gt, "诸事不宜");
         sl_set1(bt, "诸事不宜");
+#endif
     } else if (c->thing_level == 2) {   /* 从忌不从宜 */
         sl_remove_intersection(gt, bt);
     } else if (c->thing_level == 1) {   /* 从宜亦从忌：交集两边都删 */
@@ -269,7 +298,7 @@ void cleanup_things(ctx_t *c)
                 sl_removen(bt, RM6, 3);
             }
             if (!sl_contains(bt, "修造") || !sl_contains(bt, "竖柱上梁")) {
-                static const char *const RM7[14] = {"修宫室", "缮城郭", "整手足甲", "筑提", "修仓库", "鼓铸",
+                static const char *const RM7[14] = {"修宫室", "缮城郭", "整手足甲", "筑堤防", "修仓库", "鼓铸",
                                                     "苫盖", "修置产室", "开渠穿井", "安碓硙", "补垣塞穴",
                                                     "修饰垣墙", "平治道涂", "破屋坏垣"};
                 sl_removen(bt, RM7, 14);
@@ -343,6 +372,14 @@ void cleanup_things(ctx_t *c)
         }
     }
 
+    /* 通用宜回填（等级 1/2）：避免经过等第清洗后"宜"列表为空。
+     * 注意：thing_level==3 的"诸事不宜"已在前面单独处理，这里不再重复回填。 */
+#if CNLUNAR_YIJI_OPTIMIZE_LEVEL >= 1
+    if (gt->n == 0 && c->thing_level != 3) {
+        for (int i = 0; i < N_(COMMON_YI); i++) sl_add(gt, COMMON_YI[i]);
+    }
+#endif
+
     /* 书中未明注忌不注宜 */
     {
         const char *rm[CNLUNAR_MAX_THINGS];
@@ -357,7 +394,15 @@ void cleanup_things(ctx_t *c)
     }
 
     if (bt->n == 0) sl_add(bt, "诸事不忌");
+#if CNLUNAR_YIJI_OPTIMIZE_LEVEL >= 1
+    /* 若通用宜被冲突清洗后又空了，兜底再填一次，避免用户看到"诸事不宜"。
+     * 等级 2 因等第映射更宽松，走到这里的概率更低。 */
+    if (gt->n == 0) {
+        for (int i = 0; i < N_(COMMON_YI); i++) sl_add(gt, COMMON_YI[i]);
+    }
+#else
     if (gt->n == 0) sl_add(gt, "诸事不宜");
+#endif
 
     sl_sort_things(bt);
     sl_sort_things(gt);

@@ -18,6 +18,7 @@
 #include "service_http_client.h"
 #include "service_i18n.h"
 #include "service_input.h"
+#include "service_nvs.h"
 #include "service_power.h"
 #include "service_rtc.h"
 #include "service_recorder.h"
@@ -123,6 +124,12 @@ void app_main(void)
     /* 音色加载失败时“开机但静默”优于重启循环（存储损坏时 abort 死循环）。
      * Trap: 无卡时 SPIFFS 加载 10s+，main 独占 CPU0 饿死 IDLE0 触发 task_wdt；
      * 进度回调内的让出不足以救回 IDLE0，用 WDT relax 临时把超时提到 30s */
+    /* 音源选择（设置页持久化）：NVS 在 service_power_init 阶段已就绪；
+     * 空串 = 内部预设，SD 文件加载失败由引擎内部回退内部预设 */
+    char sf2_source[SERVICE_NVS_SF2_SOURCE_MAX_LEN];
+    if (service_nvs_get_sf2_source(sf2_source, sizeof(sf2_source)) == ESP_OK) {
+        engine_sf2_set_boot_source(sf2_source);
+    }
     engine_sf2_set_progress_callback(main_sf2_progress, NULL);
     engine_gui_wdt_relax();
     ESP_ERROR_CHECK_WITHOUT_ABORT(engine_sf2_register_source());

@@ -86,6 +86,17 @@ esp_err_t service_audio_register_source(const audio_source_ops_t *ops);
 esp_err_t service_audio_activate_sf2(void);
 
 /**
+ * @brief 停用 SF2 音频源（主路径静音，但不销毁源/不卸载音色）
+ *
+ * MP3 播放期间隔离合成链路用：仅把活跃源置为 NONE，停止调用 render_stereo，
+ * 保留 SF2 源注册与音色缓存，恢复时 activate_sf2 走轻量路径（engine_sf2_init
+ * 因 initialized 缓存直接返回，无需重载音色）。
+ *
+ * @return ESP_OK 成功；ESP_ERR_INVALID_STATE 当前活跃源不是 SF2
+ */
+esp_err_t service_audio_deactivate_sf2(void);
+
+/**
  * @brief 获取当前激活的音频源
  * @return 当前音频源
  */

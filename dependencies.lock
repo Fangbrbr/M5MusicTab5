@@ -1,4 +1,14 @@
 dependencies:
+  esphome/micro-mp3:
+    component_hash: 51106d6a6ef13d37b598aa06b4a4de39249319110f990950eb123203a9e2eb6d
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.4'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 0.4.0
   espp/base_component:
     component_hash: bf0ae988a3c2899e09207ecc278619ede7811af0e3628ee957893c643ee97f95
     dependencies:
@@ -327,7 +337,7 @@ dependencies:
       type: service
     version: 1.2.1
   espressif/esp_lcd_touch_gt911:
-    component_hash: 07f678e4202d79bbad917805dcec4134ff08344177720f32ec4898267ad9e394
+    component_hash: 737bdf29e0823eacf041381e81db2aaf5d378f3b5417df7f415f83319e3e790b
     dependencies:
     - name: espressif/esp_lcd_touch
       registry_url: https://components.espressif.com
@@ -339,7 +349,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 1.2.0~3
+    version: 1.2.1
   espressif/esp_lcd_touch_st7123:
     component_hash: c43fd76fb12b4dd1bf30d60e99e4ec150b16e17cafc942a58e6274d4b68e71fe
     dependencies:
@@ -686,6 +696,7 @@ dependencies:
       type: service
     version: 9.5.0
 direct_dependencies:
+- esphome/micro-mp3
 - espp/rx8130ce
 - espressif/esp-sr
 - espressif/esp_audio_codec
@@ -698,6 +709,6 @@ direct_dependencies:
 - espressif/m5stack_tab5
 - espressif/usb_host_hid
 - idf
-manifest_hash: afcb02555005681a09754ebbbba7222154bb7a36ee0d95b2a8db392d5843347f
+manifest_hash: 5755acad4d3a8725c60b4319ceea721add0306f5fd76a87b20a6c44d8bfb8e44
 target: esp32p4
 version: 2.0.0

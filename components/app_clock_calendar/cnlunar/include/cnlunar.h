@@ -24,6 +24,17 @@ extern "C" {
 #define CNLUNAR_MAX_THINGS   96   /**< 宜/忌事项列表最大条目 */
 #define CNLUNAR_MAX_GODS     80   /**< 吉神/凶神列表最大条目 */
 
+/* 宜忌"诸事不宜"优化等级：改下面一个数字即可
+ * 0 = 与 cnlunar Python 原版完全一致
+ * 1 = 空的宜列表用通用宜回填（默认）
+ * 2 = 同时放宽等第过滤，进一步减少"诸事不宜" */
+#define CNLUNAR_YIJI_OPTIMIZE_LEVEL 1
+
+#if CNLUNAR_YIJI_OPTIMIZE_LEVEL >= 1
+/* 通用宜列表：等级 1/2 用来回填空宜列表。可自由增删。 */
+#define CNLUNAR_COMMON_YI "祭祀", "祈福", "沐浴", "扫舍宇", "入学", "裁制", "会亲友", "出行"
+#endif
+
 /** 神煞计算模式，对应原版 Lunar(godType=...) */
 typedef enum {
     CNLUNAR_GOD_TYPE_8CHAR = 0,   /**< 默认：用八字月柱算神煞（辨方书配图） */

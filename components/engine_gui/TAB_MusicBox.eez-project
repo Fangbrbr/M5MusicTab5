@@ -5451,7 +5451,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -5651,7 +5651,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -5809,7 +5809,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -5967,7 +5967,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6113,7 +6113,7 @@
                       },
                       "group": "",
                       "groupIndex": 0,
-                      "text": "Midi",
+                      "text": "播放器",
                       "textType": "literal",
                       "longMode": "WRAP",
                       "recolor": false,
@@ -6125,7 +6125,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6284,7 +6284,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6443,7 +6443,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6602,7 +6602,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6760,7 +6760,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6919,7 +6919,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -7078,7 +7078,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -7236,7 +7236,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 72,
+                      "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -10187,6 +10187,231 @@
                               "grid_column_dsc_array": "FR(1), FR(2), FR(1), FR(1)",
                               "border_width": 0,
                               "text_color": "text_primary",
+                              "bg_color": "bg_secondary"
+                            }
+                          }
+                        }
+                      },
+                      "group": "",
+                      "groupIndex": 0
+                    },
+                    {
+                      "objID": "7c48f76d-069e-486f-bc9b-55d87dcf23d7",
+                      "type": "LVGLPanelWidget",
+                      "left": -18,
+                      "top": 10.5,
+                      "width": 100,
+                      "height": 60,
+                      "customInputs": [],
+                      "customOutputs": [],
+                      "style": {
+                        "objID": "1cd12b7d-d596-4b95-bff7-bd4f45727e17",
+                        "useStyle": "default",
+                        "conditionalStyles": [],
+                        "childStyles": []
+                      },
+                      "hiddenInEditor": false,
+                      "timeline": [],
+                      "eventHandlers": [],
+                      "leftUnit": "px",
+                      "topUnit": "px",
+                      "widthUnit": "%",
+                      "heightUnit": "px",
+                      "children": [
+                        {
+                          "objID": "16d44335-7704-46d8-98aa-70fbb09b5fb0",
+                          "type": "LVGLLabelWidget",
+                          "left": 0,
+                          "top": 0,
+                          "width": 90,
+                          "height": 34,
+                          "customInputs": [],
+                          "customOutputs": [],
+                          "style": {
+                            "objID": "3b420144-35cf-4355-fd1e-73e56366b298",
+                            "useStyle": "default",
+                            "conditionalStyles": [],
+                            "childStyles": []
+                          },
+                          "hiddenInEditor": false,
+                          "timeline": [],
+                          "eventHandlers": [],
+                          "leftUnit": "px",
+                          "topUnit": "px",
+                          "widthUnit": "content",
+                          "heightUnit": "content",
+                          "children": [],
+                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                          "hiddenFlagType": "literal",
+                          "clickableFlagType": "literal",
+                          "flagScrollbarMode": "",
+                          "flagScrollDirection": "",
+                          "scrollSnapX": "",
+                          "scrollSnapY": "",
+                          "checkedStateType": "literal",
+                          "disabledStateType": "literal",
+                          "states": "",
+                          "localStyles": {
+                            "objID": "3ee397aa-615b-4caa-c92c-517ceec73f09",
+                            "definition": {
+                              "MAIN": {
+                                "DEFAULT": {
+                                  "grid_cell_y_align": "CENTER"
+                                }
+                              }
+                            }
+                          },
+                          "group": "",
+                          "groupIndex": 0,
+                          "text": "音源：",
+                          "textType": "literal",
+                          "longMode": "WRAP",
+                          "recolor": false,
+                          "useStaticText": true
+                        },
+                        {
+                          "objID": "e9056555-0371-4012-f6b4-ca3b462c13a5",
+                          "type": "LVGLDropdownWidget",
+                          "left": 994,
+                          "top": 360,
+                          "width": 20,
+                          "height": 50,
+                          "customInputs": [],
+                          "customOutputs": [],
+                          "style": {
+                            "objID": "ce10d681-a4f7-407f-9d84-aaf6393842c8",
+                            "useStyle": "default",
+                            "conditionalStyles": [],
+                            "childStyles": []
+                          },
+                          "hiddenInEditor": false,
+                          "timeline": [],
+                          "eventHandlers": [],
+                          "identifier": "setting_sf2_source",
+                          "leftUnit": "px",
+                          "topUnit": "px",
+                          "widthUnit": "%",
+                          "heightUnit": "px",
+                          "children": [
+                            {
+                              "objID": "eabadd01-3bee-4ff2-bf7d-4afd911e0e42",
+                              "type": "LVGLContainerWidget",
+                              "left": 0,
+                              "top": 0,
+                              "width": 130,
+                              "height": 130,
+                              "customInputs": [],
+                              "customOutputs": [],
+                              "style": {
+                                "objID": "4eb90c9d-c11b-45c9-dc21-f93664d1cdbe",
+                                "useStyle": "default",
+                                "conditionalStyles": [],
+                                "childStyles": []
+                              },
+                              "hiddenInEditor": false,
+                              "timeline": [],
+                              "eventHandlers": [],
+                              "leftUnit": "px",
+                              "topUnit": "px",
+                              "widthUnit": "px",
+                              "heightUnit": "px",
+                              "children": [],
+                              "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                              "hiddenFlagType": "literal",
+                              "clickableFlag": true,
+                              "clickableFlagType": "literal",
+                              "flagScrollbarMode": "",
+                              "flagScrollDirection": "",
+                              "scrollSnapX": "",
+                              "scrollSnapY": "",
+                              "checkedStateType": "literal",
+                              "disabledStateType": "literal",
+                              "states": "",
+                              "localStyles": {
+                                "objID": "ae24fad3-bdaf-404b-84d4-1b73ffbc4916",
+                                "definition": {
+                                  "SELECTED": {
+                                    "CHECKED": {
+                                      "bg_color": "primary"
+                                    }
+                                  },
+                                  "MAIN": {
+                                    "DEFAULT": {
+                                      "text_align": "CENTER",
+                                      "bg_color": "card",
+                                      "text_color": "text_secondary"
+                                    }
+                                  }
+                                }
+                              },
+                              "group": "",
+                              "groupIndex": 0
+                            }
+                          ],
+                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                          "hiddenFlagType": "literal",
+                          "clickableFlag": true,
+                          "clickableFlagType": "literal",
+                          "flagScrollbarMode": "",
+                          "flagScrollDirection": "",
+                          "scrollSnapX": "",
+                          "scrollSnapY": "",
+                          "checkedStateType": "literal",
+                          "disabledStateType": "literal",
+                          "states": "",
+                          "localStyles": {
+                            "objID": "70a77ac6-88dc-4cdb-a292-86b4c24f1466",
+                            "definition": {
+                              "SELECTED": {
+                                "DEFAULT": {
+                                  "grid_cell_y_align": "CENTER",
+                                  "grid_cell_column_pos": 3
+                                }
+                              },
+                              "MAIN": {
+                                "DEFAULT": {
+                                  "grid_cell_column_pos": 2,
+                                  "grid_cell_y_align": "CENTER",
+                                  "grid_cell_x_align": "STRETCH",
+                                  "text_color": "text_primary",
+                                  "text_align": "CENTER",
+                                  "border_color": "bg_primary",
+                                  "bg_color": "card"
+                                }
+                              }
+                            }
+                          },
+                          "group": "",
+                          "groupIndex": 0,
+                          "options": "内部预设\\nSoxxxxxxxxxx...",
+                          "optionsType": "literal",
+                          "selected": 1,
+                          "selectedType": "literal",
+                          "direction": "bottom",
+                          "useStaticText": true
+                        }
+                      ],
+                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                      "hiddenFlagType": "literal",
+                      "clickableFlag": true,
+                      "clickableFlagType": "literal",
+                      "flagScrollbarMode": "",
+                      "flagScrollDirection": "",
+                      "scrollSnapX": "",
+                      "scrollSnapY": "",
+                      "checkedStateType": "literal",
+                      "disabledStateType": "literal",
+                      "states": "",
+                      "localStyles": {
+                        "objID": "d3a6fa0e-4bfd-4f41-d103-5eed03cd38c9",
+                        "definition": {
+                          "MAIN": {
+                            "DEFAULT": {
+                              "grid_row_dsc_array": "FR(1)",
+                              "grid_column_dsc_array": "FR(1), FR(1), FR(1)",
+                              "layout": "GRID",
+                              "text_color": "text_primary",
+                              "border_width": 0,
                               "bg_color": "bg_secondary"
                             }
                           }
@@ -20140,7 +20365,7 @@
                       },
                       "group": "",
                       "groupIndex": 0,
-                      "options": "大调\\n中国五声\\n小调\\n小调五声音阶\\n日本调式",
+                      "options": "大调\\n小调\\n中国五声\\n埃及调式\\n多利亚\\n日本调式",
                       "optionsType": "literal",
                       "selected": 0,
                       "selectedType": "literal",
@@ -21445,9 +21670,6 @@
                           "grid_cell_y_align": "STRETCH",
                           "bg_color": "bg_primary",
                           "border_color": "shadow"
-                        },
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
                         }
                       }
                     }
@@ -21539,9 +21761,6 @@
                     "objID": "93d679bf-ef43-4e1f-c9cb-260e08fb6fe1",
                     "definition": {
                       "MAIN": {
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
-                        },
                         "DEFAULT": {
                           "layout": "FLEX",
                           "text_color": "text_secondary",
@@ -21641,9 +21860,6 @@
                     "objID": "9025fd55-63e6-4980-8546-e6a71a4cc4cc",
                     "definition": {
                       "MAIN": {
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
-                        },
                         "DEFAULT": {
                           "layout": "FLEX",
                           "text_color": "text_secondary",
@@ -21743,9 +21959,6 @@
                     "objID": "061f9bb3-1a1b-4b41-8e90-ea9234d908aa",
                     "definition": {
                       "MAIN": {
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
-                        },
                         "DEFAULT": {
                           "layout": "FLEX",
                           "text_color": "text_secondary",
@@ -21845,9 +22058,6 @@
                     "objID": "4117bf1f-502a-4c96-f348-e1db1ff32831",
                     "definition": {
                       "MAIN": {
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
-                        },
                         "DEFAULT": {
                           "layout": "FLEX",
                           "text_color": "text_secondary",
@@ -21947,9 +22157,6 @@
                     "objID": "bcf4c140-84eb-4aef-bf41-1e5ea21b1423",
                     "definition": {
                       "MAIN": {
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
-                        },
                         "DEFAULT": {
                           "layout": "FLEX",
                           "text_color": "text_secondary",
@@ -22059,9 +22266,6 @@
                           "grid_cell_y_align": "STRETCH",
                           "bg_color": "bg_primary",
                           "border_color": "shadow"
-                        },
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
                         }
                       }
                     }
@@ -22153,9 +22357,6 @@
                     "objID": "4e557c56-35ee-4c8c-f45d-9b2125ea74bf",
                     "definition": {
                       "MAIN": {
-                        "PRESSED": {
-                          "bg_color": "bg_secondary"
-                        },
                         "DEFAULT": {
                           "layout": "FLEX",
                           "text_color": "text_secondary",
@@ -22982,7 +23183,7 @@
               },
               "group": "",
               "groupIndex": 0,
-              "text": "Midi播放器",
+              "text": "播放器",
               "textType": "literal",
               "longMode": "WRAP",
               "recolor": false,
@@ -23343,6 +23544,164 @@
               "groupIndex": 0
             },
             {
+              "objID": "63086591-82c6-4371-b8c0-2e6980c527a8",
+              "type": "LVGLPanelWidget",
+              "left": 32,
+              "top": 110,
+              "width": 47,
+              "height": 80,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "6ea1726b-4fb1-4279-d9a3-d23402befba3",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "hiddenInEditor": false,
+              "timeline": [],
+              "eventHandlers": [],
+              "identifier": "midi_panel_music_list",
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "%",
+              "heightUnit": "%",
+              "children": [
+                {
+                  "objID": "1a237575-d8a6-4984-ee21-90ad14765793",
+                  "type": "LVGLLabelWidget",
+                  "left": 32,
+                  "top": 110,
+                  "width": 100,
+                  "height": 34,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "style": {
+                    "objID": "cddf6235-3ddc-4092-c6ed-7294b43863cb",
+                    "useStyle": "default",
+                    "conditionalStyles": [],
+                    "childStyles": []
+                  },
+                  "hiddenInEditor": false,
+                  "timeline": [],
+                  "eventHandlers": [],
+                  "leftUnit": "px",
+                  "topUnit": "px",
+                  "widthUnit": "%",
+                  "heightUnit": "content",
+                  "children": [],
+                  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                  "hiddenFlagType": "literal",
+                  "clickableFlagType": "literal",
+                  "flagScrollbarMode": "",
+                  "flagScrollDirection": "",
+                  "scrollSnapX": "",
+                  "scrollSnapY": "",
+                  "checkedStateType": "literal",
+                  "disabledStateType": "literal",
+                  "states": "",
+                  "localStyles": {
+                    "objID": "6d20b8e6-809f-4e9d-f8a2-f2813972518b",
+                    "definition": {
+                      "MAIN": {
+                        "DEFAULT": {
+                          "text_align": "CENTER"
+                        }
+                      }
+                    }
+                  },
+                  "group": "",
+                  "groupIndex": 0,
+                  "text": "歌曲列表",
+                  "textType": "literal",
+                  "longMode": "WRAP",
+                  "recolor": false,
+                  "useStaticText": true
+                },
+                {
+                  "objID": "3c59cd37-56cc-47f1-e39d-0f4b50b6f6cf",
+                  "type": "LVGLListWidget",
+                  "left": 32,
+                  "top": 146,
+                  "width": 100,
+                  "height": 95,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "style": {
+                    "objID": "a2522041-a7a1-4b84-e91d-b13b6c00fe50",
+                    "useStyle": "default",
+                    "conditionalStyles": [],
+                    "childStyles": []
+                  },
+                  "hiddenInEditor": false,
+                  "timeline": [],
+                  "eventHandlers": [],
+                  "identifier": "midi_list_music_file",
+                  "leftUnit": "px",
+                  "topUnit": "px",
+                  "widthUnit": "%",
+                  "heightUnit": "%",
+                  "children": [],
+                  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                  "hiddenFlagType": "literal",
+                  "clickableFlag": true,
+                  "clickableFlagType": "literal",
+                  "flagScrollbarMode": "",
+                  "flagScrollDirection": "",
+                  "scrollSnapX": "",
+                  "scrollSnapY": "",
+                  "checkedStateType": "literal",
+                  "disabledStateType": "literal",
+                  "states": "",
+                  "localStyles": {
+                    "objID": "f7131675-52d1-42be-a95e-5249185e783a",
+                    "definition": {
+                      "MAIN": {
+                        "DEFAULT": {
+                          "text_color": "text_primary",
+                          "border_width": 0,
+                          "pad_row": 5,
+                          "pad_top": 10,
+                          "pad_bottom": 10,
+                          "pad_left": 10,
+                          "bg_color": "bg_primary"
+                        }
+                      }
+                    }
+                  },
+                  "group": "",
+                  "groupIndex": 0
+                }
+              ],
+              "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+              "hiddenFlagType": "literal",
+              "clickableFlag": true,
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "",
+              "flagScrollDirection": "",
+              "scrollSnapX": "",
+              "scrollSnapY": "",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "d9fe45b2-3a9e-4742-d477-0b93ab6bacd5",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "layout": "FLEX",
+                      "flex_flow": "COLUMN",
+                      "text_color": "text_primary",
+                      "border_width": 0,
+                      "bg_color": "bg_primary"
+                    }
+                  }
+                }
+              },
+              "group": "",
+              "groupIndex": 0
+            },
+            {
               "objID": "454c00ab-5378-4e53-904b-2d1477b4a31c",
               "type": "LVGLPanelWidget",
               "left": 32,
@@ -23357,7 +23716,7 @@
                 "conditionalStyles": [],
                 "childStyles": []
               },
-              "hiddenInEditor": false,
+              "hiddenInEditor": true,
               "timeline": [],
               "eventHandlers": [],
               "identifier": "midi_panel_mid_list",
@@ -23381,7 +23740,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -23432,10 +23791,10 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
-                  "identifier": "midi_list_music_file",
+                  "identifier": "midi_list_mid_file",
                   "leftUnit": "px",
                   "topUnit": "px",
                   "widthUnit": "%",
@@ -23456,7 +23815,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "midi_file_example",
@@ -23480,7 +23839,7 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": false,
+                          "hiddenInEditor": true,
                           "timeline": [],
                           "eventHandlers": [],
                           "leftUnit": "px",
@@ -23577,6 +23936,7 @@
                 }
               ],
               "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+              "hiddenFlag": true,
               "hiddenFlagType": "literal",
               "clickableFlag": true,
               "clickableFlagType": "literal",
@@ -23848,7 +24208,6 @@
                             "DEFAULT": {
                               "grid_cell_column_span": 4,
                               "grid_cell_x_align": "STRETCH",
-                              "text_font": "chinese_40",
                               "grid_cell_y_align": "STRETCH"
                             }
                           }
@@ -24124,7 +24483,7 @@
                       },
                       "group": "",
                       "groupIndex": 0,
-                      "text": "轨道数量: ",
+                      "text": "轨道: ",
                       "textType": "literal",
                       "longMode": "WRAP",
                       "recolor": false,
@@ -24851,7 +25210,7 @@
                 "childStyles": []
               },
               "locked": true,
-              "hiddenInEditor": false,
+              "hiddenInEditor": true,
               "timeline": [],
               "eventHandlers": [],
               "identifier": "midi_set",
@@ -24875,7 +25234,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "midi_set_btn_return",
@@ -24899,7 +25258,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -24965,129 +25324,77 @@
                   "groupIndex": 0
                 },
                 {
-                  "objID": "64e215a1-57ea-405a-9a9d-633d599c283c",
+                  "objID": "f0f2f2ee-6a3d-4166-a924-5841ea19cfd9",
                   "type": "LVGLPanelWidget",
                   "left": 0,
                   "top": 0,
                   "width": 100,
-                  "height": 60,
+                  "height": 260,
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
-                    "objID": "cebf9203-aa0e-4ffc-e0e7-a632ca0e1f2f",
+                    "objID": "3f3668b4-82c7-40df-fdef-7e92352e2562",
                     "useStyle": "default",
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
                   "topUnit": "px",
                   "widthUnit": "%",
-                  "heightUnit": "px",
+                  "heightUnit": "content",
                   "children": [
                     {
-                      "objID": "77307d4f-689e-4384-aa89-76e63b5a5edb",
-                      "type": "LVGLLabelWidget",
-                      "left": 0,
-                      "top": 0,
-                      "width": 150,
-                      "height": 34,
+                      "objID": "3c170907-53e1-473b-d996-97ac2e04a4c3",
+                      "type": "LVGLButtonWidget",
+                      "left": -255,
+                      "top": 322.5,
+                      "width": 250,
+                      "height": 220,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
-                        "objID": "4f0ec44c-a522-48c4-caf4-df04b115dad3",
+                        "objID": "db0d751d-9f5a-46b6-93d9-90335c0ec892",
                         "useStyle": "default",
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
-                      "leftUnit": "px",
-                      "topUnit": "px",
-                      "widthUnit": "content",
-                      "heightUnit": "content",
-                      "children": [],
-                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-                      "hiddenFlagType": "literal",
-                      "clickableFlagType": "literal",
-                      "flagScrollbarMode": "",
-                      "flagScrollDirection": "",
-                      "scrollSnapX": "",
-                      "scrollSnapY": "",
-                      "checkedStateType": "literal",
-                      "disabledStateType": "literal",
-                      "states": "",
-                      "localStyles": {
-                        "objID": "31bd89d7-bde0-4d43-de97-57d3881cd9c5",
-                        "definition": {
-                          "MAIN": {
-                            "DEFAULT": {
-                              "grid_cell_y_align": "CENTER"
-                            }
-                          }
-                        }
-                      },
-                      "group": "",
-                      "groupIndex": 0,
-                      "text": "播放内容：",
-                      "textType": "literal",
-                      "longMode": "WRAP",
-                      "recolor": false,
-                      "useStaticText": true
-                    },
-                    {
-                      "objID": "790ff8f3-cfcd-46a9-9b2d-292c5d38122d",
-                      "type": "LVGLDropdownWidget",
-                      "left": 994,
-                      "top": 360,
-                      "width": 229,
-                      "height": 50,
-                      "customInputs": [],
-                      "customOutputs": [],
-                      "style": {
-                        "objID": "a9050987-53a7-4f85-d49d-7f4a5bd6e381",
-                        "useStyle": "default",
-                        "conditionalStyles": [],
-                        "childStyles": []
-                      },
-                      "hiddenInEditor": false,
-                      "timeline": [],
-                      "eventHandlers": [],
-                      "identifier": "midi_play_type",
+                      "identifier": "midi_btn_music",
                       "leftUnit": "px",
                       "topUnit": "px",
                       "widthUnit": "px",
                       "heightUnit": "px",
                       "children": [
                         {
-                          "objID": "c3c58966-2244-4280-97ea-39c0f3d1b3a4",
-                          "type": "LVGLContainerWidget",
+                          "objID": "48c34262-30b2-48bb-83b5-01d98f2959d5",
+                          "type": "LVGLLabelWidget",
                           "left": 0,
                           "top": 0,
-                          "width": 130,
-                          "height": 130,
+                          "width": 120,
+                          "height": 34,
                           "customInputs": [],
                           "customOutputs": [],
                           "style": {
-                            "objID": "3796ffd8-191d-409b-9f4a-ec8e0a2e204a",
+                            "objID": "1ad3b410-0d5a-4b34-d868-d6225635f3ae",
                             "useStyle": "default",
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": false,
+                          "hiddenInEditor": true,
                           "timeline": [],
                           "eventHandlers": [],
                           "leftUnit": "px",
                           "topUnit": "px",
-                          "widthUnit": "px",
-                          "heightUnit": "px",
+                          "widthUnit": "content",
+                          "heightUnit": "content",
                           "children": [],
                           "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
                           "hiddenFlagType": "literal",
-                          "clickableFlag": true,
                           "clickableFlagType": "literal",
                           "flagScrollbarMode": "",
                           "flagScrollDirection": "",
@@ -25097,32 +25404,134 @@
                           "disabledStateType": "literal",
                           "states": "",
                           "localStyles": {
-                            "objID": "5bf2120e-eeec-40b4-d15a-b1d6349ed5b1",
+                            "objID": "224f70a9-7b1d-4567-94a3-20c1db655ad3",
                             "definition": {
-                              "SELECTED": {
-                                "CHECKED": {
-                                  "bg_color": "primary"
-                                }
-                              },
                               "MAIN": {
                                 "DEFAULT": {
-                                  "bg_color": "bg_primary",
-                                  "text_align": "CENTER",
-                                  "text_color": "text_secondary"
-                                }
-                              },
-                              "SCROLLBAR": {
-                                "DEFAULT": {
-                                  "bg_color": "primary"
+                                  "align": "CENTER"
                                 }
                               }
                             }
                           },
                           "group": "",
-                          "groupIndex": 0
+                          "groupIndex": 0,
+                          "text": "音乐播放",
+                          "textType": "literal",
+                          "longMode": "WRAP",
+                          "recolor": false,
+                          "useStaticText": true
                         }
                       ],
-                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                      "hiddenFlagType": "literal",
+                      "clickableFlag": true,
+                      "clickableFlagType": "literal",
+                      "flagScrollbarMode": "",
+                      "flagScrollDirection": "",
+                      "scrollSnapX": "",
+                      "scrollSnapY": "",
+                      "checkedState": false,
+                      "checkedStateType": "literal",
+                      "disabledStateType": "literal",
+                      "states": "",
+                      "localStyles": {
+                        "objID": "a2659cc5-5390-4310-8868-8f2434a8a41e",
+                        "definition": {
+                          "MAIN": {
+                            "DEFAULT": {
+                              "text_color": "text_primary",
+                              "bg_color": "card",
+                              "shadow_width": 0
+                            },
+                            "PRESSED": {
+                              "bg_color": "primary"
+                            },
+                            "CHECKED": {
+                              "bg_color": "primary"
+                            }
+                          }
+                        }
+                      },
+                      "group": "",
+                      "groupIndex": 0
+                    },
+                    {
+                      "objID": "8f49d561-e32f-4ae3-eb0e-fea968268552",
+                      "type": "LVGLButtonWidget",
+                      "left": -20,
+                      "top": 1,
+                      "width": 250,
+                      "height": 220,
+                      "customInputs": [],
+                      "customOutputs": [],
+                      "style": {
+                        "objID": "a381fb8b-592b-4913-b31f-74a0fba9b7f3",
+                        "useStyle": "default",
+                        "conditionalStyles": [],
+                        "childStyles": []
+                      },
+                      "hiddenInEditor": true,
+                      "timeline": [],
+                      "eventHandlers": [],
+                      "identifier": "midi_btn_mid",
+                      "leftUnit": "px",
+                      "topUnit": "px",
+                      "widthUnit": "px",
+                      "heightUnit": "px",
+                      "children": [
+                        {
+                          "objID": "f40836a6-9252-4f8f-bd4a-70043c9fc4fc",
+                          "type": "LVGLLabelWidget",
+                          "left": 0,
+                          "top": 0,
+                          "width": 185,
+                          "height": 34,
+                          "customInputs": [],
+                          "customOutputs": [],
+                          "style": {
+                            "objID": "15299a20-34d5-4cd9-8e69-7483912b8aa4",
+                            "useStyle": "default",
+                            "conditionalStyles": [],
+                            "childStyles": []
+                          },
+                          "hiddenInEditor": true,
+                          "timeline": [],
+                          "eventHandlers": [],
+                          "leftUnit": "px",
+                          "topUnit": "px",
+                          "widthUnit": "content",
+                          "heightUnit": "content",
+                          "children": [],
+                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                          "hiddenFlagType": "literal",
+                          "clickableFlagType": "literal",
+                          "flagScrollbarMode": "",
+                          "flagScrollDirection": "",
+                          "scrollSnapX": "",
+                          "scrollSnapY": "",
+                          "checkedStateType": "literal",
+                          "disabledStateType": "literal",
+                          "states": "",
+                          "localStyles": {
+                            "objID": "58547932-ba5d-42b2-d1e6-37c15e269d01",
+                            "definition": {
+                              "MAIN": {
+                                "DEFAULT": {
+                                  "align": "CENTER"
+                                }
+                              }
+                            }
+                          },
+                          "group": "",
+                          "groupIndex": 0,
+                          "text": "Midi文件播放",
+                          "textType": "literal",
+                          "longMode": "WRAP",
+                          "recolor": false,
+                          "useStaticText": true
+                        }
+                      ],
+                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
                       "hiddenFlagType": "literal",
                       "clickableFlag": true,
                       "clickableFlagType": "literal",
@@ -25134,35 +25543,133 @@
                       "disabledStateType": "literal",
                       "states": "",
                       "localStyles": {
-                        "objID": "ec4ba318-ddab-4841-d549-264f9db7e839",
+                        "objID": "b81f313a-f34e-42b4-c82a-12f5a93c41eb",
                         "definition": {
-                          "SELECTED": {
-                            "DEFAULT": {
-                              "grid_cell_y_align": "CENTER",
-                              "grid_cell_column_pos": 3
-                            }
-                          },
                           "MAIN": {
                             "DEFAULT": {
-                              "grid_cell_column_pos": 2,
-                              "grid_cell_y_align": "CENTER",
-                              "grid_cell_x_align": "STRETCH",
                               "text_color": "text_primary",
-                              "text_align": "CENTER",
-                              "border_width": 0,
-                              "bg_color": "bg_primary"
+                              "bg_color": "card",
+                              "shadow_width": 0
+                            },
+                            "PRESSED": {
+                              "bg_color": "primary"
+                            },
+                            "CHECKED": {
+                              "bg_color": "primary"
                             }
                           }
                         }
                       },
                       "group": "",
-                      "groupIndex": 0,
-                      "options": "Midi音乐\\n录音文件",
-                      "optionsType": "literal",
-                      "selected": 0,
-                      "selectedType": "literal",
-                      "direction": "bottom",
-                      "useStaticText": true
+                      "groupIndex": 0
+                    },
+                    {
+                      "objID": "26832fee-b144-43d6-971b-cc89df3746d7",
+                      "type": "LVGLButtonWidget",
+                      "left": 0,
+                      "top": 0,
+                      "width": 250,
+                      "height": 220,
+                      "customInputs": [],
+                      "customOutputs": [],
+                      "style": {
+                        "objID": "07b2a146-f1cf-4259-fa5f-12699396f375",
+                        "useStyle": "default",
+                        "conditionalStyles": [],
+                        "childStyles": []
+                      },
+                      "hiddenInEditor": true,
+                      "timeline": [],
+                      "eventHandlers": [],
+                      "identifier": "midi_btn_hmr",
+                      "leftUnit": "px",
+                      "topUnit": "px",
+                      "widthUnit": "px",
+                      "heightUnit": "px",
+                      "children": [
+                        {
+                          "objID": "68fbee91-f024-4f69-e219-ef0f1e0462e3",
+                          "type": "LVGLLabelWidget",
+                          "left": 0,
+                          "top": 0,
+                          "width": 180,
+                          "height": 34,
+                          "customInputs": [],
+                          "customOutputs": [],
+                          "style": {
+                            "objID": "c3fa1306-2258-414d-9468-f70caec6416b",
+                            "useStyle": "default",
+                            "conditionalStyles": [],
+                            "childStyles": []
+                          },
+                          "hiddenInEditor": true,
+                          "timeline": [],
+                          "eventHandlers": [],
+                          "leftUnit": "px",
+                          "topUnit": "px",
+                          "widthUnit": "content",
+                          "heightUnit": "content",
+                          "children": [],
+                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                          "hiddenFlagType": "literal",
+                          "clickableFlagType": "literal",
+                          "flagScrollbarMode": "",
+                          "flagScrollDirection": "",
+                          "scrollSnapX": "",
+                          "scrollSnapY": "",
+                          "checkedStateType": "literal",
+                          "disabledStateType": "literal",
+                          "states": "",
+                          "localStyles": {
+                            "objID": "b3ec223e-dac6-4cc2-f2d6-814f00f7d153",
+                            "definition": {
+                              "MAIN": {
+                                "DEFAULT": {
+                                  "align": "CENTER"
+                                }
+                              }
+                            }
+                          },
+                          "group": "",
+                          "groupIndex": 0,
+                          "text": "录音文件播放",
+                          "textType": "literal",
+                          "longMode": "WRAP",
+                          "recolor": false,
+                          "useStaticText": true
+                        }
+                      ],
+                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                      "hiddenFlagType": "literal",
+                      "clickableFlag": true,
+                      "clickableFlagType": "literal",
+                      "flagScrollbarMode": "",
+                      "flagScrollDirection": "",
+                      "scrollSnapX": "",
+                      "scrollSnapY": "",
+                      "checkedStateType": "literal",
+                      "disabledStateType": "literal",
+                      "states": "",
+                      "localStyles": {
+                        "objID": "2f0c3143-12b7-4f01-befa-ee4a2f0ba6c3",
+                        "definition": {
+                          "MAIN": {
+                            "DEFAULT": {
+                              "text_color": "text_primary",
+                              "bg_color": "card",
+                              "shadow_width": 0
+                            },
+                            "PRESSED": {
+                              "bg_color": "primary"
+                            },
+                            "CHECKED": {
+                              "bg_color": "primary"
+                            }
+                          }
+                        }
+                      },
+                      "group": "",
+                      "groupIndex": 0
                     }
                   ],
                   "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -25177,16 +25684,15 @@
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
-                    "objID": "cedaacf8-115c-4d7a-f224-d5b7e1f48a53",
+                    "objID": "46f9a63f-ca65-4fa3-a766-eedd579b1f40",
                     "definition": {
                       "MAIN": {
                         "DEFAULT": {
-                          "grid_row_dsc_array": "FR(1)",
-                          "grid_column_dsc_array": "FR(1), FR(1), FR(1)",
-                          "layout": "GRID",
+                          "bg_opa": 0,
                           "border_width": 0,
-                          "text_color": "text_primary",
-                          "bg_color": "bg_secondary"
+                          "layout": "FLEX",
+                          "flex_main_place": "CENTER",
+                          "pad_column": 60
                         }
                       }
                     }
@@ -36333,7 +36839,7 @@
                   "left": 0,
                   "top": 0,
                   "width": 100,
-                  "height": 250,
+                  "height": 220,
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
@@ -36356,7 +36862,7 @@
                       "left": -255,
                       "top": 322.5,
                       "width": 200,
-                      "height": 130,
+                      "height": 150,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -36448,6 +36954,9 @@
                             },
                             "PRESSED": {
                               "bg_color": "primary"
+                            },
+                            "CHECKED": {
+                              "bg_color": "primary"
                             }
                           }
                         }
@@ -36461,7 +36970,7 @@
                       "left": -20,
                       "top": 1,
                       "width": 200,
-                      "height": 130,
+                      "height": 150,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -36553,6 +37062,9 @@
                             },
                             "PRESSED": {
                               "bg_color": "primary"
+                            },
+                            "CHECKED": {
+                              "bg_color": "primary"
                             }
                           }
                         }
@@ -36566,7 +37078,7 @@
                       "left": 0,
                       "top": 0,
                       "width": 200,
-                      "height": 130,
+                      "height": 150,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -36658,6 +37170,9 @@
                             },
                             "PRESSED": {
                               "bg_color": "primary"
+                            },
+                            "CHECKED": {
+                              "bg_color": "primary"
                             }
                           }
                         }
@@ -36687,7 +37202,7 @@
                           "layout": "FLEX",
                           "flex_main_place": "CENTER",
                           "pad_column": 100,
-                          "pad_top": 100
+                          "pad_top": 50
                         }
                       }
                     }
@@ -39852,6 +40367,9 @@
                             },
                             "PRESSED": {
                               "bg_color": "primary"
+                            },
+                            "CHECKED": {
+                              "bg_color": "primary"
                             }
                           }
                         }
@@ -39957,6 +40475,9 @@
                               "text_font": "chinese_40"
                             },
                             "PRESSED": {
+                              "bg_color": "primary"
+                            },
+                            "CHECKED": {
                               "bg_color": "primary"
                             }
                           }
@@ -41247,7 +41768,7 @@
       "descent": 7,
       "glyphs": [],
       "lvglRanges": "32-127",
-      "lvglSymbols": "□丨■一丁七万三上下不帜与丑专’”世咦黄 ️呜耶皇芯帝蛤欸紫丙哒嘟抉懵喔谨两严咯嘞呢呐噜丧淼嗨潶嘿枷个中卓奸束缚串临为主验举义之伽乌乘乙九乡书乾争事二于五井亡亢交亥亦产享京亲人仅今从仓他仙以仪仲件任份伏伐会传但位体余佛作使供依便保信修候值假储儿元充先光克兑兔党入全八公六共关兴兵其具养髓瘫痪疾内册写军农冠冤冬冲准减凡凤凰凶出击函分切刑列则初删利到制刷券刺剃前剑功务动劫劳势勒勾包化北匹医十千午华协单南卜卞占卫卯危即卿历厌厕厚原厨去参又及双反取受变叠口另只可号司吃合吉同名后吏向君吠否含启周命和咸响哭喂喜嗣囊四回因围国图土圣在地均坎坏坐坤型垣城基堂堤塚塞填境墓墙增壁士壬声处复夏夕外多夜大天太夫头奎女如妇妨姻娄娘娥娵娶婆婚嫁子孔字存孙孝孟季孤学宁宅宇守安完官定宜宝实客宣室宫害宴宵家容宿寅富寒对寿射将尊小少尝尤尼尾屋屠山岁岳崩工巨巫差己已巳巽市布师帝带干平年并广庆床序库应庚府废座廉建廿开式引张弥弦弱强归当彭影往徙德徽骼心必忌志忠念态思怪恒恤恩息情惊惹愚愿戊戌成或战房所手才执扫技把抗抚抛护披勿匮厄吝啬噬挥敷沛沦瘾谣载阱霾驭骛魅抵拍拒招择拼持指按捉捕换据排掠探接推提插援搬摇摩攒支收放政敌救教散敬数整文斗斯新方施旁旅无日旦时昊昌明易星春是昴显普暑曜更曹替最月有服朔望朝期木未本朱机杀杂权杜条来杨松极构析林果枯枵柏某柘查柱柳标栈树栖株核格栽桑梁棒森植楚榴槃模次正此武死殃殊殿母每毒比毕毛氐民气水求汉江池沈沐沙河治泉法泣注泰泱泽洁洋洗活流浮浴海涂涅消涧清渠渡港游湿溪滋满火灯灵灶灾炉炳点烟焦煞燕爱父片版牙牛牟牢牧物特犬犴犹狂狐狗独狮狱狼猎猪献猴猷猿獐獬玄玉王环现球理琉璃瓶生用田由甲申电畋界留畜疗疮病瘟癌癸白百的皆皇益盖目盲直相看真眠眼睡知石砂破础硙确碓磨示祀祈祖神祟祥祭祸禄福离秋种科秤秦移稳穴穷空穿立竖章童端符第等筑箔箕算类系紫红纪纯纳组织经结绕给络绝续缮罗罡罢置羊美羯翻翼者耗耳肖肝肠肥肺肾胃胆胎胖胜胱脾腊膀自至致舍航般船艮艾节芒芜苍苦苫范茅茕荒药菩营萨葬薄藏虎虚蚓蚩蛇蛟蛰蜡蝎蝠蟹血行衣补表被裁西要覃覆见观规角觜解触訾计认讳许讼识诉词诏译试诞询语说诸读调谭谷象豹貉貐负财贤败货贵费贺贼赏赐赖赦赴超足距跨路转轮轸较输辛辨辰边达运返还进远连迦适选逐逝造逢遇道遣邓郎部郭都酆酉配酝酱酿醉采释重量金针钏钗钟铁铸锋错长门闭问闰间闻阎队防阳阴阵阿陀际陈降除隍隔难雀集雉雨雪雳零雷需震霜露霹青静非革音项须颁颉颠风飞食饰首香马驿鬼魁鱼鸡鸣鹑鹿麒麟麻黄黑默鼓鼠龙东南西北東哈哼呀么嗯深圳可新的旧喵以爆炒吗廿°可喵喵（—「」；°{}{}【】、~）以油炸吗《》！@%#￥、测\"\"“”-咔_试可哦嗯欸诶以烧烤吗可以沾正宗的四川木酱紫伏交面吗扫码连上 WiFi 后使用浏览器访问 192.168.4.1 机械阶级电子鼓点人声复位重置级别全局系统网络硬长按件作者分软件辨率设置一可以显示几行字可以显看看什么十个字呢不能显示示两行字吗上下世个中主之乐习橙色于五亮以们伙会伴住你塔罗牌使菜单保偏关内准几分到前动化单历叫可吃合后启和哦啦器圈在垫基夜奏好子存完导小就尺屏师帮幕床度延开式弦强当性感成我战才拍指挑接效整旅日时是更有期朵机来梦模欢正步然现琴瓜用界的眼睛睡知础确禅秒简练络网置老耳联能自节表要让记设调起超跳过迎还连适选途道醒重量钟钢间陪需面音页题骤高鼓阿啊哎哀唉埃挨癌矮艾爱碍安氨俺岸按案暗昂凹熬傲奥澳八巴叭吧拔把坝爸罢霸白百柏摆败拜班般颁斑搬板版办半伴扮瓣邦帮膀傍棒包°胞宝饱保堡报抱豹暴爆卑杯悲碑北贝备背倍被辈奔本崩逼鼻比彼笔币必毕闭辟碧蔽壁避臂边编蝙鞭扁便变遍辨辩标表别宾滨冰兵丙柄饼并病拨波玻剥播脖伯驳泊勃博搏膊薄卜补捕不布步部擦猜才材财裁采彩踩菜蔡参餐残蚕惨灿仓苍舱藏操曹槽草册侧测策层叉插查茶察差拆柴缠产阐颤昌长肠尝偿常厂场畅倡唱抄超巢朝潮吵炒车扯彻撤尘臣沉陈闯衬称趁撑成呈承诚城乘惩程橙吃池驰迟持匙尺齿斥赤翅充冲虫崇抽仇绸愁筹酬丑瞅臭出初除厨础储楚处触川穿传船喘串窗床晨创吹垂锤春纯唇醇词瓷慈辞磁雌此次刺从匆葱聪丛凑粗促催脆翠村存寸措错搭达答打大呆代带待袋逮戴丹单担胆旦但诞弹淡蛋氮当挡党荡刀导岛倒蹈到盗道稻得德的灯登等邓凳瞪低堤滴迪敌笛底抵地弟帝递第颠典点电店垫淀殿雕吊钓调掉爹跌叠蝶丁叮盯钉顶订定丢东冬懂动冻洞都斗抖陡豆督毒读独堵赌杜肚度渡端短段断锻堆队对吨敦蹲盾顿多夺朵躲俄鹅额恶饿鳄恩儿而尔耳二发乏伐罚阀法帆番翻凡烦繁反返犯泛饭范贩方坊芳防妨房肪仿访纺放飞非啡菲肥废沸肺费分纷芬坟粉份奋愤粪丰风枫封疯峰锋蜂冯逢缝凤奉佛否夫肤孵弗伏扶服浮符幅福辐蝠抚府辅腐父付妇负附复赴副傅富赋腹覆该改钙盖溉概干甘杆肝赶敢感刚岗纲缸钢港高搞稿告戈哥胳鸽割歌阁革格葛隔个各给根跟更耕工弓公功攻供宫恭巩拱共贡勾沟钩狗构购够估咕姑孤菇古谷股骨鼓固故顾瓜刮挂拐怪关观官冠馆管贯惯灌罐光广归龟规硅轨鬼柜贵桂滚棍郭锅国果裹过哈孩海害含函寒韩罕喊汉汗旱杭航毫豪好号浩耗呵喝合何和河核荷盒贺褐赫鹤黑嘿痕很狠恨哼恒横衡轰哄红宏洪虹鸿侯喉猴吼后厚候乎呼忽狐胡壶湖葫糊蝴虎互户护花华哗滑化划画话桦怀淮坏欢还环缓幻唤换患荒慌皇黄煌晃灰恢辉徽回毁悔汇会绘惠慧昏婚浑魂混活火伙或货获祸惑霍击饥圾机肌鸡积基迹绩激及吉级即极急疾集辑籍几己挤脊计记纪忌技际剂季既济继寂寄加夹佳家嘉甲贾钾价驾架假嫁稼尖坚间肩艰兼监减剪检简碱见件建剑健舰渐践鉴键箭江姜将浆僵疆讲奖蒋匠降交郊娇浇骄焦礁角脚搅叫轿较教阶皆接揭街节劫杰洁结捷截竭姐解介戒届界借巾今斤金津筋仅紧锦尽劲近进晋浸禁京经茎惊晶睛精鲸井颈景警净径竞竟敬境静镜纠究九久酒旧救就舅居局菊橘举矩句巨拒具俱剧惧据距聚卷倦决绝觉掘嚼军君均菌俊峻卡开凯慨刊堪砍看康抗炕考烤靠科棵颗壳咳可渴克刻客课肯坑空孔恐控口扣枯哭苦库裤酷夸跨块快宽款狂况矿亏葵愧溃昆困扩括阔垃拉啦喇腊蜡辣来莱赖兰拦栏蓝篮览懒烂滥郎狼廊朗浪捞牢老乐勒雷蕾泪类累冷愣厘梨离莉犁璃黎礼李里哩理鲤力历厉立丽利励例隶粒俩连帘怜莲联廉脸练炼恋链良凉梁粮两亮辆量辽疗聊僚了料列劣烈猎裂邻林临淋磷灵玲凌铃陵羚零龄领岭令另溜刘流留硫瘤柳六龙笼隆垄拢楼漏露卢芦炉鲁陆录鹿碌路驴旅铝履律虑率绿氯滤卵乱掠略伦轮论罗萝逻螺裸洛络骆落妈麻马玛码蚂骂吗嘛埋买迈麦卖脉蛮满曼慢漫忙芒盲茫猫毛矛茅茂冒贸帽貌么没枚玫眉梅媒煤霉每美妹门闷们萌盟猛蒙孟梦弥迷谜米泌秘密蜜眠绵棉免勉面苗描秒妙庙灭民敏名明鸣命摸模膜摩磨蘑魔抹末沫陌莫漠墨默谋某母亩牡姆拇木目牧墓幕慕穆拿哪内那纳娜钠乃奶奈耐男南难囊恼脑闹呢嫩能尼泥你拟逆年念娘酿鸟尿捏您宁凝牛扭纽农浓弄奴努怒女暖挪诺哦欧偶爬帕怕拍排牌派攀盘判叛盼庞旁胖抛炮跑泡胚陪培赔佩配喷盆朋棚蓬鹏膨捧碰批披皮疲脾匹屁譬片偏篇骗漂飘瓢票拼贫频品平评凭苹屏瓶萍坡泼颇婆迫破剖扑铺葡蒲朴浦普谱七妻栖戚期欺漆齐其奇歧骑棋旗企岂启起气弃汽契砌器恰千迁牵铅谦签前钱潜浅遣欠枪腔强墙抢悄敲乔桥瞧巧切茄且窃亲侵秦琴禽勤青氢轻倾清情晴顷请庆穷丘秋蚯求球区曲驱屈躯趋取娶去趣圈全权泉拳犬劝券缺却雀确鹊裙群然燃染嚷壤让饶扰绕惹热人仁忍认任扔仍日绒荣容溶熔融柔肉如儒乳辱入软锐瑞润若弱撒洒萨塞赛三伞散桑嗓丧扫嫂色森僧杀沙纱刹砂傻啥晒山杉衫珊闪陕扇善伤商赏上尚梢烧稍少绍哨舌蛇舍设社射涉摄申伸身深神审婶肾甚渗慎升生声牲胜绳省圣盛剩尸失师诗施狮湿十什石时识实拾食史使始驶士氏世市示式事侍势视饰室是适逝释收手守首寿受兽售授瘦书抒叔枢殊疏舒输蔬熟暑署属鼠薯术束述树竖数刷耍衰摔甩帅双霜爽谁水税睡顺瞬说丝司私思斯撕死四寺似饲松耸宋送颂搜艘苏俗肃素速宿塑酸蒜算虽随髓岁遂碎穗孙损笋缩所索锁他它她塌塔踏胎台抬太态泰贪摊滩坛谈潭坦叹探碳汤唐堂塘糖躺趟涛掏逃桃陶淘萄讨套特疼腾藤梯踢啼提题蹄体替天添田甜填挑条跳贴铁厅听廷亭庭停蜓挺艇通同桐铜童统桶筒痛偷头投透突图徒涂途屠土吐兔团推腿退吞托拖脱驼妥拓唾挖哇蛙娃瓦歪外弯湾丸完玩顽挽晚碗万汪亡王网往忘旺望危威微为围违唯惟维伟伪尾纬委萎卫未位味胃谓喂慰魏温文纹闻蚊吻稳问翁窝我沃卧握乌污屋无吴吾五午伍武舞务物误悟雾夕西吸希析息牺悉惜晰稀溪锡熙嘻膝习席袭媳洗喜戏系细隙虾瞎峡狭辖霞下吓夏厦仙先纤掀鲜闲弦贤咸衔嫌显险县现线限宪陷献腺乡相香厢湘箱详祥翔享响想向巷项象像橡削消萧硝销小晓孝效校笑些歇协胁斜谐携鞋写泄泻卸屑械谢蟹心辛欣新信兴星猩刑行形型醒杏姓幸性凶兄匈胸雄熊休修羞秀袖嗅须虚需徐许序叙畜绪续蓄宣玄悬旋选穴学雪血寻巡询循训讯迅压呀鸦鸭牙芽崖哑雅亚咽烟淹严言岩沿炎研盐颜衍掩眼演厌宴艳焰雁燕央扬羊阳杨洋仰养氧痒样腰邀摇遥咬药要耀爷也冶野业叶页夜液一伊衣医依仪夷宜姨移遗疑乙已以矣蚁义亿忆艺议亦异役抑译易疫益谊逸意溢毅翼因阴音吟银引饮蚓隐印英婴鹰迎盈营蝇赢影映硬哟拥永泳勇涌用优忧幽悠尤犹由邮油游友有又右幼诱于予余鱼娱渔愉愚与宇羽雨语玉吁育郁狱浴预域欲喻寓御裕遇愈誉豫元员园原圆袁援缘源远怨院愿曰约月岳钥悦阅跃越云匀允孕运晕韵蕴杂砸灾栽宰再在咱暂赞脏葬遭糟早枣藻皂造噪燥躁则择泽责贼怎曾增赠渣扎眨炸摘宅窄债沾粘展占战站张章涨掌丈仗帐胀账障招找召兆赵照罩遮折哲者这浙针珍真诊枕阵振镇震争征挣睁蒸整正证郑政症之支汁芝枝知织肢脂蜘执直值职植殖止只旨址纸指趾至志制治质致智置中忠终钟肿种仲众重州舟周洲轴宙皱骤朱株珠诸猪蛛竹烛逐主煮嘱住助注贮驻柱祝著筑抓爪专砖转赚庄桩装壮状撞追准捉桌着仔兹姿资滋籽子紫字自宗综棕踪总纵走奏租足族阻组祖钻嘴最罪醉尊遵昨左作坐座做蔼隘庵鞍黯肮拗袄懊扒芭疤捌跋靶掰扳绊梆绑榜蚌谤磅镑苞褒雹鲍狈悖惫笨绷泵蹦匕鄙庇痹弊璧贬匾辫彪憋鳖瘪彬斌缤濒鬓秉禀菠舶渤跛簸哺怖埠簿睬惭沧糙厕蹭茬岔豺掺搀禅馋蝉铲猖敞钞嘲澈忱辰铛澄逞秤痴弛侈耻宠畴稠锄雏橱矗揣囱疮炊捶椿淳蠢戳绰祠赐醋簇窜篡崔摧悴粹搓撮挫瘩怠贷耽档叨捣祷悼蹬嘀涤缔蒂掂滇巅佃甸玷奠刁叼迭谍碟鼎董栋兜蚪逗痘睹妒镀缎兑墩盹囤钝咄踱堕舵惰跺讹娥峨蛾鄂愕遏噩饵贰筏矾妃匪诽吠吩氛焚忿讽芙拂袱甫斧俯脯咐尬丐柑竿尴秆橄赣冈肛杠羔膏糕镐疙搁蛤庚羹埂耿梗蚣躬汞苟垢沽辜雇寡卦褂乖棺逛闺瑰癸跪亥酣憨涵悍捍焊憾撼翰夯皓禾烘弘弧唬沪猾徊宦涣焕凰惶蝗簧恍幌卉讳诲贿晦荤豁讥叽唧缉箕稽棘嫉妓鲫冀歼煎拣茧捡荐贱溅槛缰桨酱椒跤蕉侥狡绞饺矫剿窖酵睫芥诫藉荆兢靖揪灸玖韭臼疚拘驹桔沮炬锯娟鹃绢诀崛爵钧骏竣揩楷勘坎慷糠亢拷铐坷苛磕垦恳啃叩寇垮筷筐旷框眶盔窥馈坤廓婪澜揽缆榄榔姥涝酪垒肋棱漓吏沥俐栗砾雳镰谅晾缭瞭琳鳞凛赁拎聆菱浏馏榴胧窿娄篓颅卤禄吕侣屡峦抡仑啰锣骡蟆馒瞒蔓莽锚昧媚氓朦锰咪靡觅缅瞄藐蔑闽冥谬馍摹寞沐睦暮捺瑙馁妮溺撵碾孽拧狞泞钮虐懦殴呕葩徘湃潘乓螃刨袍砰澎坯劈啤僻翩聘乒坪魄菩圃瀑曝凄脐崎鳍迄泣洽钳黔谴嵌呛跷锹侨憔俏翘怯芹擒寝卿蜻擎琼岖渠瘸瓤壬纫韧茸蓉冗揉蹂汝褥闰腮叁骚涩鲨霎筛煽赡晌勺奢呻绅笙甥矢恃拭嗜梳淑赎曙恕庶墅漱蟀拴栓吮硕嘶伺讼酥溯祟隧梭嗦琐蹋汰痰谭檀毯膛倘淌滔剔屉剃涕惕恬迢帖彤捅凸颓蜕褪豚鸵椭袜豌婉惋皖腕枉妄偎薇帷苇畏尉猬蔚瘟紊嗡蜗巫诬芜梧侮鹉戊昔犀熄蟋匣侠馅羡镶宵潇箫霄嚣肖哮啸蝎邪懈锌薪馨衅腥汹锈戌墟旭酗婿絮轩喧癣炫绚靴薛勋旬驯汛逊殉押涯衙焉檐砚谚堰秧漾夭妖肴姚窑舀椰腋壹怡贻胰倚屹邑绎茵荫寅淫莺樱鹦颖佣庸咏踊佑迂淤渝舆禹芋鸳渊苑粤耘闵赃凿蚤咋喳轧闸诈栅斋毡瞻斩辗绽彰樟杖沼辙蔗贞斟疹怔狰拯侄挚秩滞稚粥肘帚昼拄铸拽撰椎锥坠缀赘佐佘赊喽 ：；～~·！@#￥%……&*（）——+=-【{】}|、：；“‘《，》。？/⌈⌉⌊⌋『』〇",
+      "lvglSymbols": "□丨■一丁七万三上下不帜与丑专’肇”世咦黄 ️呜耶皇芯帝蛤欸阙娴紫丙哒嘟抉懵喔谨两严咯嘞呢呐噜丧淼嗨潶嘿枷个中卓奸束缚串临为主验举义之伽乌乘乙九乡书乾争事二于五井亡亢交亥亦产享京亲人仅今从仓他仙以仪仲件任份伏伐会传但位体余佛作使供依便保信修候值假储儿元充先光克兑兔党入全八公六共关兴兵其具养髓瘫痪疾内册写军农冠冤冬冲准减凡凤凰凶出击函分切刑列则初删利到制刷券刺剃前剑功务动劫劳势勒勾包化北匹医十千午华协单南卜卞占卫卯危即卿历厌厕厚原厨去参又及双反取受变叠口另只可号司吃合吉同名后吏向君吠否含启周命和咸响哭喂喜嗣囊四回因围国图土圣在地均坎坏坐坤型垣城基堂堤塚塞填境墓墙增壁士壬声处复夏夕外多夜大天太夫头奎女如妇妨姻娄娘娥娵娶婆婚嫁子孔字存孙孝孟季孤学宁宅宇守安完官定宜宝实客宣室宫害宴宵家容宿寅富寒对寿射将尊小少尝尤尼尾屋屠山岁岳崩工巨巫差己已巳巽市布师帝带干平年并广庆床序库应庚府废座廉建廿开式引张弥弦弱强归当彭影往徙德徽骼心必忌志忠念态思怪恒恤恩息情惊惹愚愿戊戌成或战房所手才执扫技把抗抚抛护披勿匮厄吝啬噬挥敷沛沦瘾谣载阱霾驭骛魅抵拍拒招择拼持指按捉捕换据排掠探接推提插援搬摇摩攒支收放政敌救教散敬数整文斗斯新方施旁旅无日旦时昊昌明易星春是昴显普暑曜更曹替最月有服朔望朝期木未本朱机杀杂权杜条来杨松极构析林果枯枵柏某柘查柱柳标栈树栖株核格栽桑梁棒森植楚榴槃模次正此武死殃殊殿母每毒比毕毛氐民气水求汉江池沈沐沙河治泉法泣注泰泱泽洁洋洗活流浮浴海涂涅消涧清渠渡港游湿溪滋满火灯灵灶灾炉炳点烟焦煞燕爱父片版牙牛牟牢牧物特犬犴犹狂狐狗独狮狱狼猎猪献猴猷猿獐獬玄玉王环现球理琉璃瓶生用田由甲申电畋界留畜疗疮病瘟癌癸白百的皆皇益盖目盲直相看真眠眼睡知石砂破础硙确碓磨示祀祈祖神祟祥祭祸禄福离秋种科秤秦移稳穴穷空穿立竖章童端符第等筑箔箕算类系紫红纪纯纳组织经结绕给络绝续缮罗罡罢置羊美羯翻翼者耗耳肖肝肠肥肺肾胃胆胎胖胜胱脾腊膀自至致舍航般船艮艾节芒芜苍苦苫范茅茕荒药菩营萨葬薄藏虎虚蚓蚩蛇蛟蛰蜡蝎蝠蟹血行衣补表被裁西要覃覆见观规角觜解触訾计认讳许讼识诉词诏译试诞询语说诸读调谭谷象豹貉貐负财贤败货贵费贺贼赏赐赖赦赴超足距跨路转轮轸较输辛辨辰边达运返还进远连迦适选逐逝造逢遇道遣邓郎部郭都酆酉配酝酱酿醉采释重量金针钏钗钟铁铸锋错长门闭问闰间闻阎队防阳阴阵阿陀际陈降除隍隔难雀集雉雨雪雳零雷需震霜露霹青静非革音项须颁颉颠风飞食饰首香马驿鬼魁鱼鸡鸣鹑鹿麒麟麻黄黑默鼓鼠龙东南西北東哈哼呀么嗯深圳可新的旧喵以爆炒吗廿°可喵喵（—「」；°{}{}【】、~）以油炸吗《》！@%#￥、测\"\"“”-咔_试可哦嗯欸诶以烧烤吗可以沾正宗的四川木酱紫伏交面吗扫码连上 WiFi 后使用浏览器访问 192.168.4.1 机械阶级电子鼓点人声复位重置级别全局系统网络硬长按件作者分软件辨率设置一可以显示几行字可以显看看什么十个字呢不能显示示两行字吗上下世个中主之乐习橙色于五亮以们伙会伴住你塔罗牌使菜单保偏关内准几分到前动化单历叫可吃合后启和哦啦器圈在垫基夜奏好子存完导小就尺屏师帮幕床度延开式弦强当性感成我战才拍指挑接效整旅日时是更有期朵机来梦模欢正步然现琴瓜用界的眼睛睡知础确禅秒简练络网置老耳联能自节表要让记设调起超跳过迎还连适选途道醒重量钟钢间陪需面音页题骤高鼓阿啊哎哀唉埃挨癌矮艾爱碍安氨俺岸按案暗昂凹熬傲奥澳八巴叭吧拔把坝爸罢霸白百柏摆败拜班般颁斑搬板版办半伴扮瓣邦帮膀傍棒包°胞宝饱保堡报抱豹暴爆卑杯悲碑北贝备背倍被辈奔本崩逼鼻比彼笔币必毕闭辟碧蔽壁避臂边编蝙鞭扁便变遍辨辩标表别宾滨冰兵丙柄饼并病拨波玻剥播脖伯驳泊勃博搏膊薄卜补捕不布步部擦猜才材财裁采彩踩菜蔡参餐残蚕惨灿仓苍舱藏操曹槽草册侧测策层叉插查茶察差拆柴缠产阐颤昌长肠尝偿常厂场畅倡唱抄超巢朝潮吵炒车扯彻撤尘臣沉陈闯衬称趁撑成呈承诚城乘惩程橙吃池驰迟持匙尺齿斥赤翅充冲虫崇抽仇绸愁筹酬丑瞅臭出初除厨础储楚处触川穿传船喘串窗床晨创吹垂锤春纯唇醇词瓷慈辞磁雌此次刺从匆葱聪丛凑粗促催脆翠村存寸措错搭达答打大呆代带待袋逮戴丹单担胆旦但诞弹淡蛋氮当挡党荡刀导岛倒蹈到盗道稻得德的灯登等邓凳瞪低堤滴迪敌笛底抵地弟帝递第颠典点电店垫淀殿雕吊钓调掉爹跌叠蝶丁叮盯钉顶订定丢东冬懂动冻洞都斗抖陡豆督毒读独堵赌杜肚度渡端短段断锻堆队对吨敦蹲盾顿多夺朵躲俄鹅额恶饿鳄恩儿而尔耳二发乏伐罚阀法帆番翻凡烦繁反返犯泛饭范贩方坊芳防妨房肪仿访纺放飞非啡菲肥废沸肺费分纷芬坟粉份奋愤粪丰风枫封疯峰锋蜂冯逢缝凤奉佛否夫肤孵弗伏扶服浮符幅福辐蝠抚府辅腐父付妇负附复赴副傅富赋腹覆该改钙盖溉概干甘杆肝赶敢感刚岗纲缸钢港高搞稿告戈哥胳鸽割歌阁革格葛隔个各给根跟更耕工弓公功攻供宫恭巩拱共贡勾沟钩狗构购够估咕姑孤菇古谷股骨鼓固故顾瓜刮挂拐怪关观官冠馆管贯惯灌罐光广归龟规硅轨鬼柜贵桂滚棍郭锅国果裹过哈孩海害含函寒韩罕喊汉汗旱杭航毫豪好号浩耗呵喝合何和河核荷盒贺褐赫鹤黑嘿痕很狠恨哼恒横衡轰哄红宏洪虹鸿侯喉猴吼后厚候乎呼忽狐胡壶湖葫糊蝴虎互户护花华哗滑化划画话桦怀淮坏欢还环缓幻唤换患荒慌皇黄煌晃灰恢辉徽回毁悔汇会绘惠慧昏婚浑魂混活火伙或货获祸惑霍击饥圾机肌鸡积基迹绩激及吉级即极急疾集辑籍几己挤脊计记纪忌技际剂季既济继寂寄加夹佳家嘉甲贾钾价驾架假嫁稼尖坚间肩艰兼监减剪检简碱见件建剑健舰渐践鉴键箭江姜将浆僵疆讲奖蒋匠降交郊娇浇骄焦礁角脚搅叫轿较教阶皆接揭街节劫杰洁结捷截竭姐解介戒届界借巾今斤金津筋仅紧锦尽劲近进晋浸禁京经茎惊晶睛精鲸井颈景警净径竞竟敬境静镜纠究九久酒旧救就舅居局菊橘举矩句巨拒具俱剧惧据距聚卷倦决绝觉掘嚼军君均菌俊峻卡开凯慨刊堪砍看康抗炕考烤靠科棵颗壳咳可渴克刻客课肯坑空孔恐控口扣枯哭苦库裤酷夸跨块快宽款狂况矿亏葵愧溃昆困扩括阔垃拉啦喇腊蜡辣来莱赖兰拦栏蓝篮览懒烂滥郎狼廊朗浪捞牢老乐勒雷蕾泪类累冷愣厘梨离莉犁璃黎礼李里哩理鲤力历厉立丽利励例隶粒俩连帘怜莲联廉脸练炼恋链良凉梁粮两亮辆量辽疗聊僚了料列劣烈猎裂邻林临淋磷灵玲凌铃陵羚零龄领岭令另溜刘流留硫瘤柳六龙笼隆垄拢楼漏露卢芦炉鲁陆录鹿碌路驴旅铝履律虑率绿氯滤卵乱掠略伦轮论罗萝逻螺裸洛络骆落妈麻马玛码蚂骂吗嘛埋买迈麦卖脉蛮满曼慢漫忙芒盲茫猫毛矛茅茂冒贸帽貌么没枚玫眉梅媒煤霉每美妹门闷们萌盟猛蒙孟梦弥迷谜米泌秘密蜜眠绵棉免勉面苗描秒妙庙灭民敏名明鸣命摸模膜摩磨蘑魔抹末沫陌莫漠墨默谋某母亩牡姆拇木目牧墓幕慕穆拿哪内那纳娜钠乃奶奈耐男南难囊恼脑闹呢嫩能尼泥你拟逆年念娘酿鸟尿捏您宁凝牛扭纽农浓弄奴努怒女暖挪诺哦欧偶爬帕怕拍排牌派攀盘判叛盼庞旁胖抛炮跑泡胚陪培赔佩配喷盆朋棚蓬鹏膨捧碰批披皮疲脾匹屁譬片偏篇骗漂飘瓢票拼贫频品平评凭苹屏瓶萍坡泼颇婆迫破剖扑铺葡蒲朴浦普谱七妻栖戚期欺漆齐其奇歧骑棋旗企岂启起气弃汽契砌器恰千迁牵铅谦签前钱潜浅遣欠枪腔强墙抢悄敲乔桥瞧巧切茄且窃亲侵秦琴禽勤青氢轻倾清情晴顷请庆穷丘秋蚯求球区曲驱屈躯趋取娶去趣圈全权泉拳犬劝券缺却雀确鹊裙群然燃染嚷壤让饶扰绕惹热人仁忍认任扔仍日绒荣容溶熔融柔肉如儒乳辱入软锐瑞润若弱撒洒萨塞赛三伞散桑嗓丧扫嫂色森僧杀沙纱刹砂傻啥晒山杉衫珊闪陕扇善伤商赏上尚梢烧稍少绍哨舌蛇舍设社射涉摄申伸身深神审婶肾甚渗慎升生声牲胜绳省圣盛剩尸失师诗施狮湿十什石时识实拾食史使始驶士氏世市示式事侍势视饰室是适逝释收手守首寿受兽售授瘦书抒叔枢殊疏舒输蔬熟暑署属鼠薯术束述树竖数刷耍衰摔甩帅双霜爽谁水税睡顺瞬说丝司私思斯撕死四寺似饲松耸宋送颂搜艘苏俗肃素速宿塑酸蒜算虽随髓岁遂碎穗孙损笋缩所索锁他它她塌塔踏胎台抬太态泰贪摊滩坛谈潭坦叹探碳汤唐堂塘糖躺趟涛掏逃桃陶淘萄讨套特疼腾藤梯踢啼提题蹄体替天添田甜填挑条跳贴铁厅听廷亭庭停蜓挺艇通同桐铜童统桶筒痛偷头投透突图徒涂途屠土吐兔团推腿退吞托拖脱驼妥拓唾挖哇蛙娃瓦歪外弯湾丸完玩顽挽晚碗万汪亡王网往忘旺望危威微为围违唯惟维伟伪尾纬委萎卫未位味胃谓喂慰魏温文纹闻蚊吻稳问翁窝我沃卧握乌污屋无吴吾五午伍武舞务物误悟雾夕西吸希析息牺悉惜晰稀溪锡熙嘻膝习席袭媳洗喜戏系细隙虾瞎峡狭辖霞下吓夏厦仙先纤掀鲜闲弦贤咸衔嫌显险县现线限宪陷献腺乡相香厢湘箱详祥翔享响想向巷项象像橡削消萧硝销小晓孝效校笑些歇协胁斜谐携鞋写泄泻卸屑械谢蟹心辛欣新信兴星猩刑行形型醒杏姓幸性凶兄匈胸雄熊休修羞秀袖嗅须虚需徐许序叙畜绪续蓄宣玄悬旋选穴学雪血寻巡询循训讯迅压呀鸦鸭牙芽崖哑雅亚咽烟淹严言岩沿炎研盐颜衍掩眼演厌宴艳焰雁燕央扬羊阳杨洋仰养氧痒样腰邀摇遥咬药要耀爷也冶野业叶页夜液一伊衣医依仪夷宜姨移遗疑乙已以矣蚁义亿忆艺议亦异役抑译易疫益谊逸意溢毅翼因阴音吟银引饮蚓隐印英婴鹰迎盈营蝇赢影映硬哟拥永泳勇涌用优忧幽悠尤犹由邮油游友有又右幼诱于予余鱼娱渔愉愚与宇羽雨语玉吁育郁狱浴预域欲喻寓御裕遇愈誉豫元员园原圆袁援缘源远怨院愿曰约月岳钥悦阅跃越云匀允孕运晕韵蕴杂砸灾栽宰再在咱暂赞脏葬遭糟早枣藻皂造噪燥躁则择泽责贼怎曾增赠渣扎眨炸摘宅窄债沾粘展占战站张章涨掌丈仗帐胀账障招找召兆赵照罩遮折哲者这浙针珍真诊枕阵振镇震争征挣睁蒸整正证郑政症之支汁芝枝知织肢脂蜘执直值职植殖止只旨址纸指趾至志制治质致智置中忠终钟肿种仲众重州舟周洲轴宙皱骤朱株珠诸猪蛛竹烛逐主煮嘱住助注贮驻柱祝著筑抓爪专砖转赚庄桩装壮状撞追准捉桌着仔兹姿资滋籽子紫字自宗综棕踪总纵走奏租足族阻组祖钻嘴最罪醉尊遵昨左作坐座做蔼隘庵鞍黯肮拗袄懊扒芭疤捌跋靶掰扳绊梆绑榜蚌谤磅镑苞褒雹鲍狈悖惫笨绷泵蹦匕鄙庇痹弊璧贬匾辫彪憋鳖瘪彬斌缤濒鬓秉禀菠舶渤跛簸哺怖埠簿睬惭沧糙厕蹭茬岔豺掺搀禅馋蝉铲猖敞钞嘲澈忱辰铛澄逞秤痴弛侈耻宠畴稠锄雏橱矗揣囱疮炊捶椿淳蠢戳绰祠赐醋簇窜篡崔摧悴粹搓撮挫瘩怠贷耽档叨捣祷悼蹬嘀涤缔蒂掂滇巅佃甸玷奠刁叼迭谍碟鼎董栋兜蚪逗痘睹妒镀缎兑墩盹囤钝咄踱堕舵惰跺讹娥峨蛾鄂愕遏噩饵贰筏矾妃匪诽吠吩氛焚忿讽芙拂袱甫斧俯脯咐尬丐柑竿尴秆橄赣冈肛杠羔膏糕镐疙搁蛤庚羹埂耿梗蚣躬汞苟垢沽辜雇寡卦褂乖棺逛闺瑰癸跪亥酣憨涵悍捍焊憾撼翰夯皓禾烘弘弧唬沪猾徊宦涣焕凰惶蝗簧恍幌卉讳诲贿晦荤豁讥叽唧缉箕稽棘嫉妓鲫冀歼煎拣茧捡荐贱溅槛缰桨酱椒跤蕉侥狡绞饺矫剿窖酵睫芥诫藉荆兢靖揪灸玖韭臼疚拘驹桔沮炬锯娟鹃绢诀崛爵钧骏竣揩楷勘坎慷糠亢拷铐坷苛磕垦恳啃叩寇垮筷筐旷框眶盔窥馈坤廓婪澜揽缆榄榔姥涝酪垒肋棱漓吏沥俐栗砾雳镰谅晾缭瞭琳鳞凛赁拎聆菱浏馏榴胧窿娄篓颅卤禄吕侣屡峦抡仑啰锣骡蟆馒瞒蔓莽锚昧媚氓朦锰咪靡觅缅瞄藐蔑闽冥谬馍摹寞沐睦暮捺瑙馁妮溺撵碾孽拧狞泞钮虐懦殴呕葩徘湃潘乓螃刨袍砰澎坯劈啤僻翩聘乒坪魄菩圃瀑曝凄脐崎鳍迄泣洽钳黔谴嵌呛跷锹侨憔俏翘怯芹擒寝卿蜻擎琼岖渠瘸瓤壬纫韧茸蓉冗揉蹂汝褥闰腮叁骚涩鲨霎筛煽赡晌勺奢呻绅笙甥矢恃拭嗜梳淑赎曙恕庶墅漱蟀拴栓吮硕嘶伺讼酥溯祟隧梭嗦琐蹋汰痰谭檀毯膛倘淌滔剔屉剃涕惕恬迢帖彤捅凸颓蜕褪豚鸵椭袜豌婉惋皖腕枉妄偎薇帷苇畏尉猬蔚瘟紊嗡蜗巫诬芜梧侮鹉戊昔犀熄蟋匣侠馅羡镶宵潇箫霄嚣肖哮啸蝎邪懈锌薪馨衅腥汹锈戌墟旭酗婿絮轩喧癣炫绚靴薛勋旬驯汛逊殉押涯衙焉檐砚谚堰秧漾夭妖肴姚窑舀椰腋壹怡贻胰倚屹邑绎茵荫寅淫莺樱鹦颖佣庸咏踊佑迂淤渝舆禹芋鸳渊苑粤耘闵赃凿蚤咋喳轧闸诈栅斋毡瞻斩辗绽彰樟杖沼辙蔗贞斟疹怔狰拯侄挚秩滞稚粥肘帚昼拄铸拽撰椎锥坠缀赘佐佘赊喽 ：；～~·！@#￥%……&*（）——+=-【{】}|、：；“‘《，》。？/⌈⌉⌊⌋『』〇",
       "lvglAdditionalSources": [
         {
           "objID": "e0f9793d-86e1-40d0-983f-d4f370deb191",

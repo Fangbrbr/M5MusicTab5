@@ -14,6 +14,7 @@
 #include "service_xiaozhi.h"
 #include "service_audio.h"
 #include "service_page_onboard.h"
+#include "service_page_setting.h"
 #include "service_input.h"
 #include "engine_sf2.h"
 #include "freertos/FreeRTOS.h"
@@ -195,6 +196,8 @@ static void task_app_entry(void *arg)
         service_recorder_process();
         service_http_client_process();
         service_page_onboard_process();
+        /* SF2 音源切换等设置页挂起请求（秒级加载在此消化，不堵 task_gui） */
+        service_page_setting_process();
 
         /* C6 BLE MIDI 探测延后到后台执行，避免阻塞开机进度；仅执行一次 */
         service_input_late_probe_ble();

@@ -56,10 +56,72 @@ bool engine_sf2_is_ready(void);
  * 与渲染互斥：加载期间渲染暂停。大文件加载耗时数秒，
  * 仅适合启动阶段或用户确认场景调用。
  *
+ * Trap: 上游 loadSf2File 进入即 parser.clear() 释放旧音色，加载失败
+ * 后引擎处于无音色静默态，调用方必须自行 fallback（如改载内部预设）。
+ *
  * @param[in] path 绝对路径（/sdcard/... 或 /sys_int/...）
  * @return true 加载成功
  */
 bool engine_sf2_load_file(const char *path);
+
+/* -------------------- SD 卡音源选择（设置页 setting_sf2_source 后端） -------------------- */
+
+/** SD 卡音源目录与单文件大小上限：PSRAM 被显示/AFE/WS 等多方共享。
+ * 16 MB 是文件级硬上限；真正能否加载由 engine_sf2_check_fit 按加载时刻的
+ * 实际剩余 PSRAM 动态判定（需 ≥ 文件大小 + 安全保留，否则拒绝以防功能缺失） */
+#define ENGINE_SF2_SD_DIR            "/sdcard/soundfonts"
+#define ENGINE_SF2_SD_MAX_BYTES      (16u * 1024u * 1024u)
+#define ENGINE_SF2_SD_NAME_MAX_LEN   96
+#define ENGINE_SF2_SD_MAX_FILES      32
+
+/**
+ * @brief 预检音源文件当前能否加载（PSRAM 预算闸门）
+ *
+ * Why: 大音源加载后占用 PSRAM，可能导致 Zen/鼓组等 App 的 canvas 分配失败、
+ * 功能缺失。加载前先校验：剩余 PSRAM 需 ≥ 文件大小 + 安全保留（默认 3 MB，
+ * 覆盖最大 App canvas + 余量），否则拒绝并保留当前音源。
+ *
+ * @param[in] path 绝对路径
+ * @return true 可加载；false 内存不足
+ */
+bool engine_sf2_check_fit(const char *path);
+
+/**
+ * @brief 重新扫描 SD 卡音源目录，缓存 .sf2 文件名列表（按名字序）
+ * @return 可用文件数（无卡/无目录/无文件返回 0）
+ */
+int engine_sf2_sd_rescan(void);
+
+/**
+ * @brief 取扫描缓存中第 index 个文件名（不含路径）
+ * @return 文件名指针（内部缓存，下次 rescan 失效）；越界返回 NULL
+ */
+const char *engine_sf2_sd_name_at(int index);
+
+/**
+ * @brief 当前生效音源
+ * @return SD 文件名（不含路径）；内部预设返回空字符串 ""
+ */
+const char *engine_sf2_current_source(void);
+
+/**
+ * @brief 指定开机加载的音源（main 在 activate 前按 NVS 调用一次）
+ * @param[in] sd_name SD 文件名；NULL/空串 = 内部预设
+ */
+void engine_sf2_set_boot_source(const char *sd_name);
+
+/**
+ * @brief 加载内部预设（SPIFFS 内置音色）
+ * @return true 加载成功
+ */
+bool engine_sf2_load_internal(void);
+
+/**
+ * @brief 按文件名加载 SD 卡音源（含 16 MB 上限检查）
+ * @param[in] sd_name 文件名（不含路径）
+ * @return true 加载成功；文件缺失/超限/解析失败返回 false
+ */
+bool engine_sf2_load_sd(const char *sd_name);
 
 /**
  * @brief 向 service_audio 注册本引擎为音频源

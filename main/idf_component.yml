@@ -25,3 +25,4 @@ dependencies:
   espressif/esp_audio_codec: ~2.5.0
   espressif/esp_audio_effects: ~1.3.0
   espressif/esp-sr: ~2.4.6
+  esphome/micro-mp3: ^0.4.0

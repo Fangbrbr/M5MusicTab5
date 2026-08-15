@@ -210,8 +210,17 @@ float __attribute__((hot,always_inline)) IRAM_ATTR Voice::nextSample() {
         return 0.0f;
     }
 
-    updatePitch();
-    
+    // PATCH(P22): 每样本 updatePitch() 移除，改为块级更新。渲染热路径实测
+    // 单 voice ≈20µs（复音 48 时 ren avg/max 1003/2463µs，超 1450 预算即
+    // I2S 断流杂音），此处 3 次浮点乘 + 指针解引用每样本重复纯属冗余：
+    // - 弯音/通道状态：pitchBend 在 s_sf2_mutex 锁内执行，渲染块持锁期间
+    //   不可能变化；
+    // - LFO/portamento：updatePitchFactors() 本身就按块推进（690Hz），
+    //   pitchMod 在块内恒定，逐样本重算不产生任何值变化。
+    // effectivePhaseIncrement 由渲染循环前的 Synth::updateScores() 对全部
+    // 活跃 voice 统一刷新；新发声 voice 由 prepareStart() 末尾的 updatePitch()
+    // 保证首块即有效。上游 Voice::renderBlock 为无调用者死代码，不受影响
+
     // for syncing time-based functions (like LFOs)
     samplesRun++;
     

@@ -22,11 +22,14 @@
 
 // ===================== SYNTHESIZER ===============
 /* P4@360MHz 的预算远高于上游 S3@240MHz（19 voices 是上游带 FX 的实测墙）。
- * 32 声部在弦乐密集的 MIDI 文件中频繁抢音：持续长音被评分较低的
- * 新音符挤掉，听感为“长音只剩一声短促”（PC 播放器通常 64~256 声部）。
- * 上调至 48；若遥测 render_block_us 仍有余量可继续上调。 */
-#define   MAX_VOICES            48
-#define   MAX_VOICES_PER_NOTE   4
+ * 声部数曾 32→48→96 上调，但 96 只是把"同音连击时余音 voice 累积"导致的
+ * 复音耗尽崩坏点推后，并未治本；且 Voice 数组占内存，挤占 PSRAM 预算。
+ * 根治见 P21（同音 re-trigger 清理余音 voice），声部数回退到 64 即均衡
+ * （真实演奏一个 note 多 zone 至多 ~3 voice，64 声部覆盖 ~20 个同时发音）。
+ * 增益基准 SF2_VOICE_GAIN_REF 固定 48，独立于声部数，扩容不降全局响度。 */
+#define   MAX_VOICES            64
+#define   MAX_VOICES_PER_NOTE   6
+#define   SF2_VOICE_GAIN_REF    48   /* volume_scaler 增益基准（独立于 MAX_VOICES） */
 #define   PITCH_BEND_CENTER     0
 
 /* FX / filter 开关：默认全部关闭，待渲染遥测确认负载余量后逐项启用。

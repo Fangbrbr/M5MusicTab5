@@ -37,6 +37,22 @@ void service_page_setting_refresh_tab_styles(void);
  */
 void service_page_setting_refresh_tab_styles_locked(void);
 
+/**
+ * @brief 10ms 周期钩子（task_app 循环调用）
+ *
+ * 消化 SF2 音源切换的挂起请求：LVGL 回调（task_gui）只登记，
+ * 实际加载（秒级阻塞）在本钩子内执行，避免卡死 UI 任务。
+ */
+void service_page_setting_process(void);
+
+/**
+ * @brief SD 卡内容可能变化（FTP 会话结束）时的音源重扫入口
+ *
+ * 仅登记校验请求，由 service_page_setting_process 异步执行：
+ * 当前生效的 SD 音源若已被删除，自动回退内部预设并通知。
+ */
+void service_page_setting_sf2_on_sd_changed(void);
+
 #ifdef __cplusplus
 }
 #endif

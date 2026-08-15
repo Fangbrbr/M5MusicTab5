@@ -138,6 +138,7 @@ typedef struct {
     int canvas_h;
     int canvas_x;
     int canvas_y;
+    bool canvas_attempted;      /* 虚拟鼓组 canvas 已尝试分配（失败不再重试，降级回矩阵布局） */
     bool recording_self;        /* 本 App 发起的录制 */
     bool recording_stop_pending;  /* 录制已停止，等待 finalize 后提示 */
 } drum_state_t;
@@ -322,6 +323,13 @@ static bool drum_canvas_ensure_buffer(void)
         return s_drum.canvas_buf != NULL;
     }
 
+    /* 分配失败不再重试（大音源挤占 PSRAM 时每周期刷屏告警）；
+     * 降级为鼓垫矩阵布局继续可用 */
+    if (s_drum.canvas_attempted) {
+        return false;
+    }
+    s_drum.canvas_attempted = true;
+
     lv_area_t coords;
     lvgl_port_lock(portMAX_DELAY);
     lv_obj_get_coords(s_drum_ui.panel_v, &coords);
@@ -335,7 +343,7 @@ static bool drum_canvas_ensure_buffer(void)
 
     void *buf = heap_caps_calloc(1, (size_t)w * h * 2, MALLOC_CAP_SPIRAM);
     if (buf == NULL) {
-        ESP_LOGE(TAG, "canvas buf alloc failed");
+        ESP_LOGW(TAG, "canvas buf alloc failed, fallback to matrix layout");
         return false;
     }
 
