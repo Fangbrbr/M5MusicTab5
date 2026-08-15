@@ -289,6 +289,15 @@ FreeRTOS tick 1000 Hz，双核。`task_comm` 栈扩至 16 KB 以容纳 Opus/CELT
 - xiaozhi 下行 TTS：ws 二进制帧在 `task_comm`（`service_ws_process()` 分发）上下文经裸 libopus `opus_decode` 整包解码、线性插值重采样到 44.1 kHz 后写 aux。服务器实际按 BinaryProtocol3（4 字节头）封包下发；ws 握手必须带 `Protocol-Version: 1` 头，且接收侧保留 v3 防御性剥离，否则封包头被误当 opus TOC，TTS 只剩噪声碎片。
 - 下行反压链（防服务器突发丢音频）：`xz_on_ws_audio` 在 aux 剩余空间不足一个最长包（`XZ_AUX_BACKPRESSURE_FREE_FRAMES`）时等播放端排水（10ms 切片、上限 `XZ_AUX_BACKPRESSURE_MAX_MS`，期间离开 SPEAKING 立即丢帧防残留）；积压倒灌回 ws 事件队列（64 深，编码包 ~200B/60ms 是最廉价缓冲层）；队列满后 ws 任务入队阻塞（`SERVICE_WS_EVT_SEND_BLOCK_MS`）经 TCP 接收窗口反压服务器。队列满丢包告警已按 1s 窗口限流，逐条刷屏会进一步挤占 CPU。
 - aux 预充门与流尾（2026-08 尾音残留修复）：欠载即重新预充（攒够 ~400ms 再出声），但"流已结束"时尾音不足门限会永久卡门、跨轮残留成下轮开头插播。`tts_stop` 时 `service_audio_aux_end_of_stream()` 一次性解除预充放尾音（置位式，Core 1 消费侧应用，`s_aux_priming` 保持单写者）；auto 续听 2500ms 兜底命中时 `service_audio_aux_clear()` 清场；按钮打断与唤醒打断均已对齐 aux_clear。
+- MP3 播放链路（2026-08）：`service_player`（C++ 桥接 esphome/micro-mp3，纯 C API）解码 `.mp3`，线性插值重采样到 44.1 kHz 立体声后写 aux 混音流；解码推进由 `app_midi_player` 的 `on_update`（task_app 锁内）驱动，完播自动连播下一首（列表末尾循环回首）。曲名优先取 ID3v2 TIT2（UTF-8/UTF-16 BOM 自动识别），缺失回退文件名；中文文件名依赖 `CONFIG_FATFS_API_ENCODING_UTF_8=y`。
+- MP3 与合成器/AI 互斥：播放起停经 `service_audio_deactivate_sf2()` / `activate_sf2()` 隔离 SF2 主源（音色不卸载），并 `service_xiaozhi_set_suspended()` 挂起 AI（TTS 同走 aux，防生产者竞争）；停止播放或退出 App 自动恢复。
+
+### 3.6.1 SF2 音源管理（SD 卡加载）
+
+- 默认内置小 GM（`engine_sf2` 内嵌预设）；SD 卡 `/sdcard/soundfonts/*.sf2` 由 `engine_sf2_sd_rescan()` 扫描（上限 `ENGINE_SF2_SD_MAX_FILES`），设置页「音源」下拉（`setting_sf2_source`）切换，选项 =「内部预设」+ SD 文件列表。
+- PSRAM 预算闸门：可用 PSRAM（free + 当前已加载）≥ 新音源所需才允许加载，不足拒绝且保持当前音源不变（2026-08 修复：旧音源释放掩盖新占用的记账 bug）。
+- 选择经 `service_nvs_get/set_sf2_source()` 持久化，开机恢复；加载失败（文件损坏/内存不足）回退内部预设。加载进度按整百分比节流写通知栏（`app_manager_show_notificationf_timeout`，timeout=0 持久显示直至完成）。
+- 大音源复音性能（2026-08）：渲染热路径 `nextSample()` 每样本 `updatePitch()` 已改块级更新（补丁 P22，见 `engine_sf2/UPSTREAM_PATCHES.md`）；同音符 release voice 优先复用防快速连击复音耗尽。渲染块耗时预算 1450µs（64 复音实测 avg ~1ms），超限即 I2S underrun 杂音。
 
 ### 3.7 AI 对话 LED 指示器（xx_led_ai）
 
