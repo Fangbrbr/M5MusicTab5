@@ -10,13 +10,13 @@ X-Y	X-Y	X-Y
 鼓垫	鼓垫	Drum Pad
 小钢琴	小钢琴	Tiny Piano
 AI 导师	AI 导师	AI Mentor
-时钟日历	时钟日历	Clock & Calendar
+时钟日历	时钟日历	Clock
 MIDI 播放器	MIDI 播放器	MIDI Player
 节拍器	节拍器	Metronome
 有喵喵陪伴的音乐小世界	有喵喵陪伴的音乐小世界	A Musical World with Meow meow
 喵喵在睡梦中吃瓜子...	喵喵在睡梦中吃瓜子...	Meow meow is dreaming...
 截图已保存	截图已保存	Screenshot saved
-无 SD 卡，无法截图	无 SD 卡，无法截图	"No SD card, screenshot unavailable"
+无 SD 卡，无法截图	无 SD 卡，无法截图	No SD card, screenshot unavailable
 截图目录创建失败	截图目录创建失败	Screenshot directory creation failed
 截图失败	截图失败	Screenshot failed
 截图文件创建失败	截图文件创建失败	Failed to create screenshot file
@@ -27,7 +27,7 @@ TAB5 音乐盒	TAB5 音乐盒	TAB5 Music Box
 跳过	跳过	Skip
 下一步	下一步	Next
 欢迎来到Tab5 Music Box	欢迎来到Tab5 Music Box	Welcome to Tab5 Music Box
-我是喵喵，你的音乐小伙伴	我是喵喵，你的音乐小伙伴	"I'm Meow meow, your music buddy"
+我是喵喵，你的音乐小伙伴	我是喵喵，你的音乐小伙伴	I'm Meow meow, your music buddy
 让我们一起完成几个简单的设置，开启音乐之旅...	让我们一起完成几个简单的设置，开启音乐之旅...	Let's finish a few simple settings and start your music journey...
 步骤：2/5	步骤：2/5	Step 2/5
 设置日期和时间	设置日期和时间	Date & Time
@@ -54,14 +54,14 @@ TAB5 音乐盒	TAB5 音乐盒	TAB5 Music Box
 自动休眠（熄屏后5min触发）：	自动休眠（熄屏后5min触发）：	Auto sleep (5 min after screen off):
 步骤：5/5	步骤：5/5	Step 5/5
 设置网络连接	设置网络连接	Network Setup
-联网后喵喵会自动帮你调整时间，还可以使用AI超强Buff哦...	联网后喵喵会自动帮你调整时间，还可以使用AI超强Buff哦...	"Online, Meow meow auto-syncs time and unlocks AI powers..."
+联网后喵喵会自动帮你调整时间，还可以使用AI超强Buff哦...	联网后喵喵会自动帮你调整时间，还可以使用AI超强Buff哦...	Online, Meow meow auto-syncs time and unlocks AI powers...
 Wifi总开关：	Wifi总开关：	Wi-Fi:
 设置完成啦	设置完成啦	All Set!
-喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	"Meow meow will reboot in 5 seconds, then your music journey begins"
+喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	Meow meow will reboot in 5 seconds, then your music journey begins
 练耳	练耳	Ear Trainer
 组鼓	组鼓	Drum Kit
 AI导师	AI导师	AI Mentor
-答案之书	答案之书	Book of Answers
+答案之书	答案之书	Book & Tarot
 语言/Language：	语言/Language：	Language:
 网络设置：	网络设置：	Network:
 全局重置：	全局重置：	Factory reset:
@@ -99,8 +99,8 @@ X-Y模式	X-Y模式	X-Y Mode
 步长：	步长：	Step:
 拍号:	拍号:	Time sig:
 节拍音色：	节拍音色：	Click sound:
-Hi，喵喵。	Hi，喵喵。	"Hi, Miao Miao."
-"你好，我是喵喵。你的设备还没有绑定，请用设备ID: %6d, 在 xiaozhi.me 完成绑定~"	"你好，我是喵喵。你的设备还没有绑定，请用设备ID: %6d, 在 xiaozhi.me 完成绑定~"	"Hi, I'm Miao Miao. Your device is not bound. Use device ID: %6d at xiaozhi.me to bind~"
+Hi，喵喵。	Hi，喵喵。	Hi, Miao Miao.
+你好，我是喵喵。你的设备还没有绑定，请用设备ID: %6d, 在 xiaozhi.me 完成绑定~	你好，我是喵喵。你的设备还没有绑定，请用设备ID: %6d, 在 xiaozhi.me 完成绑定~	Hi, I'm Miao Miao. Your device is not bound. Use device ID: %6d at xiaozhi.me to bind~
 存储对话（需要使用SD卡）：	存储对话（需要使用SD卡）：	Save chats (needs SD card):
 重置AI配置：	重置AI配置：	Reset AI config:
 日历&时钟	日历&时钟	Calendar & Clock
@@ -140,21 +140,247 @@ Hi，喵喵。	Hi，喵喵。	"Hi, Miao Miao."
 未来	未来	Future
 星币十	星币十	Ten of Pentacles
 塔罗牌	塔罗牌	Tarot
- 请将设备翻转，心中默念你的疑问之后，翻开设备 	 请将设备翻转，心中默念你的疑问之后，翻开设备 	" Flip the device, focus on your question, then flip it back"
+ 请将设备翻转，心中默念你的疑问之后，翻开设备 	 请将设备翻转，心中默念你的疑问之后，翻开设备 	 Flip the device, focus on your question, then flip it back
 喵喵起床啦！	喵喵起床啦！	Meow meow is awake!
 喵喵正在起床...	喵喵正在起床...	Meow meow is waking up...
 开始录制	开始录制	Recording started
 录音已保存	录音已保存	Recording saved
-录制时间过短，已丢弃	录制时间过短，已丢弃	"Too short, discarded"
+录制时间过短，已丢弃	录制时间过短，已丢弃	Too short, discarded
 停止录制失败	停止录制失败	Stop recording failed
 未检测到 SD 卡	未检测到 SD 卡	No SD card
 正在录制中	正在录制中	Already recording
 录制启动失败	录制启动失败	Start recording failed
-能量已耗尽，明日自动回满	能量已耗尽，明日自动回满	"Energy depleted, refills tomorrow"
-能量耗尽，明日恢复后再抽取	能量耗尽，明日恢复后再抽取	"Energy depleted, try again tomorrow"
-能量耗尽，明日恢复后再抽卡	能量耗尽，明日恢复后再抽卡	"Energy depleted, try again tomorrow"
-本次消耗 %d 能量，剩余 %d%%	本次消耗 %d 能量，剩余 %d%%	"Used %d energy, %d%% left"
-请翻转设备，心中默念疑问后翻回，查看答案	请翻转设备，心中默念疑问后翻回，查看答案	"Flip the device, think of your question, then flip back"
-请翻转设备，心中默念疑问后翻回，抽取塔罗牌	请翻转设备，心中默念疑问后翻回，抽取塔罗牌	"Flip the device, think of your question, then flip back to draw"
+能量已耗尽，明日自动回满	能量已耗尽，明日自动回满	Energy depleted, refills tomorrow
+能量耗尽，明日恢复后再抽取	能量耗尽，明日恢复后再抽取	Energy depleted, try again tomorrow
+能量耗尽，明日恢复后再抽卡	能量耗尽，明日恢复后再抽卡	Energy depleted, try again tomorrow
+本次消耗 %d 能量，剩余 %d%%	本次消耗 %d 能量，剩余 %d%%	Used %d energy, %d%% left
+请翻转设备，心中默念疑问后翻回，查看答案	请翻转设备，心中默念疑问后翻回，查看答案	Flip the device, think of your question, then flip back
+请翻转设备，心中默念疑问后翻回，抽取塔罗牌	请翻转设备，心中默念疑问后翻回，抽取塔罗牌	Flip the device, think of your question, then flip back to draw
 再次翻转查看下一则答案	再次翻转查看下一则答案	Flip again for the next answer
-三张牌已抽出，再次翻转抽新牌	三张牌已抽出，再次翻转抽新牌	"3 cards drawn, flip again for a new draw"
+三张牌已抽出，再次翻转抽新牌	三张牌已抽出，再次翻转抽新牌	3 cards drawn, flip again for a new draw
+/sd/midi/Abandon.mid	/sd/midi/Abandon.mid	/sd/midi/Abandon.mid
+00-大钢琴\n01-明亮钢琴\n02-电三角钢琴\n03-酒吧钢琴\n04-电钢琴1\n05-电钢琴2\n06-羽管键琴\n07-克拉维尼特\n08-钢片琴\n09-钟琴\n10-八音盒\n11-颤音琴\n12-马林巴\n13-木琴\n14-管钟\n15-扬琴	00-大钢琴\n01-明亮钢琴\n02-电三角钢琴\n03-酒吧钢琴\n04-电钢琴1\n05-电钢琴2\n06-羽管键琴\n07-克拉维尼特\n08-钢片琴\n09-钟琴\n10-八音盒\n11-颤音琴\n12-马林巴\n13-木琴\n14-管钟\n15-扬琴	00-Grand Piano\n01-Bright Piano\n02-E.Grand Piano\n03-Honky-tonk\n04-E.Piano 1\n05-E.Piano 2\n06-Harpsichord\n07-Clavinet\n08-Celesta\n09-Glockenspiel\n10-Music Box\n11-Vibraphone\n12-Marimba\n13-Xylophone\n14-Tubular Bells\n15-Dulcimer
+000-标准\n008-Room\n016-Power\n024-Electronic\n025-TR-808\n032-Jazz\n040-Brush\n048-Prchestra\n056-SFX	000-标准\n008-Room\n016-Power\n024-Electronic\n025-TR-808\n032-Jazz\n040-Brush\n048-Prchestra\n056-SFX	000-Standard\n008-Room\n016-Power\n024-Electronic\n025-TR-808\n032-Jazz\n040-Brush\n048-Orchestra\n056-SFX
+15秒\n30秒\n1分钟\n3分钟\n5分钟\n10分钟	15秒\n30秒\n1分钟\n3分钟\n5分钟\n10分钟	15s\n30s\n1min\n3min\n5min\n10min
+2026-07-21 星期五	2026-07-21 星期五	2026-07-21 Friday
+20xx年第x周，星期九	20xx年第x周，星期九	20xx Week x, Someday
+24小时\n12小时	24小时\n12小时	24-hour\n12-hour
+40-小提琴\n41-中提琴\n42-大提琴\n43-低音提琴\n44-弦乐震音\n45-弦乐拨奏\n48-弦乐合奏1\n49-弦乐合奏2\n50-合成弦乐1\n51-合成弦乐2\n52-人声合唱Ah\n53-人声Oh\n54-合成人声\n56-小号\n57-长号\n58-大号\n59-弱音小号\n60-圆号\n61-铜管合奏\n62-合成铜管1\n63-合成铜管2\n64-高音萨克斯\n65-中音萨克斯\n66-次中音萨克斯\n67-上低音萨克斯\n68-双簧管\n69-英国管\n70-大管\n71-单簧管	40-小提琴\n41-中提琴\n42-大提琴\n43-低音提琴\n44-弦乐震音\n45-弦乐拨奏\n48-弦乐合奏1\n49-弦乐合奏2\n50-合成弦乐1\n51-合成弦乐2\n52-人声合唱Ah\n53-人声Oh\n54-合成人声\n56-小号\n57-长号\n58-大号\n59-弱音小号\n60-圆号\n61-铜管合奏\n62-合成铜管1\n63-合成铜管2\n64-高音萨克斯\n65-中音萨克斯\n66-次中音萨克斯\n67-上低音萨克斯\n68-双簧管\n69-英国管\n70-大管\n71-单簧管	40-Violin\n41-Viola\n42-Cello\n43-Contrabass\n44-Tremolo Strings\n45-Pizzicato Strings\n48-Strings Ens.1\n49-Strings Ens.2\n50-Synth Strings 1\n51-Synth Strings 2\n52-Choir Aahs\n53-Voice Oohs\n54-Synth Voice\n56-Trumpet\n57-Trombone\n58-Tuba\n59-Muted Trumpet\n60-French Horn\n61-Brass Section\n62-Synth Brass 1\n63-Synth Brass 2\n64-Soprano Sax\n65-Alto Sax\n66-Tenor Sax\n67-Baritone Sax\n68-Oboe\n69-English Horn\n70-Bassoon\n71-Clarinet
+50min	50min	50min
+= 挑战 =\n= 练习=	= 挑战 =\n= 练习=	= Challenge =\n= Practice =
+ANSWERS	ANSWERS	ANSWERS
+BPM	BPM	BPM
+BPM：	BPM：	BPM:
+Bad Apple(Nodbody Mixed)	Bad Apple(Nodbody Mixed)	Bad Apple(Nodbody Mixed)
+C0\nC1\nC2\nC3\nC4\nC5\nC6	C0\nC1\nC2\nC3\nC4\nC5\nC6	C0\nC1\nC2\nC3\nC4\nC5\nC6
+C\nC#\nD\nD#\nE\nF\nGb\nG\nG#\nA\nA#\nB\nC	C\nC#\nD\nD#\nE\nF\nGb\nG\nG#\nA\nA#\nB\nC	C\nC#\nD\nD#\nE\nF\nGb\nG\nG#\nA\nA#\nB\nC
+Cb Db Eb Fb Gb Ab B#	Cb Db Eb Fb Gb Ab B#	Cb Db Eb Fb Gb Ab B#
+Clap	Clap	Clap
+Closed HH	Closed HH	Closed HH
+Cm	Cm	Cm
+Crash	Crash	Crash
+F#7sus4	F#7sus4	F#7sus4
+F(IV)	F(IV)	F(IV)
+FTP文件管理	FTP文件管理	FTP Files
+Floor Tom	Floor Tom	Floor Tom
+FmiL (fmil123@qq.com)	FmiL (fmil123@qq.com)	FmiL (fmil123@qq.com)
+FreeRTOS + LVGL 9.5.0 (EEZ Studio)	FreeRTOS + LVGL 9.5.0 (EEZ Studio)	FreeRTOS + LVGL 9.5.0 (EEZ Studio)
+G(V)	G(V)	G(V)
+Hi，喵喵。嗨黑哼 嘿哈呼呵咯啦嘞喽噜	Hi，喵喵。嗨黑哼 嘿哈呼呵咯啦嘞喽噜	Hi, Meow meow.
+IP：	IP：	IP:
+It is suggested to view the issue from a different way or perspective, which may lead to new findings or solutions.	It is suggested to view the issue from a different way or perspective, which may lead to new findings or solutions.	It is suggested to view the issue from a different way or perspective, which may lead to new findings or solutions.
+Kick	Kick	Kick
+M5Stack TAB5 (ESP32P4 + ESP32C6)	M5Stack TAB5 (ESP32P4 + ESP32C6)	M5Stack TAB5 (ESP32P4 + ESP32C6)
+Midi文件播放	Midi文件播放	MIDI File Playback
+Open HH	Open HH	Open HH
+Ride	Ride	Ride
+Snare	Snare	Snare
+The Book of	The Book of	The Book of
+\n历史最高	\n历史最高	\nHigh Score
+curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'
+ftp://123.456.789.222等待连接\nWifi为案松手的撒网数大	ftp://123.456.789.222等待连接\nWifi为案松手的撒网数大	ftp://123.456.789.222 waiting\nWi-Fi file transfer
+https://v1.hitokoto.cn/?c=f&encode=text	https://v1.hitokoto.cn/?c=f&encode=text	https://v1.hitokoto.cn/?c=f&encode=text
+string_wifi_connect_tip	string_wifi_connect_tip	string_wifi_connect_tip
+xxx.mid	xxx.mid	xxx.mid
+丙午年六月大 初八 · 大暑	丙午年六月大 初八 · 大暑	Bingwu Year, 6th Lunar Month, Day 8 · Major Heat
+主选单\n时钟\n小钢琴\nAI导师\n禅模式	主选单\n时钟\n小钢琴\nAI导师\n禅模式	Main Menu\nClock\nTiny Piano\nAI Mentor\nZen Mode
+乐器\n线性	乐器\n线性	Instrument\nLinear
+今天 · 星期二	今天 · 星期二	Today · Tuesday
+今年已过500天，剩余600天。	今年已过500天，剩余600天。	500 days passed this year, 600 left.
+倒置显示：	倒置显示：	Invert display:
+全局唤醒（需要先激活绑定）：	全局唤醒（需要先激活绑定）：	Global wake-up (requires binding):
+内部预设\nSoxxxxxxxxxx...	内部预设\nSoxxxxxxxxxx...	Internal preset\nSoxxxxxxxxxx...
+初级\n中级\n高级	初级\n中级\n高级	Beginner\nIntermediate\nAdvanced
+喵喵需要知道正确的时间才能准确陪伴你的练习哦...	喵喵需要知道正确的时间才能准确陪伴你的练习哦...	Meow meow needs the right time to accompany your practice...
+基础\n设置	基础\n设置	Basic\nSettings
+大三\n	大三\n	Maj3\n
+大调\n国风五声\n小调\n日式小调	大调\n国风五声\n小调\n日式小调	Major\nChinese Pentatonic\nMinor\nJapanese Minor
+大调\n小调\n中国五声\n埃及调式\n多利亚\n日本调式	大调\n小调\n中国五声\n埃及调式\n多利亚\n日本调式	Major\nMinor\nChinese Penta.\nEgyptian\nDorian\nJapanese
+字体1\n字体2	字体1\n字体2	Font 1\nFont 2
+局域网FTP文件管理：	局域网FTP文件管理：	LAN FTP file manager:
+已过500天	已过500天	500 days passed
+弹珠\n雨滴	弹珠\n雨滴	Pinball\nRaindrop
+录音文件播放	录音文件播放	Recording Playback
+我们可以正式开启音乐旅途啦	我们可以正式开启音乐旅途啦	Let's officially start the music journey!
+按键矩阵\n模拟钢琴	按键矩阵\n模拟钢琴	Pad Matrix\nPiano Keys
+播放器	播放器	Player
+标准\n指针式\n木鱼式\n鼓组式\n打击乐式\n体感式	标准\n指针式\n木鱼式\n鼓组式\n打击乐式\n体感式	Standard\nPointer\nWoodblock\nDrum Kit\nPercussion\nMotion
+模拟组鼓\n打击垫	模拟组鼓\n打击垫	Drum Kit\nDrum Pads
+歌曲列表	歌曲列表	Song List
+点击试听	点击试听	Tap to preview
+状态：	状态：	Status:
+等待连接	等待连接	Waiting for connection
+绝对音感\n相对音感	绝对音感\n相对音感	Perfect Pitch\nRelative Pitch
+自动关机（熄屏后5min触发）：	自动关机（熄屏后5min触发）：	Auto power-off (5 min after screen off):
+萨卡班萨卡班	萨卡班萨卡班	Sacabambaspis
+象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。	象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。	Awakening of mental strength and a sharp revelation of truth: clarity, decisive action, and the pure energy of reason and justice. Awakening of mental strength and a sharp revelation of truth: clarity, decisive action, and the pure energy of reason and justice.
+轨道: 	轨道: 	Track: 
+进度：	进度：	Progress:
+金丝熊\n星空黑	金丝熊\n星空黑	Golden Hamster\nStarry Black
+音乐播放	音乐播放	Music Player
+音源：	音源：	Sound Source:
+高级\n设置	高级\n设置	Advanced\nSettings
+ Tap	 Tap	 Tap
+ AbandonAbandonAbandonAbandon.mid	 AbandonAbandonAbandonAbandon.mid	 AbandonAbandonAbandonAbandon.mid
+ Tap	 Tap	 Tap
+curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'
+正位	正位	Upright
+逆位	逆位	Reversed
+ 请将设备翻转，心中默念你的疑问之后，翻开设备 	 请将设备翻转，心中默念你的疑问之后，翻开设备 	 请将设备翻转，心中默念你的疑问之后，翻开设备 
+本设备不支持翻转交互	本设备不支持翻转交互	Flip interaction not supported on this device
+三条生命已用完，游戏即将重新开始	三条生命已用完，游戏即将重新开始	All 3 lives used, restarting the game
+内存不足，禅模式无法打开（音源过大时请换小音源）	内存不足，禅模式无法打开（音源过大时请换小音源）	Out of memory - Zen Mode unavailable (try a smaller soundfont)
+内部预设音色加载失败	内部预设音色加载失败	Failed to load internal preset
+回答正确！	回答正确！	Correct!
+对话写入 SD 卡失败	对话写入 SD 卡失败	Failed to save chat to SD card
+已切换为内部预设音色	已切换为内部预设音色	Switched to internal preset
+已经是最后一首	已经是最后一首	Already the last track
+已经是第一首	已经是第一首	Already the first track
+录音文件解析失败	录音文件解析失败	Failed to parse recording file
+播报中…	播报中…	Speaking…
+未找到音乐文件	未找到音乐文件	No music files found
+未检测到 SD 卡，无法开启对话存储	未检测到 SD 卡，无法开启对话存储	No SD card, cannot enable chat saving
+标准\n指针式\n木鱼式\n鼓组式\n打击乐式\n体感式\n2/4强弱式	标准\n指针式\n木鱼式\n鼓组式\n打击乐式\n体感式\n2/4强弱式	Standard\nPointer\nWoodblock\nDrum Kit\nPercussion\nMotion\n2/4 Accent
+欢迎使用 AI 助手，可以点击按钮或说“Hi,唤醒”	欢迎使用 AI 助手，可以点击按钮或说“Hi,唤醒”	"Welcome to AI Assistant! Tap the button or say ""Hi, Meow meow"""
+正在加载内部预设音色…	正在加载内部预设音色…	Loading internal preset…
+正在加载音色： %s	正在加载音色： %s	Loading soundfont: %s
+正在连接…	正在连接…	Connecting…
+没有试听次数啦，试着做出选择吧~	没有试听次数啦，试着做出选择吧~	No trials left - make your choice~
+设备激活中…	设备激活中…	Activating…
+请先完成绑定激活，再开启全局唤醒	请先完成绑定激活，再开启全局唤醒	Please bind and activate first, then enable global wake-up
+音乐文件打开失败	音乐文件打开失败	Failed to open music file
+音源文件已被移除，回退内部预设	音源文件已被移除，回退内部预设	Soundfont file removed, reverted to internal preset
+音色加载 %d%%	音色加载 %d%%	Loading soundfont %d%%
+音色加载失败，回退内部预设	音色加载失败，回退内部预设	Soundfont load failed, reverted to internal preset
+音色已切换： %s	音色已切换： %s	Soundfont switched: %s
+AI 配置已完全重置，请等待 6 位配对码	AI 配置已完全重置，请等待 6 位配对码	AI config fully reset, waiting for the 6-digit pairing code
+MIDI 文件解析失败	MIDI 文件解析失败	Failed to parse MIDI file
+WiFi 已关闭	WiFi 已关闭	Wi-Fi off
+不对哦，再试试。	不对哦，再试试。	Not quite, try again.
+你好，我是喵喵。你的设备还没有绑定，请用设备ID: %s, 在 xiaozhi.me 完成绑定~	你好，我是喵喵。你的设备还没有绑定，请用设备ID: %s, 在 xiaozhi.me 完成绑定~	Hi, I'm Meow meow. Your device is not bound. Use device ID: %s at xiaozhi.me to bind~
+你好，我是喵喵。按住麦克风按钮或喊“Hi，喵喵”和我说话~	你好，我是喵喵。按住麦克风按钮或喊“Hi，喵喵”和我说话~	"Hi, I'm Meow meow. Hold the mic button or say ""Hi, Meow meow"" to talk~"
+内部预设	内部预设	Internal preset
+再按 %lds …	再按 %lds …	Press %lds…
+回答错误，正确答案是%s。	回答错误，正确答案是%s。	Wrong, the correct answer is %s.
+已连接 %s	已连接 %s	Connected to %s
+已配置 %s，连接中…	已配置 %s，连接中…	%s configured, connecting…
+扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1	扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1	Scan to join HammySetup (password: 12345678)\nOpen http://192.168.4.1
+挑战模式：请听音后点击按钮作答，可点播放键重听	挑战模式：请听音后点击按钮作答，可点播放键重听	Challenge mode: listen, then tap a button to answer; tap play to listen again
+未找到 MIDI 文件	未找到 MIDI 文件	No MIDI files found
+未找到录音文件	未找到录音文件	No recordings found
+欢迎来到练耳！挑战模式：听音后作答，答错扣血，无二次机会	欢迎来到练耳！挑战模式：听音后作答，答错扣血，无二次机会	Welcome to Ear Trainer! Challenge mode: listen and answer; wrong answers cost a life, no second chances
+欢迎来到练耳！练习模式：通知栏将展示答案，听音后请点击对应按钮	欢迎来到练耳！练习模式：通知栏将展示答案，听音后请点击对应按钮	Welcome to Ear Trainer! Practice mode: the answer shows in the notification bar; listen and tap the matching button
+正在连接服务器…	正在连接服务器…	Connecting to server…
+聆听中…（按住说话）	聆听中…（按住说话）	Listening… (hold to talk)
+聆听中…（说完稍候）	聆听中…（说完稍候）	Listening… (pause when done)
+设备激活中，请稍候…	设备激活中，请稍候…	Activating, please wait…
+识别到语音…	识别到语音…	Voice detected…
+音源过大，内存不足，已保留当前音源	音源过大，内存不足，已保留当前音源	Soundfont too large, not enough memory - current soundfont kept
+小二度	小二度	Minor 2nd
+大二度	大二度	Major 2nd
+小三度	小三度	Minor 3rd
+大三度	大三度	Major 3rd
+纯四度	纯四度	Perfect 4th
+增四度	增四度	Tritone
+纯五度	纯五度	Perfect 5th
+小六度	小六度	Minor 6th
+大六度	大六度	Major 6th
+小七度	小七度	Minor 7th
+大七度	大七度	Major 7th
+八度	八度	Octave
+出错了：%s	出错了：%s	Error: %s
+上行	上行	Ascending
+下行	下行	Descending
+%s答案：%s，听音后点击对应琴键	%s答案：%s，听音后点击对应琴键	%sAnswer: %s, listen and tap the correct key
+%s答案：%s%s（%s - %s），点击对应音程按钮	%s答案：%s%s（%s - %s），点击对应音程按钮	%sAnswer: %s%s (%s - %s), tap the correct interval button
+系统运行时长: %lu秒	系统运行时长: %lu秒	Uptime: %lu s
+系统运行时长: %lu分%lu秒	系统运行时长: %lu分%lu秒	Uptime: %lu min %lu s
+系统运行时长: %lu时%lu分%lu秒	系统运行时长: %lu时%lu分%lu秒	Uptime: %lu h %lu min %lu s
+系统运行时长: %lu天%lu时%lu分%lu秒	系统运行时长: %lu天%lu时%lu分%lu秒	Uptime: %lu d %lu h %lu min %lu s
+等待客户端连接...	等待客户端连接...	Waiting for client...
+已连接: %s	已连接: %s	Connected: %s
+传输中: %s	传输中: %s	Transferring: %s
+%s  %lu 字节	%s  %lu 字节	%s  %lu bytes
+%s  %lu/%lu 字节	%s  %lu/%lu 字节	%s  %lu/%lu bytes
+ftp://%s  账号密码: musicpad	ftp://%s  账号密码: musicpad	ftp://%s  User/pass: musicpad
+保存成功	保存成功	Saved successfully
+保存失败%s	保存失败%s	Save failed: %s
+Wi-Fi	Wi-Fi	Wi-Fi
+WiFi 未连接	WiFi 未连接	Wi-Fi not connected
+正在连接 %s ...	正在连接 %s ...	Connecting %s ...
+已关联 %s，等待 IP...	已关联 %s，等待 IP...	Associated with %s, waiting for IP...
+连接成功！Wi-Fi 已就绪	连接成功！Wi-Fi 已就绪	Connected! Wi-Fi is ready
+连接失败：%s（原因码 %d），稍后重试	连接失败：%s（原因码 %d），稍后重试	Connection failed: %s (reason %d), retrying...
+连接失败（原因码 %d），稍后重试	连接失败（原因码 %d），稍后重试	Connection failed (reason %d), retrying...
+AP 未找到（SSID 错误？）	AP 未找到（SSID 错误？）	AP not found (wrong SSID?)
+AP 离开 / 无响应	AP 离开 / 无响应	AP left / no response
+AP 过载拒绝关联	AP 过载拒绝关联	AP overloaded, association rejected
+上次关联已过期	上次关联已过期	Previous association expired
+不支持该 AP 信道	不支持该 AP 信道	AP channel not supported
+信标超时（信号太弱？）	信标超时（信号太弱？）	Beacon timeout (signal too weak?)
+关联失败（资源不足）	关联失败（资源不足）	Association failed (insufficient resources)
+关联被 AP 拒绝	关联被 AP 拒绝	Association rejected by AP
+安全模式不支持	安全模式不支持	Security mode not supported
+扫描超时（周边无 AP？）	扫描超时（周边无 AP？）	Scan timeout (no AP nearby?)
+探针响应超时	探针响应超时	Probe response timeout
+认证失败（密码错误？）	认证失败（密码错误？）	Authentication failed (wrong password?)
+认证超时	认证超时	Authentication timeout
+需要 BSS 变换失败	需要 BSS 变换失败	BSS transition failed
+未指定错误	未指定错误	Unknown error
+扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1（当前 SSID：%s）	扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1（当前 SSID：%s）	Scan to connect HammySetup (password: 12345678)\nVisit http://192.168.4.1 in browser (current SSID: %s)
+服务启动失败 (%d)，请检查 SD 卡	服务启动失败 (%d)，请检查 SD 卡	Service start failed (%d), check SD card
+服务未启动	服务未启动	Service not started
+%s大调 / %s小调	%s大调 / %s小调	%s Major / %s Minor
+调号: %s	调号: %s	Key signature: %s
+"""Consider a different perspective"""	"""Consider a different perspective"""	"""Consider a different perspective"""
+		
+大三	大三	Major
+小三	小三	Minor
+增三	增三	Augmented
+减三	减三	Diminished
+挂二	挂二	sus2
+挂四	挂四	sus4
+大七	大七	Major 7th
+大小七	大小七	Dominant 7th
+小七	小七	Minor 7th
+半减七	半减七	Half-diminished 7th
+减七	减七	Diminished 7th
+挂二七	挂二七	7sus2
+挂四七	挂四七	7sus4
+加九	加九	add9
+九和弦	九和弦	9th
+大三度+小三度	大三度+小三度	M3+m3
+小三度+大三度	小三度+大三度	m3+M3
+大三度+大三度	大三度+大三度	M3+M3
+小三度+小三度	小三度+小三度	m3+m3
+大二度+纯四度	大二度+纯四度	M2+P4
+纯四度+大二度	纯四度+大二度	P4+M2
+大三度+小三度+大三度	大三度+小三度+大三度	M3+m3+M3
+大三度+小三度+小三度	大三度+小三度+小三度	M3+m3+m3
+小三度+大三度+小三度	小三度+大三度+小三度	m3+M3+m3
+小三度+小三度+大三度	小三度+小三度+大三度	m3+m3+M3
+小三度+小三度+小三度	小三度+小三度+小三度	m3+m3+m3
+大二度+纯四度+小三度	大二度+纯四度+小三度	M2+P4+m3
+纯四度+大二度+小三度	纯四度+大二度+小三度	P4+M2+m3
+大三度+小三度+大二度	大三度+小三度+大二度	M3+m3+M2
+大三度+小三度+小三度+大二度	大三度+小三度+小三度+大二度	M3+m3+m3+M2

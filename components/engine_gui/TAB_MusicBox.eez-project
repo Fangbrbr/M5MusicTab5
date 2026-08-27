@@ -200,7 +200,7 @@
         "name": "sys_notification_bar",
         "type": "string",
         "size": null,
-        "defaultValue": "\"欢迎\"",
+        "defaultValue": "\"\"",
         "persistent": false
       },
       {
@@ -652,7 +652,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "TAB5 Music Box",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -771,7 +771,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "喵喵在睡梦中吃瓜子...",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "SCROLL",
               "recolor": false,
               "useStaticText": true
@@ -878,7 +878,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "TAB5 音乐盒",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -1039,7 +1039,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "上一步",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -1146,7 +1146,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "下一步",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -1246,7 +1246,7 @@
                   "objID": "85fbca84-ed0c-453a-c87a-3c79d8823577",
                   "type": "LVGLImageWidget",
                   "left": 570,
-                  "top": 164,
+                  "top": 161,
                   "width": 100,
                   "height": 108,
                   "customInputs": [],
@@ -1297,7 +1297,7 @@
                   "objID": "be383798-d98a-483d-8f22-822a545d6eec",
                   "type": "LVGLLabelWidget",
                   "left": 0,
-                  "top": 350,
+                  "top": 348,
                   "width": 100,
                   "height": 45,
                   "customInputs": [],
@@ -1342,8 +1342,8 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "欢迎来到Tab5 Music Box",
-                  "textType": "literal",
-                  "longMode": "WRAP",
+                  "textType": "translated-literal",
+                  "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
                 },
@@ -1351,7 +1351,7 @@
                   "objID": "0ac0d789-4c82-4e7e-b8b1-53f064ebadfc",
                   "type": "LVGLLabelWidget",
                   "left": 0,
-                  "top": 444,
+                  "top": 430,
                   "width": 100,
                   "height": 34,
                   "customInputs": [],
@@ -1395,16 +1395,16 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "我是喵喵，你的音乐小伙伴",
-                  "textType": "literal",
-                  "longMode": "WRAP",
+                  "textType": "translated-literal",
+                  "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
                 },
                 {
                   "objID": "71a58d7d-ab39-4503-fad5-6933cf40dd96",
                   "type": "LVGLLabelWidget",
-                  "left": 0,
-                  "top": 483,
+                  "left": -7,
+                  "top": 509,
                   "width": 100,
                   "height": 34,
                   "customInputs": [],
@@ -1448,10 +1448,235 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "让我们一起完成几个简单的设置，开启音乐之旅...",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
+                },
+                {
+                  "objID": "a9513e3f-21ac-4e2f-d350-9c8f6e27d90d",
+                  "type": "LVGLPanelWidget",
+                  "left": 833,
+                  "top": 53,
+                  "width": 30,
+                  "height": 60,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "style": {
+                    "objID": "03225162-5d63-4478-82e2-cb56cfe5a0c7",
+                    "useStyle": "default",
+                    "conditionalStyles": [],
+                    "childStyles": []
+                  },
+                  "hiddenInEditor": true,
+                  "timeline": [],
+                  "eventHandlers": [],
+                  "leftUnit": "px",
+                  "topUnit": "px",
+                  "widthUnit": "%",
+                  "heightUnit": "px",
+                  "children": [
+                    {
+                      "objID": "20dc8d0b-6532-4a3a-cb59-544b359c62b2",
+                      "type": "LVGLLabelWidget",
+                      "left": 0,
+                      "top": 0,
+                      "width": 29,
+                      "height": 34,
+                      "customInputs": [],
+                      "customOutputs": [],
+                      "style": {
+                        "objID": "b052bf95-20e5-4891-d4ae-606633956a11",
+                        "useStyle": "default",
+                        "conditionalStyles": [],
+                        "childStyles": []
+                      },
+                      "hiddenInEditor": true,
+                      "timeline": [],
+                      "eventHandlers": [],
+                      "leftUnit": "px",
+                      "topUnit": "px",
+                      "widthUnit": "content",
+                      "heightUnit": "content",
+                      "children": [],
+                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                      "hiddenFlagType": "literal",
+                      "clickableFlagType": "literal",
+                      "flagScrollbarMode": "",
+                      "flagScrollDirection": "",
+                      "scrollSnapX": "",
+                      "scrollSnapY": "",
+                      "checkedStateType": "literal",
+                      "disabledStateType": "literal",
+                      "states": "",
+                      "localStyles": {
+                        "objID": "6352581d-da96-48c7-9f06-f60ddadca5ee",
+                        "definition": {
+                          "MAIN": {
+                            "DEFAULT": {
+                              "grid_cell_y_align": "CENTER"
+                            }
+                          }
+                        }
+                      },
+                      "group": "",
+                      "groupIndex": 0,
+                      "text": "",
+                      "textType": "translated-literal",
+                      "longMode": "WRAP",
+                      "recolor": false,
+                      "useStaticText": true
+                    },
+                    {
+                      "objID": "3c7266bb-dd14-4ab0-b4e5-4228a2c2f9d4",
+                      "type": "LVGLDropdownWidget",
+                      "left": 994,
+                      "top": 360,
+                      "width": 50,
+                      "height": 50,
+                      "customInputs": [],
+                      "customOutputs": [],
+                      "style": {
+                        "objID": "9fced104-49ba-49f8-e76b-a69ec9998e80",
+                        "useStyle": "default",
+                        "conditionalStyles": [],
+                        "childStyles": []
+                      },
+                      "hiddenInEditor": true,
+                      "timeline": [],
+                      "eventHandlers": [],
+                      "identifier": "ob_set_language",
+                      "leftUnit": "px",
+                      "topUnit": "px",
+                      "widthUnit": "%",
+                      "heightUnit": "px",
+                      "children": [
+                        {
+                          "objID": "93af75e5-920c-429b-ea9f-e682f34eaaac",
+                          "type": "LVGLContainerWidget",
+                          "left": 0,
+                          "top": 0,
+                          "width": 130,
+                          "height": 130,
+                          "customInputs": [],
+                          "customOutputs": [],
+                          "style": {
+                            "objID": "d5d1023a-f159-4739-ce4b-a61e5130bc1e",
+                            "useStyle": "default",
+                            "conditionalStyles": [],
+                            "childStyles": []
+                          },
+                          "hiddenInEditor": true,
+                          "timeline": [],
+                          "eventHandlers": [],
+                          "leftUnit": "px",
+                          "topUnit": "px",
+                          "widthUnit": "px",
+                          "heightUnit": "px",
+                          "children": [],
+                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                          "hiddenFlagType": "literal",
+                          "clickableFlag": true,
+                          "clickableFlagType": "literal",
+                          "flagScrollbarMode": "",
+                          "flagScrollDirection": "",
+                          "scrollSnapX": "",
+                          "scrollSnapY": "",
+                          "checkedStateType": "literal",
+                          "disabledStateType": "literal",
+                          "states": "",
+                          "localStyles": {
+                            "objID": "77459c80-186c-4778-baf7-259fe576e5c8",
+                            "definition": {
+                              "SELECTED": {
+                                "CHECKED": {
+                                  "bg_color": "primary"
+                                }
+                              },
+                              "MAIN": {
+                                "DEFAULT": {
+                                  "text_align": "CENTER",
+                                  "bg_color": "card",
+                                  "text_color": "text_secondary"
+                                }
+                              }
+                            }
+                          },
+                          "group": "",
+                          "groupIndex": 0
+                        }
+                      ],
+                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                      "hiddenFlagType": "literal",
+                      "clickableFlag": true,
+                      "clickableFlagType": "literal",
+                      "flagScrollbarMode": "",
+                      "flagScrollDirection": "",
+                      "scrollSnapX": "",
+                      "scrollSnapY": "",
+                      "checkedStateType": "literal",
+                      "disabledStateType": "literal",
+                      "states": "",
+                      "localStyles": {
+                        "objID": "53f19e66-d318-44a1-88fd-b35d39e1d004",
+                        "definition": {
+                          "SELECTED": {
+                            "DEFAULT": {
+                              "grid_cell_y_align": "CENTER",
+                              "grid_cell_column_pos": 3
+                            }
+                          },
+                          "MAIN": {
+                            "DEFAULT": {
+                              "grid_cell_column_pos": 1,
+                              "grid_cell_y_align": "CENTER",
+                              "grid_cell_x_align": "STRETCH",
+                              "text_color": "text_primary",
+                              "text_align": "CENTER",
+                              "border_color": "bg_primary",
+                              "bg_color": "card"
+                            }
+                          }
+                        }
+                      },
+                      "group": "",
+                      "groupIndex": 0,
+                      "options": "中文\\nEnglish\\n한국어",
+                      "optionsType": "literal",
+                      "selected": 0,
+                      "selectedType": "literal",
+                      "direction": "bottom",
+                      "useStaticText": true
+                    }
+                  ],
+                  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                  "hiddenFlagType": "literal",
+                  "clickableFlag": true,
+                  "clickableFlagType": "literal",
+                  "flagScrollbarMode": "",
+                  "flagScrollDirection": "",
+                  "scrollSnapX": "",
+                  "scrollSnapY": "",
+                  "checkedStateType": "literal",
+                  "disabledStateType": "literal",
+                  "states": "",
+                  "localStyles": {
+                    "objID": "3a92509a-36af-42b4-811d-e02d5951d753",
+                    "definition": {
+                      "MAIN": {
+                        "DEFAULT": {
+                          "grid_row_dsc_array": "FR(1)",
+                          "grid_column_dsc_array": "FR(1), FR(3)",
+                          "layout": "GRID",
+                          "text_color": "text_primary",
+                          "border_width": 0,
+                          "bg_color": "bg_secondary"
+                        }
+                      }
+                    }
+                  },
+                  "group": "",
+                  "groupIndex": 0
                 }
               ],
               "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -1552,7 +1777,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "步骤：2/5",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -1606,7 +1831,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "设置日期和时间",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -1659,7 +1884,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "喵喵需要知道正确的时间才能准确陪伴你的练习哦...",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -1710,7 +1935,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "小时",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -1822,7 +2047,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "分钟",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -1934,7 +2159,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "当前选择：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -1985,7 +2210,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "秒",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -2175,7 +2400,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "保存",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -2385,7 +2610,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "年",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -2568,7 +2793,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "月",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -2751,7 +2976,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "日",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -2811,7 +3036,7 @@
                 {
                   "objID": "561f1399-7bfc-4e60-bf20-76b04d668e9e",
                   "type": "LVGLLabelWidget",
-                  "left": 582,
+                  "left": 549,
                   "top": 10,
                   "width": 143,
                   "height": 34,
@@ -2855,7 +3080,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "步骤：3/5",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -2909,7 +3134,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "设置亮度和音量",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -2963,7 +3188,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "让喵喵的表现更适合你的眼睛和耳朵...",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -3014,7 +3239,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "屏幕亮度：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -3190,7 +3415,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "主音量：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -3527,7 +3752,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "步骤：4/5",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -3581,7 +3806,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "个性化你的Music Box",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -3634,7 +3859,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "让喵喵记住你的偏好设置",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -3708,7 +3933,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "主题：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -3828,7 +4053,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "金丝熊\\n星空黑",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -3933,7 +4158,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "开机页面：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -4053,7 +4278,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "主选单\\n时钟\\n小钢琴\\nAI导师\\n禅模式",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -4158,7 +4383,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "自动熄屏时间：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -4278,7 +4503,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "15秒\\n30秒\\n1分钟\\n3分钟\\n5分钟\\n10分钟",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -4383,7 +4608,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "自动关机（熄屏后5min触发）：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -4574,7 +4799,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "步骤：5/5",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -4628,7 +4853,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "设置网络连接",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -4681,7 +4906,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "联网后喵喵会自动帮你调整时间，还可以使用AI超强Buff哦...",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -4756,7 +4981,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Wifi总开关：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -4946,7 +5171,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "string_wifi_connect_tip",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -4994,7 +5219,7 @@
                 "childStyles": []
               },
               "locked": true,
-              "hiddenInEditor": false,
+              "hiddenInEditor": true,
               "timeline": [],
               "eventHandlers": [],
               "identifier": "step06_finish_reboot",
@@ -5018,7 +5243,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -5052,7 +5277,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "设置完成啦",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -5072,7 +5297,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -5104,7 +5329,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "我们可以正式开启音乐旅途啦",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -5124,7 +5349,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "",
@@ -5451,7 +5676,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -5499,9 +5724,9 @@
                     {
                       "objID": "608f042b-29e6-42df-f859-41417b61f460",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -5534,7 +5759,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "禅模式",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -5605,9 +5830,9 @@
                     {
                       "objID": "edd3ac8a-59bf-4693-95db-7c6840f5806e",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -5640,7 +5865,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "练耳",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -5651,7 +5876,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -5763,9 +5988,9 @@
                     {
                       "objID": "58ec72aa-1785-47fe-f44c-68617c6af334",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -5798,7 +6023,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "五度圈",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -5809,7 +6034,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -5921,9 +6146,9 @@
                     {
                       "objID": "321e448b-79d8-429b-c04b-0eff3a58b245",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -5956,7 +6181,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "和弦练习",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -5967,7 +6192,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6079,9 +6304,9 @@
                     {
                       "objID": "6b1f0e81-fcb0-492d-81ad-5634230db26e",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -6114,7 +6339,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "播放器",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -6125,7 +6350,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6238,9 +6463,9 @@
                     {
                       "objID": "14e1698c-ef29-4a4e-f597-80a643599cfa",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -6273,7 +6498,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "X-Y",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -6284,7 +6509,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6397,9 +6622,9 @@
                     {
                       "objID": "a223f9eb-0900-409d-c9e8-4b0ccf68d5ef",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -6432,7 +6657,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "组鼓",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -6443,7 +6668,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6556,9 +6781,9 @@
                     {
                       "objID": "f716b9f1-7691-4b32-c565-dc67391780a9",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -6591,7 +6816,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "小钢琴",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -6602,7 +6827,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6714,9 +6939,9 @@
                     {
                       "objID": "a4744fb9-99e2-4747-c4d2-cebfc6f32f6c",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -6749,7 +6974,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "时钟日历",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -6760,7 +6985,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -6873,9 +7098,9 @@
                     {
                       "objID": "f80bfbec-faf1-4ac8-85bd-191bc4dec999",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -6908,7 +7133,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "AI导师",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -6919,7 +7144,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -7032,9 +7257,9 @@
                     {
                       "objID": "0fdee9a9-efab-404d-edea-58cf81fbb6a9",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -7067,7 +7292,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "节拍器",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -7078,7 +7303,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -7190,9 +7415,9 @@
                     {
                       "objID": "dfa82696-2324-4a2f-82aa-fd4c5b1ecca6",
                       "type": "LVGLLabelWidget",
-                      "left": 12,
+                      "left": 0,
                       "top": 80,
-                      "width": 90,
+                      "width": 100,
                       "height": 34,
                       "customInputs": [],
                       "customOutputs": [],
@@ -7225,7 +7450,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "答案之书",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -7236,7 +7461,7 @@
                       "left": 12,
                       "top": 0,
                       "width": 90,
-                      "height": 34,
+                      "height": 72,
                       "customInputs": [],
                       "customOutputs": [],
                       "style": {
@@ -8013,7 +8238,7 @@
                   "type": "LVGLTabWidget",
                   "left": 97,
                   "top": 291,
-                  "width": 1096,
+                  "width": 1066,
                   "height": 583,
                   "customInputs": [],
                   "customOutputs": [],
@@ -8032,233 +8257,6 @@
                   "widthUnit": "px",
                   "heightUnit": "px",
                   "children": [
-                    {
-                      "objID": "1e45d5c2-80cf-4af6-e4b2-08c5d6959deb",
-                      "type": "LVGLPanelWidget",
-                      "left": 41,
-                      "top": 350,
-                      "width": 100,
-                      "height": 60,
-                      "customInputs": [],
-                      "customOutputs": [],
-                      "style": {
-                        "objID": "966101ca-2bb7-4477-c7d8-398b780bd312",
-                        "useStyle": "default",
-                        "conditionalStyles": [],
-                        "childStyles": []
-                      },
-                      "hiddenInEditor": false,
-                      "timeline": [],
-                      "eventHandlers": [],
-                      "leftUnit": "px",
-                      "topUnit": "px",
-                      "widthUnit": "%",
-                      "heightUnit": "px",
-                      "children": [
-                        {
-                          "objID": "8b38ea96-8643-4a86-d419-a95741ef4cc5",
-                          "type": "LVGLLabelWidget",
-                          "left": 0,
-                          "top": 0,
-                          "width": 257,
-                          "height": 34,
-                          "customInputs": [],
-                          "customOutputs": [],
-                          "style": {
-                            "objID": "cac34894-9e85-48b3-893a-e178069eeb3b",
-                            "useStyle": "default",
-                            "conditionalStyles": [],
-                            "childStyles": []
-                          },
-                          "hiddenInEditor": false,
-                          "timeline": [],
-                          "eventHandlers": [],
-                          "leftUnit": "px",
-                          "topUnit": "px",
-                          "widthUnit": "content",
-                          "heightUnit": "content",
-                          "children": [],
-                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-                          "hiddenFlagType": "literal",
-                          "clickableFlagType": "literal",
-                          "flagScrollbarMode": "",
-                          "flagScrollDirection": "",
-                          "scrollSnapX": "",
-                          "scrollSnapY": "",
-                          "checkedStateType": "literal",
-                          "disabledStateType": "literal",
-                          "states": "",
-                          "localStyles": {
-                            "objID": "70bab662-4fd9-4cde-c0de-14b9582a6a5b",
-                            "definition": {
-                              "MAIN": {
-                                "DEFAULT": {
-                                  "grid_cell_y_align": "CENTER"
-                                }
-                              }
-                            }
-                          },
-                          "group": "",
-                          "groupIndex": 0,
-                          "text": "语言/Language：",
-                          "textType": "literal",
-                          "longMode": "WRAP",
-                          "recolor": false,
-                          "useStaticText": true
-                        },
-                        {
-                          "objID": "e76e8135-6aac-4cf5-a1ad-49f345403b09",
-                          "type": "LVGLDropdownWidget",
-                          "left": 994,
-                          "top": 360,
-                          "width": 20,
-                          "height": 50,
-                          "customInputs": [],
-                          "customOutputs": [],
-                          "style": {
-                            "objID": "6648bab3-4d65-485d-cee4-bdde2c9d8a4f",
-                            "useStyle": "default",
-                            "conditionalStyles": [],
-                            "childStyles": []
-                          },
-                          "hiddenInEditor": false,
-                          "timeline": [],
-                          "eventHandlers": [],
-                          "identifier": "setting_language",
-                          "leftUnit": "px",
-                          "topUnit": "px",
-                          "widthUnit": "%",
-                          "heightUnit": "px",
-                          "children": [
-                            {
-                              "objID": "a0e2c8bb-fbe7-4d6c-99b0-7065bceb3e1e",
-                              "type": "LVGLContainerWidget",
-                              "left": 0,
-                              "top": 0,
-                              "width": 130,
-                              "height": 130,
-                              "customInputs": [],
-                              "customOutputs": [],
-                              "style": {
-                                "objID": "42079b40-59d9-4150-8b85-79f946ead20e",
-                                "useStyle": "default",
-                                "conditionalStyles": [],
-                                "childStyles": []
-                              },
-                              "hiddenInEditor": false,
-                              "timeline": [],
-                              "eventHandlers": [],
-                              "leftUnit": "px",
-                              "topUnit": "px",
-                              "widthUnit": "px",
-                              "heightUnit": "px",
-                              "children": [],
-                              "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-                              "hiddenFlagType": "literal",
-                              "clickableFlag": true,
-                              "clickableFlagType": "literal",
-                              "flagScrollbarMode": "",
-                              "flagScrollDirection": "",
-                              "scrollSnapX": "",
-                              "scrollSnapY": "",
-                              "checkedStateType": "literal",
-                              "disabledStateType": "literal",
-                              "states": "",
-                              "localStyles": {
-                                "objID": "cf39cfa9-5d9d-47d9-eb55-09c18b5abdd5",
-                                "definition": {
-                                  "MAIN": {
-                                    "DEFAULT": {
-                                      "text_align": "CENTER",
-                                      "bg_color": "card",
-                                      "text_color": "text_secondary"
-                                    }
-                                  },
-                                  "SELECTED": {
-                                    "CHECKED": {
-                                      "bg_color": "primary"
-                                    }
-                                  }
-                                }
-                              },
-                              "group": "",
-                              "groupIndex": 0
-                            }
-                          ],
-                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-                          "hiddenFlagType": "literal",
-                          "clickableFlag": true,
-                          "clickableFlagType": "literal",
-                          "flagScrollbarMode": "",
-                          "flagScrollDirection": "",
-                          "scrollSnapX": "",
-                          "scrollSnapY": "",
-                          "checkedStateType": "literal",
-                          "disabledStateType": "literal",
-                          "states": "",
-                          "localStyles": {
-                            "objID": "33065a44-e816-4fb4-a30e-74d4d3c7395a",
-                            "definition": {
-                              "SELECTED": {
-                                "DEFAULT": {
-                                  "grid_cell_y_align": "CENTER",
-                                  "grid_cell_column_pos": 3,
-                                  "text_color": "#f0f4ff"
-                                }
-                              },
-                              "MAIN": {
-                                "DEFAULT": {
-                                  "grid_cell_column_pos": 2,
-                                  "grid_cell_y_align": "CENTER",
-                                  "grid_cell_x_align": "STRETCH",
-                                  "text_color": "text_primary",
-                                  "text_align": "CENTER",
-                                  "border_color": "bg_primary",
-                                  "bg_color": "card"
-                                }
-                              }
-                            }
-                          },
-                          "group": "",
-                          "groupIndex": 0,
-                          "options": "简体中文\\nEnglish",
-                          "optionsType": "literal",
-                          "selected": 0,
-                          "selectedType": "literal",
-                          "direction": "bottom",
-                          "useStaticText": true
-                        }
-                      ],
-                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-                      "hiddenFlag": true,
-                      "hiddenFlagType": "literal",
-                      "clickableFlag": true,
-                      "clickableFlagType": "literal",
-                      "flagScrollbarMode": "",
-                      "flagScrollDirection": "",
-                      "scrollSnapX": "",
-                      "scrollSnapY": "",
-                      "checkedStateType": "literal",
-                      "disabledStateType": "literal",
-                      "states": "",
-                      "localStyles": {
-                        "objID": "4c417e1d-4df5-46d9-c2fe-064763d6fc12",
-                        "definition": {
-                          "MAIN": {
-                            "DEFAULT": {
-                              "grid_row_dsc_array": "FR(1)",
-                              "grid_column_dsc_array": "FR(1), FR(1), FR(1)",
-                              "layout": "GRID",
-                              "text_color": "text_primary",
-                              "border_width": 0,
-                              "bg_color": "bg_secondary"
-                            }
-                          }
-                        }
-                      },
-                      "group": "",
-                      "groupIndex": 0
-                    },
                     {
                       "objID": "1cf70eb0-28b5-4d0b-f6ed-9d96b0721bdf",
                       "type": "LVGLPanelWidget",
@@ -8328,7 +8326,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "屏幕亮度：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -8338,7 +8336,7 @@
                           "type": "LVGLSliderWidget",
                           "left": 124,
                           "top": 320,
-                          "width": 601,
+                          "width": 583,
                           "height": 30,
                           "customInputs": [],
                           "customOutputs": [],
@@ -8563,7 +8561,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "主音量：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -8573,7 +8571,7 @@
                           "type": "LVGLSliderWidget",
                           "left": 124,
                           "top": 320,
-                          "width": 601,
+                          "width": 583,
                           "height": 30,
                           "customInputs": [],
                           "customOutputs": [],
@@ -8798,7 +8796,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "主题：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -8918,7 +8916,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "options": "金丝熊\\n星空黑",
-                          "optionsType": "literal",
+                          "optionsType": "translated-literal",
                           "selected": 0,
                           "selectedType": "literal",
                           "direction": "bottom",
@@ -9023,7 +9021,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "开机页面：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -9143,7 +9141,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "options": "主选单\\n时钟\\n小钢琴\\nAI导师\\n禅模式",
-                          "optionsType": "literal",
+                          "optionsType": "translated-literal",
                           "selected": 0,
                           "selectedType": "literal",
                           "direction": "bottom",
@@ -9248,7 +9246,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "自动熄屏时间：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -9368,7 +9366,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "options": "15秒\\n30秒\\n1分钟\\n3分钟\\n5分钟\\n10分钟",
-                          "optionsType": "literal",
+                          "optionsType": "translated-literal",
                           "selected": 0,
                           "selectedType": "literal",
                           "direction": "bottom",
@@ -9473,7 +9471,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "自动休眠（熄屏后5min触发）：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -9634,7 +9632,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "倒置显示：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -9753,7 +9751,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "tabName": "基础\\n设置",
-                  "tabNameType": "literal"
+                  "tabNameType": "translated-literal"
                 },
                 {
                   "objID": "50c0bcc8-7648-418e-d75a-620f163692db",
@@ -9779,6 +9777,231 @@
                   "widthUnit": "px",
                   "heightUnit": "px",
                   "children": [
+                    {
+                      "objID": "77a5d153-bfb7-4b2a-95ef-8ed34e4c0d27",
+                      "type": "LVGLPanelWidget",
+                      "left": -18,
+                      "top": 10.5,
+                      "width": 100,
+                      "height": 60,
+                      "customInputs": [],
+                      "customOutputs": [],
+                      "style": {
+                        "objID": "2f9daf1a-016e-4414-bb03-936699f9197b",
+                        "useStyle": "default",
+                        "conditionalStyles": [],
+                        "childStyles": []
+                      },
+                      "hiddenInEditor": false,
+                      "timeline": [],
+                      "eventHandlers": [],
+                      "leftUnit": "px",
+                      "topUnit": "px",
+                      "widthUnit": "%",
+                      "heightUnit": "px",
+                      "children": [
+                        {
+                          "objID": "b011e515-afe7-48ba-de9e-d1ff04e8eb01",
+                          "type": "LVGLLabelWidget",
+                          "left": 0,
+                          "top": 0,
+                          "width": 257,
+                          "height": 34,
+                          "customInputs": [],
+                          "customOutputs": [],
+                          "style": {
+                            "objID": "9acd7e08-9098-44e4-8db7-831eca286f36",
+                            "useStyle": "default",
+                            "conditionalStyles": [],
+                            "childStyles": []
+                          },
+                          "hiddenInEditor": false,
+                          "timeline": [],
+                          "eventHandlers": [],
+                          "leftUnit": "px",
+                          "topUnit": "px",
+                          "widthUnit": "content",
+                          "heightUnit": "content",
+                          "children": [],
+                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                          "hiddenFlagType": "literal",
+                          "clickableFlagType": "literal",
+                          "flagScrollbarMode": "",
+                          "flagScrollDirection": "",
+                          "scrollSnapX": "",
+                          "scrollSnapY": "",
+                          "checkedStateType": "literal",
+                          "disabledStateType": "literal",
+                          "states": "",
+                          "localStyles": {
+                            "objID": "c8735992-0a28-4d89-a74e-30cd24a65a19",
+                            "definition": {
+                              "MAIN": {
+                                "DEFAULT": {
+                                  "grid_cell_y_align": "CENTER"
+                                }
+                              }
+                            }
+                          },
+                          "group": "",
+                          "groupIndex": 0,
+                          "text": "语言/Language：",
+                          "textType": "translated-literal",
+                          "longMode": "WRAP",
+                          "recolor": false,
+                          "useStaticText": true
+                        },
+                        {
+                          "objID": "f254faf5-ffaa-46ed-dc65-4603e3af6c50",
+                          "type": "LVGLDropdownWidget",
+                          "left": 994,
+                          "top": 360,
+                          "width": 20,
+                          "height": 50,
+                          "customInputs": [],
+                          "customOutputs": [],
+                          "style": {
+                            "objID": "389cee8e-c607-43bd-9303-8c3842d79135",
+                            "useStyle": "default",
+                            "conditionalStyles": [],
+                            "childStyles": []
+                          },
+                          "hiddenInEditor": false,
+                          "timeline": [],
+                          "eventHandlers": [],
+                          "identifier": "setting_language",
+                          "leftUnit": "px",
+                          "topUnit": "px",
+                          "widthUnit": "%",
+                          "heightUnit": "px",
+                          "children": [
+                            {
+                              "objID": "f7cb2a7b-9f78-4b9c-bb71-37f4dc4b9c27",
+                              "type": "LVGLContainerWidget",
+                              "left": 0,
+                              "top": 0,
+                              "width": 130,
+                              "height": 130,
+                              "customInputs": [],
+                              "customOutputs": [],
+                              "style": {
+                                "objID": "6ec276bd-a512-4627-ff12-e76df68f053c",
+                                "useStyle": "default",
+                                "conditionalStyles": [],
+                                "childStyles": []
+                              },
+                              "hiddenInEditor": false,
+                              "timeline": [],
+                              "eventHandlers": [],
+                              "leftUnit": "px",
+                              "topUnit": "px",
+                              "widthUnit": "px",
+                              "heightUnit": "px",
+                              "children": [],
+                              "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                              "hiddenFlagType": "literal",
+                              "clickableFlag": true,
+                              "clickableFlagType": "literal",
+                              "flagScrollbarMode": "",
+                              "flagScrollDirection": "",
+                              "scrollSnapX": "",
+                              "scrollSnapY": "",
+                              "checkedStateType": "literal",
+                              "disabledStateType": "literal",
+                              "states": "",
+                              "localStyles": {
+                                "objID": "070782e7-afde-4b82-e6cc-96c2bd7f4c29",
+                                "definition": {
+                                  "SELECTED": {
+                                    "CHECKED": {
+                                      "bg_color": "primary"
+                                    }
+                                  },
+                                  "MAIN": {
+                                    "DEFAULT": {
+                                      "text_align": "CENTER",
+                                      "bg_color": "card",
+                                      "text_color": "text_secondary"
+                                    }
+                                  }
+                                }
+                              },
+                              "group": "",
+                              "groupIndex": 0
+                            }
+                          ],
+                          "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                          "hiddenFlagType": "literal",
+                          "clickableFlag": true,
+                          "clickableFlagType": "literal",
+                          "flagScrollbarMode": "",
+                          "flagScrollDirection": "",
+                          "scrollSnapX": "",
+                          "scrollSnapY": "",
+                          "checkedStateType": "literal",
+                          "disabledStateType": "literal",
+                          "states": "",
+                          "localStyles": {
+                            "objID": "3f782f29-808c-41e4-c4db-826789a4930e",
+                            "definition": {
+                              "SELECTED": {
+                                "DEFAULT": {
+                                  "grid_cell_y_align": "CENTER",
+                                  "grid_cell_column_pos": 3
+                                }
+                              },
+                              "MAIN": {
+                                "DEFAULT": {
+                                  "grid_cell_column_pos": 2,
+                                  "grid_cell_y_align": "CENTER",
+                                  "grid_cell_x_align": "STRETCH",
+                                  "text_color": "text_primary",
+                                  "text_align": "CENTER",
+                                  "border_color": "bg_primary",
+                                  "bg_color": "card"
+                                }
+                              }
+                            }
+                          },
+                          "group": "",
+                          "groupIndex": 0,
+                          "options": "中文\\nEnglish\\n한국어",
+                          "optionsType": "literal",
+                          "selected": 0,
+                          "selectedType": "literal",
+                          "direction": "bottom",
+                          "useStaticText": true
+                        }
+                      ],
+                      "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                      "hiddenFlagType": "literal",
+                      "clickableFlag": true,
+                      "clickableFlagType": "literal",
+                      "flagScrollbarMode": "",
+                      "flagScrollDirection": "",
+                      "scrollSnapX": "",
+                      "scrollSnapY": "",
+                      "checkedStateType": "literal",
+                      "disabledStateType": "literal",
+                      "states": "",
+                      "localStyles": {
+                        "objID": "b159f3a3-10b3-42be-fa9a-afd600712720",
+                        "definition": {
+                          "MAIN": {
+                            "DEFAULT": {
+                              "grid_row_dsc_array": "FR(1)",
+                              "grid_column_dsc_array": "FR(1), FR(1), FR(1)",
+                              "layout": "GRID",
+                              "text_color": "text_primary",
+                              "border_width": 0,
+                              "bg_color": "bg_secondary"
+                            }
+                          }
+                        }
+                      },
+                      "group": "",
+                      "groupIndex": 0
+                    },
                     {
                       "objID": "5ea65f14-2fac-4ae5-deec-dccbfe623620",
                       "type": "LVGLPanelWidget",
@@ -9848,7 +10071,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "网络设置：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -10056,7 +10279,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "局域网FTP文件管理：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -10264,7 +10487,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "音源：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -10384,7 +10607,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "options": "内部预设\\nSoxxxxxxxxxx...",
-                          "optionsType": "literal",
+                          "optionsType": "translated-literal",
                           "selected": 1,
                           "selectedType": "literal",
                           "direction": "bottom",
@@ -10489,7 +10712,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "全局重置：",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -10564,7 +10787,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "长按重置",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -10656,7 +10879,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "tabName": "高级\\n设置",
-                  "tabNameType": "literal"
+                  "tabNameType": "translated-literal"
                 }
               ],
               "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -10685,7 +10908,7 @@
               "group": "",
               "groupIndex": 0,
               "tabviewPosition": "LEFT",
-              "tabviewSize": 120,
+              "tabviewSize": 150,
               "selectedTab": 0,
               "selectedTabType": "literal"
             },
@@ -10888,7 +11111,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Wifi总开关：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -11078,7 +11301,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "string_wifi_connect_tip",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -11176,7 +11399,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "长按重置",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -11343,7 +11566,7 @@
           "left": 1297,
           "top": 59,
           "width": 435,
-          "height": 110,
+          "height": 108,
           "customInputs": [],
           "customOutputs": [],
           "text": "<div><!--block-->1、下拉菜单的展开List的预选菜单项目的字体颜色是Main part内的DEFAULT内的TEXT设置的Color<br>2、下拉菜单的展开List的选中项目背景色是Selected part中CHECKED内的BACKGROUND设置的Color</div>",
@@ -11775,7 +11998,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "TAB5 Music Box",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -11904,7 +12127,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "硬件：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -11957,7 +12180,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "M5Stack TAB5 (ESP32P4 + ESP32C6)",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL_CIRCULAR",
                       "recolor": false,
                       "useStaticText": true
@@ -12063,7 +12286,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "软件：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -12116,7 +12339,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "FreeRTOS + LVGL 9.5.0 (EEZ Studio)",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL_CIRCULAR",
                       "recolor": false,
                       "useStaticText": true
@@ -12222,7 +12445,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "作者：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -12275,7 +12498,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "FmiL (fmil123@qq.com)",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL_CIRCULAR",
                       "recolor": false,
                       "useStaticText": true
@@ -13252,7 +13475,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "模式：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -13381,7 +13604,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "options": "弹珠\\n雨滴",
-                  "optionsType": "literal",
+                  "optionsType": "translated-literal",
                   "selected": 0,
                   "selectedType": "literal",
                   "direction": "bottom",
@@ -13433,7 +13656,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "调式：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -13562,7 +13785,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "options": "大调\\n国风五声\\n小调\\n日式小调",
-                  "optionsType": "literal",
+                  "optionsType": "translated-literal",
                   "selected": 1,
                   "selectedType": "literal",
                   "direction": "bottom",
@@ -13614,7 +13837,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "速度：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -14088,7 +14311,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "练耳",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -14452,7 +14675,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "点击试听",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "SCROLL_CIRCULAR",
               "recolor": false,
               "useStaticText": true
@@ -14558,7 +14781,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "得分",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -14634,6 +14857,7 @@
                 "childStyles": []
               },
               "locked": false,
+              "hiddenInEditor": false,
               "timeline": [],
               "eventHandlers": [],
               "leftUnit": "px",
@@ -14657,6 +14881,7 @@
                     "childStyles": []
                   },
                   "locked": false,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "ear_trainer_test",
@@ -14756,7 +14981,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "options": "= 挑战 =\\n= 练习=",
-                  "optionsType": "literal",
+                  "optionsType": "translated-literal",
                   "selected": 0,
                   "selectedType": "literal",
                   "direction": "bottom",
@@ -14778,6 +15003,7 @@
                     "childStyles": []
                   },
                   "locked": false,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -14808,7 +15034,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "模式：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -14829,6 +15055,7 @@
                     "childStyles": []
                   },
                   "locked": false,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "ear_mode",
@@ -14928,7 +15155,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "options": "绝对音感\\n相对音感",
-                  "optionsType": "literal",
+                  "optionsType": "translated-literal",
                   "selected": 0,
                   "selectedType": "literal",
                   "direction": "bottom",
@@ -14950,6 +15177,7 @@
                     "childStyles": []
                   },
                   "locked": false,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -14980,7 +15208,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "难度：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -15001,6 +15229,7 @@
                     "childStyles": []
                   },
                   "locked": false,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "ear_difficult",
@@ -15100,7 +15329,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "options": "初级\\n中级\\n高级",
-                  "optionsType": "literal",
+                  "optionsType": "translated-literal",
                   "selected": "0",
                   "selectedType": "literal",
                   "direction": "bottom",
@@ -15122,6 +15351,7 @@
                     "childStyles": []
                   },
                   "locked": false,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -15153,7 +15383,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "\\n历史最高",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -15174,6 +15404,7 @@
                     "childStyles": []
                   },
                   "locked": false,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "ear_best_score",
@@ -15262,7 +15493,7 @@
                 "childStyles": []
               },
               "locked": true,
-              "hiddenInEditor": false,
+              "hiddenInEditor": true,
               "timeline": [],
               "eventHandlers": [],
               "leftUnit": "px",
@@ -15285,7 +15516,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "ear_key_major",
@@ -15379,7 +15610,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "ear_key_minor2",
@@ -15448,7 +15679,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "ear_key_minor3",
@@ -15699,7 +15930,7 @@
                 }
               ],
               "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-              "hiddenFlag": true,
+              "hiddenFlag": false,
               "hiddenFlagType": "literal",
               "clickableFlag": true,
               "clickableFlagType": "literal",
@@ -16114,7 +16345,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "和弦练习",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -16572,7 +16803,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "标识：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -16626,7 +16857,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "大三度+小三度+小三度+小三度+小三度+小三度",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -16722,7 +16953,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "大三\\n",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -16878,7 +17109,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "F#7sus4",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -16996,7 +17227,7 @@
           "left": 845,
           "top": -129,
           "width": 435,
-          "height": 91,
+          "height": 90,
           "customInputs": [],
           "customOutputs": [],
           "text": "<div><!--block-->大三和弦\\n小三和弦\\n增三和弦\\n减三和弦\\n挂二和弦\\n挂四和弦\\n大七和弦\\n大小七和弦\\n小七和弦\\n半减七和弦\\n减七和弦\\n七挂二和弦\\n七挂四和弦\\n加九和弦\\n属九和弦</div>",
@@ -17136,7 +17367,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "五度圈",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -17413,7 +17644,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 944,
                   "top": -87,
-                  "width": 397,
+                  "width": 372,
                   "height": 45,
                   "customInputs": [],
                   "customOutputs": [],
@@ -17459,7 +17690,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "C大调/Am小调",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -17469,7 +17700,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
-                  "width": 192,
+                  "width": 217,
                   "height": 34,
                   "customInputs": [],
                   "customOutputs": [],
@@ -17512,7 +17743,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "调号：0",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -17564,7 +17795,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "音阶：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -17624,7 +17855,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "Cb Db Eb Fb Gb Ab B#",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -17684,7 +17915,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 944,
                   "top": -87,
-                  "width": 193,
+                  "width": 217,
                   "height": 34,
                   "customInputs": [],
                   "customOutputs": [],
@@ -17729,7 +17960,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "属",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -17739,7 +17970,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
-                  "width": 193,
+                  "width": 217,
                   "height": 45,
                   "customInputs": [],
                   "customOutputs": [],
@@ -17784,7 +18015,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "G(V)",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL_CIRCULAR",
                   "recolor": false,
                   "useStaticText": true
@@ -17794,7 +18025,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 944,
                   "top": -87,
-                  "width": 193,
+                  "width": 144,
                   "height": 34,
                   "customInputs": [],
                   "customOutputs": [],
@@ -17840,7 +18071,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "平行",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -17850,7 +18081,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
-                  "width": 193,
+                  "width": 144,
                   "height": 45,
                   "customInputs": [],
                   "customOutputs": [],
@@ -17896,7 +18127,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "Cm",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL",
                   "recolor": false,
                   "useStaticText": true
@@ -17906,7 +18137,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 944,
                   "top": -87,
-                  "width": 192,
+                  "width": 217,
                   "height": 34,
                   "customInputs": [],
                   "customOutputs": [],
@@ -17952,7 +18183,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "下属",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -17962,7 +18193,7 @@
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
-                  "width": 192,
+                  "width": 217,
                   "height": 45,
                   "customInputs": [],
                   "customOutputs": [],
@@ -18008,7 +18239,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "F(IV)",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "SCROLL_CIRCULAR",
                   "recolor": false,
                   "useStaticText": true
@@ -18034,7 +18265,7 @@
                       "border_width": 0,
                       "text_color": "text_primary",
                       "grid_row_dsc_array": "FR(2), FR(1), FR(1), FR(5), FR(1),FR(1)",
-                      "grid_column_dsc_array": "FR(1), FR(1), FR(1)",
+                      "grid_column_dsc_array": "FR(3), FR(2), FR(3)",
                       "text_font": "chinese_30",
                       "bg_color": "bg_secondary"
                     }
@@ -18243,7 +18474,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "小钢琴",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -19640,7 +19871,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "根音:",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -19704,7 +19935,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "C0\\nC1\\nC2\\nC3\\nC4\\nC5\\nC6",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "mode": "NORMAL"
@@ -20011,7 +20242,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "显示样式：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -20136,7 +20367,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "按键矩阵\\n模拟钢琴",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -20241,7 +20472,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "调式（仅矩阵按键生效）：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -20366,7 +20597,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "大调\\n小调\\n中国五声\\n埃及调式\\n多利亚\\n日本调式",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -20472,7 +20703,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "音调：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -20597,7 +20828,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "C\\nC#\\nD\\nD#\\nE\\nF\\nGb\\nG\\nG#\\nA\\nA#\\nB\\nC",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -20703,7 +20934,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "音色：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -20828,7 +21059,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "00-大钢琴\\n01-明亮钢琴\\n02-电三角钢琴\\n03-酒吧钢琴\\n04-电钢琴1\\n05-电钢琴2\\n06-羽管键琴\\n07-克拉维尼特\\n08-钢片琴\\n09-钟琴\\n10-八音盒\\n11-颤音琴\\n12-马林巴\\n13-木琴\\n14-管钟\\n15-扬琴",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -21095,7 +21326,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "鼓垫",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -21642,7 +21873,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Crash",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -21740,7 +21971,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Clap",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -21839,7 +22070,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Open HH",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -21938,7 +22169,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Closed HH",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -22037,7 +22268,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Ride",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -22136,7 +22367,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Snare",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -22236,7 +22467,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Kick",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -22336,7 +22567,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Floor Tom",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -22605,7 +22836,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "显示样式：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -22730,7 +22961,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "模拟组鼓\\n打击垫",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -22835,7 +23066,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "鼓类型：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -22960,7 +23191,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "000-标准\\n008-Room\\n016-Power\\n024-Electronic\\n025-TR-808\\n032-Jazz\\n040-Brush\\n048-Prchestra\\n056-SFX",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -23184,7 +23415,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "播放器",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -23613,7 +23844,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "歌曲列表",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -23771,7 +24002,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "Midi歌曲列表",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -23870,7 +24101,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": " AbandonAbandonAbandonAbandon.mid",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "DOT",
                           "recolor": false,
                           "useStaticText": true
@@ -24034,7 +24265,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "录音列表",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -24216,7 +24447,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Bad Apple(Nodbody Mixed)",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL_CIRCULAR",
                       "recolor": false,
                       "useStaticText": true
@@ -24268,7 +24499,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "文件：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -24323,7 +24554,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "/sd/midi/Abandon.mid",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL",
                       "recolor": false,
                       "useStaticText": true
@@ -24376,7 +24607,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "BPM：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -24484,7 +24715,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "轨道: ",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -25210,7 +25441,7 @@
                 "childStyles": []
               },
               "locked": true,
-              "hiddenInEditor": true,
+              "hiddenInEditor": false,
               "timeline": [],
               "eventHandlers": [],
               "identifier": "midi_set",
@@ -25234,7 +25465,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "midi_set_btn_return",
@@ -25258,7 +25489,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -25338,7 +25569,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -25361,7 +25592,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "midi_btn_music",
@@ -25375,7 +25606,7 @@
                           "type": "LVGLLabelWidget",
                           "left": 0,
                           "top": 0,
-                          "width": 120,
+                          "width": 100,
                           "height": 34,
                           "customInputs": [],
                           "customOutputs": [],
@@ -25385,12 +25616,12 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "leftUnit": "px",
                           "topUnit": "px",
-                          "widthUnit": "content",
+                          "widthUnit": "%",
                           "heightUnit": "content",
                           "children": [],
                           "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -25408,7 +25639,8 @@
                             "definition": {
                               "MAIN": {
                                 "DEFAULT": {
-                                  "align": "CENTER"
+                                  "align": "CENTER",
+                                  "text_align": "CENTER"
                                 }
                               }
                             }
@@ -25416,7 +25648,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "音乐播放",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -25470,7 +25702,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "midi_btn_mid",
@@ -25484,7 +25716,7 @@
                           "type": "LVGLLabelWidget",
                           "left": 0,
                           "top": 0,
-                          "width": 185,
+                          "width": 100,
                           "height": 34,
                           "customInputs": [],
                           "customOutputs": [],
@@ -25494,12 +25726,12 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "leftUnit": "px",
                           "topUnit": "px",
-                          "widthUnit": "content",
+                          "widthUnit": "%",
                           "heightUnit": "content",
                           "children": [],
                           "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -25517,7 +25749,8 @@
                             "definition": {
                               "MAIN": {
                                 "DEFAULT": {
-                                  "align": "CENTER"
+                                  "align": "CENTER",
+                                  "text_align": "CENTER"
                                 }
                               }
                             }
@@ -25525,7 +25758,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "Midi文件播放",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -25578,7 +25811,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "midi_btn_hmr",
@@ -25592,7 +25825,7 @@
                           "type": "LVGLLabelWidget",
                           "left": 0,
                           "top": 0,
-                          "width": 180,
+                          "width": 100,
                           "height": 34,
                           "customInputs": [],
                           "customOutputs": [],
@@ -25602,12 +25835,12 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "leftUnit": "px",
                           "topUnit": "px",
-                          "widthUnit": "content",
+                          "widthUnit": "%",
                           "heightUnit": "content",
                           "children": [],
                           "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -25625,7 +25858,8 @@
                             "definition": {
                               "MAIN": {
                                 "DEFAULT": {
-                                  "align": "CENTER"
+                                  "align": "CENTER",
+                                  "text_align": "CENTER"
                                 }
                               }
                             }
@@ -25633,7 +25867,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "录音文件播放",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -26092,7 +26326,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "X-Y模式",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -26895,7 +27129,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "音色：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -27020,7 +27254,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "40-小提琴\\n41-中提琴\\n42-大提琴\\n43-低音提琴\\n44-弦乐震音\\n45-弦乐拨奏\\n48-弦乐合奏1\\n49-弦乐合奏2\\n50-合成弦乐1\\n51-合成弦乐2\\n52-人声合唱Ah\\n53-人声Oh\\n54-合成人声\\n56-小号\\n57-长号\\n58-大号\\n59-弱音小号\\n60-圆号\\n61-铜管合奏\\n62-合成铜管1\\n63-合成铜管2\\n64-高音萨克斯\\n65-中音萨克斯\\n66-次中音萨克斯\\n67-上低音萨克斯\\n68-双簧管\\n69-英国管\\n70-大管\\n71-单簧管",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -27125,7 +27359,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "步长：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -27250,7 +27484,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "乐器\\n线性",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -27471,7 +27705,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "节拍器",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -28073,7 +28307,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "BPM",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -29028,7 +29262,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "拍号:",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -29414,7 +29648,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": " Tap",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -29872,7 +30106,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "节拍音色：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -29996,7 +30230,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "标准\\n指针式\\n木鱼式\\n鼓组式\\n打击乐式\\n体感式",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -30215,7 +30449,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "AI 导师",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -30615,7 +30849,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "Hi，喵喵。嗨黑哼 嘿哈呼呵咯啦嘞喽噜",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -30782,7 +31016,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "你好，我是喵喵。你的设备还没有绑定，请用设备ID: %6d, 在 xiaozhi.me 完成绑定~",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -31266,7 +31500,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "存储对话（需要使用SD卡）：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -31428,7 +31662,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "全局唤醒（需要先激活绑定）：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -31590,7 +31824,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "重置AI配置：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -31665,7 +31899,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "长按重置",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -31870,7 +32104,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "日历&时钟",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -32327,7 +32561,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "上午",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -32433,7 +32667,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "2026-07-21 星期五",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -32487,7 +32721,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "丙午年六月大 初八 · 大暑",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -32542,7 +32776,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "https://v1.hitokoto.cn/?c=f&encode=text",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL_CIRCULAR",
                       "recolor": false,
                       "useStaticText": true
@@ -32690,7 +32924,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "今天 · 星期二",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "SCROLL",
                               "recolor": false,
                               "useStaticText": true
@@ -32742,7 +32976,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "curl -X GET 'https://uapis.cn/api/v1/misc/'",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -32891,7 +33125,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "萨卡班萨卡班",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -33177,7 +33411,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "明天: ",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL",
                           "recolor": false,
                           "useStaticText": true
@@ -33229,7 +33463,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "倾盆大雨",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -33281,7 +33515,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "倾盆大雨",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL",
                           "recolor": false,
                           "useStaticText": true
@@ -33381,7 +33615,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "后天: ",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL",
                           "recolor": false,
                           "useStaticText": true
@@ -33433,7 +33667,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "鹅毛大雪鹅鹅鹅饿",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -33485,7 +33719,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "鹅毛大雪鹅鹅鹅饿",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL",
                           "recolor": false,
                           "useStaticText": true
@@ -33879,7 +34113,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "20xx年第x周，星期九",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -33989,7 +34223,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "今年已过500天，剩余600天。",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL",
                           "recolor": false,
                           "useStaticText": true
@@ -34097,7 +34331,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "宜",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL_CIRCULAR",
                           "recolor": false,
                           "useStaticText": true
@@ -34150,7 +34384,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "已过500天",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL_CIRCULAR",
                           "recolor": false,
                           "useStaticText": true
@@ -34203,7 +34437,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "忌",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL_CIRCULAR",
                           "recolor": false,
                           "useStaticText": true
@@ -34256,7 +34490,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "已过500天",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL_CIRCULAR",
                           "recolor": false,
                           "useStaticText": true
@@ -34309,7 +34543,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "已过500天",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL_CIRCULAR",
                           "recolor": false,
                           "useStaticText": true
@@ -34362,7 +34596,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "已过500天",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "SCROLL_CIRCULAR",
                           "recolor": false,
                           "useStaticText": true
@@ -34712,7 +34946,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "-1分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -34791,7 +35025,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "50min",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -34866,7 +35100,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "+1分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35082,7 +35316,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "1分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35184,7 +35418,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "3分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35286,7 +35520,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "5分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35388,7 +35622,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "10分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35490,7 +35724,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "20分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35592,7 +35826,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "30分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35694,7 +35928,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "40分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35796,7 +36030,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "50分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -35898,7 +36132,7 @@
                               "group": "",
                               "groupIndex": 0,
                               "text": "60分钟",
-                              "textType": "literal",
+                              "textType": "translated-literal",
                               "longMode": "WRAP",
                               "recolor": false,
                               "useStaticText": true
@@ -36033,7 +36267,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "重置",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -36139,7 +36373,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "开始",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -36442,7 +36676,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "时间显示：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -36567,7 +36801,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "24小时\\n12小时",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -36672,7 +36906,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "时间数字：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -36797,7 +37031,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "options": "字体1\\n字体2",
-                      "optionsType": "literal",
+                      "optionsType": "translated-literal",
                       "selected": 0,
                       "selectedType": "literal",
                       "direction": "bottom",
@@ -36926,7 +37160,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "时钟",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -37034,7 +37268,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "万年历",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -37142,7 +37376,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "计时器",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -37395,7 +37629,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "答案之书&塔罗牌",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -37771,7 +38005,7 @@
                 "childStyles": []
               },
               "locked": true,
-              "hiddenInEditor": false,
+              "hiddenInEditor": true,
               "timeline": [],
               "eventHandlers": [],
               "identifier": "fun_panel_book",
@@ -37795,7 +38029,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -37847,7 +38081,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -37899,7 +38133,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -37951,7 +38185,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -38003,7 +38237,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_book_open",
@@ -38027,7 +38261,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "book_answer_text",
@@ -38059,7 +38293,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "\"Consider a different perspective\"",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -38079,7 +38313,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -38131,7 +38365,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "book_answer_detail",
@@ -38163,7 +38397,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "It is suggested to view the issue from a different way or perspective, which may lead to new findings or solutions.",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -38218,7 +38452,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": false,
+                  "hiddenInEditor": true,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_book_close",
@@ -38242,7 +38476,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -38273,7 +38507,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "The Book of",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -38293,7 +38527,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -38325,7 +38559,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "ANSWERS",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -38345,7 +38579,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": false,
+                      "hiddenInEditor": true,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -38370,7 +38604,8 @@
                             "DEFAULT": {
                               "text_color": "text_primary",
                               "text_font": "chinese_40",
-                              "text_letter_space": 10
+                              "text_letter_space": 10,
+                              "text_align": "CENTER"
                             }
                           }
                         }
@@ -38378,7 +38613,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "= 答案之书 =",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -38466,7 +38701,7 @@
                 "childStyles": []
               },
               "locked": true,
-              "hiddenInEditor": true,
+              "hiddenInEditor": false,
               "timeline": [],
               "eventHandlers": [],
               "identifier": "fun_panel_tarot",
@@ -38490,7 +38725,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -38542,7 +38777,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -38594,7 +38829,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -38646,7 +38881,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -38698,7 +38933,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -38731,7 +38966,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "过去",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -38751,7 +38986,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_tarot_open_1",
@@ -38775,7 +39010,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_1",
@@ -38808,8 +39043,8 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "审判",
-                      "textType": "literal",
-                      "longMode": "CLIP",
+                      "textType": "translated-literal",
+                      "longMode": "SCROLL",
                       "recolor": false,
                       "useStaticText": true
                     },
@@ -38828,7 +39063,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -38880,7 +39115,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_reversed_1",
@@ -38913,7 +39148,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "正位",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "CLIP",
                       "recolor": false,
                       "useStaticText": true
@@ -38933,7 +39168,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_detail_panel_1",
@@ -38957,7 +39192,7 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "identifier": "tarot_card_detail_text_1",
@@ -38989,7 +39224,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -39074,7 +39309,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_tarot_close_1",
@@ -39098,7 +39333,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -39181,7 +39416,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -39214,7 +39449,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "现在",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -39234,7 +39469,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_tarot_open_2",
@@ -39258,7 +39493,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -39310,7 +39545,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_2",
@@ -39343,8 +39578,8 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "权杖骑士",
-                      "textType": "literal",
-                      "longMode": "CLIP",
+                      "textType": "translated-literal",
+                      "longMode": "SCROLL",
                       "recolor": false,
                       "useStaticText": true
                     },
@@ -39363,7 +39598,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_reversed_2",
@@ -39396,7 +39631,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "逆位",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "CLIP",
                       "recolor": false,
                       "useStaticText": true
@@ -39416,7 +39651,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_detail_panel_2",
@@ -39440,7 +39675,7 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "identifier": "tarot_card_detail_text_2",
@@ -39472,7 +39707,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -39557,7 +39792,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_tarot_close_2",
@@ -39581,7 +39816,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -39664,7 +39899,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -39697,7 +39932,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "未来",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -39717,7 +39952,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_tarot_open_3",
@@ -39741,7 +39976,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -39793,7 +40028,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_3",
@@ -39826,8 +40061,8 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "星币十",
-                      "textType": "literal",
-                      "longMode": "CLIP",
+                      "textType": "translated-literal",
+                      "longMode": "SCROLL",
                       "recolor": false,
                       "useStaticText": true
                     },
@@ -39846,7 +40081,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_reversed_3",
@@ -39879,7 +40114,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "逆位",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "CLIP",
                       "recolor": false,
                       "useStaticText": true
@@ -39899,7 +40134,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "tarot_card_detail_panel_3",
@@ -39923,7 +40158,7 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "identifier": "tarot_card_detail_text_3",
@@ -39955,7 +40190,7 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。象征思想力量的觉醒与真理的锐利揭示，代表清晰洞察与果断决策的开端，蕴含理智与正义的纯粹能量。",
-                          "textType": "literal",
+                          "textType": "translated-literal",
                           "longMode": "WRAP",
                           "recolor": false,
                           "useStaticText": true
@@ -40040,7 +40275,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "identifier": "panel_tarot_close_3",
@@ -40064,7 +40299,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "leftUnit": "px",
@@ -40134,7 +40369,7 @@
                 }
               ],
               "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-              "hiddenFlag": true,
+              "hiddenFlag": false,
               "hiddenFlagType": "literal",
               "clickableFlag": false,
               "clickableFlagType": "literal",
@@ -40215,7 +40450,7 @@
               "group": "",
               "groupIndex": 0,
               "text": " 请将设备翻转，心中默念你的疑问之后，翻开设备 ",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "SCROLL",
               "recolor": false,
               "useStaticText": true
@@ -40236,7 +40471,7 @@
                 "childStyles": []
               },
               "locked": true,
-              "hiddenInEditor": true,
+              "hiddenInEditor": false,
               "timeline": [],
               "eventHandlers": [],
               "identifier": "fun_set",
@@ -40260,7 +40495,7 @@
                     "conditionalStyles": [],
                     "childStyles": []
                   },
-                  "hiddenInEditor": true,
+                  "hiddenInEditor": false,
                   "timeline": [],
                   "eventHandlers": [],
                   "leftUnit": "px",
@@ -40283,7 +40518,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "fun_btn_book",
@@ -40297,7 +40532,7 @@
                           "type": "LVGLLabelWidget",
                           "left": 0,
                           "top": 0,
-                          "width": 160,
+                          "width": 100,
                           "height": 45,
                           "customInputs": [],
                           "customOutputs": [],
@@ -40307,12 +40542,12 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "leftUnit": "px",
                           "topUnit": "px",
-                          "widthUnit": "content",
+                          "widthUnit": "%",
                           "heightUnit": "content",
                           "children": [],
                           "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -40330,7 +40565,8 @@
                             "definition": {
                               "MAIN": {
                                 "DEFAULT": {
-                                  "align": "CENTER"
+                                  "align": "CENTER",
+                                  "text_align": "CENTER"
                                 }
                               }
                             }
@@ -40338,8 +40574,8 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "答案之书",
-                          "textType": "literal",
-                          "longMode": "WRAP",
+                          "textType": "translated-literal",
+                          "longMode": "SCROLL",
                           "recolor": false,
                           "useStaticText": true
                         }
@@ -40392,7 +40628,7 @@
                         "conditionalStyles": [],
                         "childStyles": []
                       },
-                      "hiddenInEditor": true,
+                      "hiddenInEditor": false,
                       "timeline": [],
                       "eventHandlers": [],
                       "identifier": "fun_btn_tarot",
@@ -40406,7 +40642,7 @@
                           "type": "LVGLLabelWidget",
                           "left": 0,
                           "top": 0,
-                          "width": 120,
+                          "width": 100,
                           "height": 45,
                           "customInputs": [],
                           "customOutputs": [],
@@ -40416,12 +40652,12 @@
                             "conditionalStyles": [],
                             "childStyles": []
                           },
-                          "hiddenInEditor": true,
+                          "hiddenInEditor": false,
                           "timeline": [],
                           "eventHandlers": [],
                           "leftUnit": "px",
                           "topUnit": "px",
-                          "widthUnit": "content",
+                          "widthUnit": "%",
                           "heightUnit": "content",
                           "children": [],
                           "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -40439,7 +40675,8 @@
                             "definition": {
                               "MAIN": {
                                 "DEFAULT": {
-                                  "align": "CENTER"
+                                  "align": "CENTER",
+                                  "text_align": "CENTER"
                                 }
                               }
                             }
@@ -40447,8 +40684,8 @@
                           "group": "",
                           "groupIndex": 0,
                           "text": "塔罗牌",
-                          "textType": "literal",
-                          "longMode": "WRAP",
+                          "textType": "translated-literal",
+                          "longMode": "SCROLL",
                           "recolor": false,
                           "useStaticText": true
                         }
@@ -40518,7 +40755,7 @@
                 }
               ],
               "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-              "hiddenFlag": true,
+              "hiddenFlag": false,
               "hiddenFlagType": "literal",
               "clickableFlag": false,
               "clickableFlagType": "literal",
@@ -40619,7 +40856,7 @@
           "left": 1892,
           "top": 338,
           "width": 501,
-          "height": 53,
+          "height": 52,
           "customInputs": [],
           "customOutputs": [],
           "actions": [
@@ -40733,7 +40970,7 @@
               "group": "",
               "groupIndex": 0,
               "text": "FTP文件管理",
-              "textType": "literal",
+              "textType": "translated-literal",
               "longMode": "WRAP",
               "recolor": false,
               "useStaticText": true
@@ -41130,7 +41367,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "状态：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -41183,7 +41420,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "等待连接",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL",
                       "recolor": false,
                       "useStaticText": true
@@ -41286,7 +41523,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "IP：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -41339,7 +41576,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "ftp://123.456.789.222等待连接\\nWifi为案松手的撒网数大",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL",
                       "recolor": false,
                       "useStaticText": true
@@ -41442,7 +41679,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "文件：",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "WRAP",
                       "recolor": false,
                       "useStaticText": true
@@ -41495,7 +41732,7 @@
                       "group": "",
                       "groupIndex": 0,
                       "text": "xxx.mid",
-                      "textType": "literal",
+                      "textType": "translated-literal",
                       "longMode": "SCROLL",
                       "recolor": false,
                       "useStaticText": true
@@ -41576,7 +41813,7 @@
                   "group": "",
                   "groupIndex": 0,
                   "text": "进度：",
-                  "textType": "literal",
+                  "textType": "translated-literal",
                   "longMode": "WRAP",
                   "recolor": false,
                   "useStaticText": true
@@ -41774,7 +42011,7 @@
           "objID": "e0f9793d-86e1-40d0-983f-d4f370deb191",
           "filePath": "..\\..\\..\\..\\..\\Fonts\\Font Awesome5-Solid+Brands+Regular.woff",
           "lvglRanges": "61441,61448,61451,61452,61452,61453,61457,61459,61461,61465,61468,61473,61478,61479,61480,61502,61512,61515,61516,61517,61521,61522,61523,61524,61543,61544,61550,61552,61553,61556,61559,61560,61561,61563,61587,61589,61636,61637,61639,61671,61674,61683,61724,61732,61787,61931,62016,62017,62018,62019,62020,62087,62099,62212,62189,62810,63426,63650,0xf129,0xF02D,0xF0E7,0xF240,0xF241,0xF242.0xF243,0xF244,0xf558,0xf025,0xf287",
-          "lvglSymbols": ""
+          "lvglSymbols": ""
         },
         {
           "objID": "e5001ab6-76d0-4681-dd67-c16e132e7a83",
@@ -41787,6 +42024,12 @@
           "filePath": "..\\..\\..\\..\\..\\Fonts\\fontawesome-free-6.7.2-desktop\\otfs\\Font Awesome 6 Free-Solid-900.otf",
           "lvglRanges": " ",
           "lvglSymbols": ""
+        },
+        {
+          "objID": "d74a0d66-3b78-4a4b-e593-b4329271db60",
+          "filePath": "..\\..\\..\\..\\..\\Fonts\\SunghyunSansDisambiguated\\SunghyunSansDisambiguated-Regular.ttf",
+          "lvglRanges": "",
+          "lvglSymbols": "한국어"
         }
       ],
       "lvglGlyphs": {

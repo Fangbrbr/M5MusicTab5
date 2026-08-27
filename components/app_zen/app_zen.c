@@ -18,6 +18,7 @@
 #include "esp_random.h"
 #include "esp_timer.h"
 #include "esp_lvgl_port.h"
+#include "service_i18n.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -1031,7 +1032,7 @@ static void app_zen_rec_btn_cb(lv_event_t *e)
     if (s_zen.recording_self) {
         service_recorder_result_t r = app_manager_record_stop();
         if (r != RECORDER_OK && r != RECORDER_ERR_NOT_RECORDING) {
-            app_manager_show_notification_timeout("停止录制失败", 2000);
+            app_manager_show_notification_timeout(_("停止录制失败"), 2000);
         }
         /* 视觉状态与最终提示由 on_update 在 finalize 完成后统一处理 */
         return;
@@ -1040,7 +1041,7 @@ static void app_zen_rec_btn_cb(lv_event_t *e)
     service_recorder_result_t r = app_manager_record_start(TAG);
     switch (r) {
     case RECORDER_OK:
-        app_manager_show_notification_timeout("开始录制", 1000);
+        app_manager_show_notification_timeout(_("开始录制"), 1000);
         s_zen.recording_self = true;
         s_zen.recording_stop_pending = false;
         if (ui->btn_rec != NULL) {
@@ -1048,13 +1049,13 @@ static void app_zen_rec_btn_cb(lv_event_t *e)
         }
         break;
     case RECORDER_ERR_NO_SD:
-        app_manager_show_notification_timeout("未检测到 SD 卡", 2000);
+        app_manager_show_notification_timeout(_("未检测到 SD 卡"), 2000);
         break;
     case RECORDER_ERR_BUSY:
-        app_manager_show_notification_timeout("正在录制中", 1500);
+        app_manager_show_notification_timeout(_("正在录制中"), 1500);
         break;
     default:
-        app_manager_show_notification_timeout("录制启动失败", 2000);
+        app_manager_show_notification_timeout(_("录制启动失败"), 2000);
         break;
     }
 }
@@ -1114,7 +1115,7 @@ static bool app_zen_on_init(app_base_t *self, void *screen_ctx)
     s_zen.canvas_buf = heap_caps_calloc(1, buf_size, MALLOC_CAP_SPIRAM);
     if (s_zen.canvas_buf == NULL) {
         ESP_LOGE(TAG, "canvas buf alloc failed");
-        app_manager_show_notification_timeout("内存不足，禅模式无法打开（音源过大时请换小音源）", 3000);
+        app_manager_show_notification_timeout(_("内存不足，禅模式无法打开（音源过大时请换小音源）"), 3000);
         return false;
     }
 
@@ -1176,9 +1177,9 @@ static void app_zen_on_update(app_base_t *self)
     if (s_zen.recording_stop_pending && !app_manager_record_is_recording()) {
         char path[256];
         if (app_manager_record_get_last_path(path, sizeof(path))) {
-            app_manager_show_notification_timeout("录音已保存", 2000);
+            app_manager_show_notification_timeout(_("录音已保存"), 2000);
         } else {
-            app_manager_show_notification_timeout("录制时间过短，已丢弃", 2000);
+            app_manager_show_notification_timeout(_("录制时间过短，已丢弃"), 2000);
         }
         s_zen.recording_stop_pending = false;
     }

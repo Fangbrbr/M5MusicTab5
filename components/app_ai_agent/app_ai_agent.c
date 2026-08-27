@@ -15,6 +15,7 @@
 #include "app_manager.h"
 #include "engine_gui.h"
 #include "fonts.h"
+#include "service_i18n.h"
 #include "service_nvs.h"
 #include "service_sd.h"
 #include "service_xiaozhi.h"
@@ -58,9 +59,9 @@ static const char *TAG = "app_ai_agent";
 #define AI_AVATAR_AI            "\xEF\x94\x81"  /* U+F501 */
 
 /* 绑定提示句式与 screens.c 示例默认文案保持一致（仅把 %6d 换成实际激活码） */
-#define AI_BIND_TEXT_FMT        "你好，我是喵喵。你的设备还没有绑定，请用设备ID: %s, 在 xiaozhi.me 完成绑定~"
-#define AI_GREETING_TEXT        "你好，我是喵喵。按住麦克风按钮或喊“Hi，喵喵”和我说话~"
-#define AI_ERROR_PREFIX         "出错了："
+#define AI_BIND_TEXT_FMT        _("你好，我是喵喵。你的设备还没有绑定，请用设备ID: %s, 在 xiaozhi.me 完成绑定~")
+#define AI_GREETING_TEXT        _("你好，我是喵喵。按住麦克风按钮或喊“Hi，喵喵”和我说话~")
+#define AI_ERROR_FMT            _("出错了：%s")
 
 typedef struct {
     lv_obj_t *btn_home;
@@ -331,7 +332,7 @@ static void ai_log_to_sd(ai_role_t role, const char *text)
     FILE *fp = service_sd_fopen(AI_CHAT_LOG_FILE, "a");
     if (fp == NULL) {
         ESP_LOGW(TAG, "open %s failed", AI_CHAT_LOG_FILE);
-        app_manager_show_notification_timeout("对话写入 SD 卡失败", 2000);
+        app_manager_show_notification_timeout(_("对话写入 SD 卡失败"), 2000);
         return;
     }
 
@@ -495,12 +496,12 @@ static void ai_handle_state(service_xiaozhi_state_t state)
     ESP_LOGD(TAG, "[ui-sync] App 收到 STATE 同步: state=%d", (int)state);
     switch (state) {
     case SERVICE_XIAOZHI_STATE_CONNECTING:
-        ai_status_set("正在连接服务器…");
-        app_manager_show_notification_timeout("正在连接…", 0);
+        ai_status_set(_("正在连接服务器…"));
+        app_manager_show_notification_timeout(_("正在连接…"), 0);
         break;
     case SERVICE_XIAOZHI_STATE_ACTIVATING:
-        ai_status_set("设备激活中，请稍候…");
-        app_manager_show_notification_timeout("设备激活中…", 0);
+        ai_status_set(_("设备激活中，请稍候…"));
+        app_manager_show_notification_timeout(_("设备激活中…"), 0);
         break;
     case SERVICE_XIAOZHI_STATE_READY:
         ai_status_clear();
@@ -516,11 +517,11 @@ static void ai_handle_state(service_xiaozhi_state_t state)
         ai_speak_btn_highlight(true);
         /* 提示文案按模式适配：auto 服务器 VAD 自动断句，manual 需按住 */
         app_manager_show_notification_timeout(
-            service_xiaozhi_is_auto_mode() ? "聆听中…（说完稍候）" : "聆听中…（按住说话）", 0);
+            service_xiaozhi_is_auto_mode() ? _("聆听中…（说完稍候）") : _("聆听中…（按住说话）"), 0);
         break;
     case SERVICE_XIAOZHI_STATE_SPEAKING:
         ai_speak_btn_highlight(true);
-        app_manager_show_notification_timeout("播报中…", 0);
+        app_manager_show_notification_timeout(_("播报中…"), 0);
         break;
     case SERVICE_XIAOZHI_STATE_IDLE:
     default:
@@ -558,7 +559,7 @@ static void ai_handle_event(const service_xiaozhi_event_t *evt)
     case SERVICE_XIAOZHI_EVT_ERROR: {
         /* 缓冲取前缀 + 事件文本全长，落历史时再截到 AI_CHAT_TEXT_LEN */
         char buf[AI_CHAT_TEXT_LEN + 16];
-        snprintf(buf, sizeof(buf), AI_ERROR_PREFIX "%s", evt->text);
+        snprintf(buf, sizeof(buf), AI_ERROR_FMT, evt->text);
         ai_history_append_show(AI_ROLE_AI, buf);
         break;
     }
@@ -566,8 +567,8 @@ static void ai_handle_event(const service_xiaozhi_event_t *evt)
         /* 本地 VAD 边沿驱动收音指示：仅聆听态展示，其余状态忽略 */
         if (evt->state == SERVICE_XIAOZHI_STATE_LISTENING) {
             const char *notice = (strcmp(evt->text, "speech") == 0)
-                    ? "识别到语音…"
-                    : (service_xiaozhi_is_auto_mode() ? "聆听中…（说完稍候）" : "聆听中…（按住说话）");
+                    ? _("识别到语音…")
+                    : (service_xiaozhi_is_auto_mode() ? _("聆听中…（说完稍候）") : _("聆听中…（按住说话）"));
             ESP_LOGD(TAG, "[ui-sync] 通知栏更新: %s", notice);
             app_manager_show_notification_timeout(notice, 0);
         }
@@ -959,7 +960,7 @@ static void ai_do_reset(void)
         ESP_LOGI(TAG, "xiaozhi restart after reset");
     }
 
-    app_manager_show_notification_timeout("AI 配置已完全重置，请等待 6 位配对码", 3000);
+    app_manager_show_notification_timeout(_("AI 配置已完全重置，请等待 6 位配对码"), 3000);
 }
 
 /* -------------------- 控件事件回调（LVGL 任务上下文，锁已持有） -------------------- */
@@ -1042,7 +1043,7 @@ static void app_ai_agent_switch_cb(lv_event_t *e)
     if (on && !service_sd_is_mounted()) {
         /* 程序改回开关状态不会再触发 VALUE_CHANGED，可安全回弹 */
         lv_obj_remove_state(s_ai_ui.switch_save, LV_STATE_CHECKED);
-        app_manager_show_notification_timeout("未检测到 SD 卡，无法开启对话存储", 2000);
+        app_manager_show_notification_timeout(_("未检测到 SD 卡，无法开启对话存储"), 2000);
         return;
     }
 
@@ -1069,7 +1070,7 @@ static void app_ai_agent_wake_anywhere_cb(lv_event_t *e)
         s_wake_guard = true;
         lv_obj_remove_state(s_ai_ui.switch_wake_anywhere, LV_STATE_CHECKED);
         s_wake_guard = false;
-        app_manager_show_notification_timeout("请先完成绑定激活，再开启全局唤醒", 2500);
+        app_manager_show_notification_timeout(_("请先完成绑定激活，再开启全局唤醒"), 2500);
         return;
     }
     esp_err_t ret = service_nvs_set_xz_wake_anywhere(on);
@@ -1112,7 +1113,7 @@ static bool app_ai_agent_on_init(app_base_t *self, void *screen_ctx)
         ESP_LOGI(TAG, "first enter but not activated, will show bind bubble");
     }
     /* 欢迎词 */
-    app_manager_show_notification_timeout("欢迎使用 AI 助手，可以点击按钮或说“Hi,唤醒”", 3000);
+    app_manager_show_notification_timeout(_("欢迎使用 AI 助手，可以点击按钮或说“Hi,唤醒”"), 3000);
 
     lvgl_port_lock(portMAX_DELAY);
 

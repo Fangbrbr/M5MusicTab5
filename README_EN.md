@@ -294,9 +294,9 @@ A built-in FTP server exposes the entire SD card over LAN: push songs to the pla
 1. Make sure the device is on Wi-Fi (📶 in the status bar)
 2. Go to Settings → Advanced → FTP file transfer; the page shows `ftp://<device IP>` with credentials (both `musicpad`)
 3. On the same LAN, connect with FileZilla / WinSCP / your OS file manager
-   — (Note: on my Windows 11, Explorer doesn't pop up the credential dialog; use ftp://musicpad:musicpad@<IP shown on screen>, e.g. ftp://musicpad:musicpad@192.168.1.187)
-5. During transfer the page shows live status, filename, and progress; the page takes over the system (no sleep, voice assistant paused, no switching away)
-6. Tap "Exit" anytime to disconnect and return to Settings
+   - If Windows Explorer doesn't pop up the credential dialog, enter the full credential URL in the address bar instead: `ftp://musicpad:musicpad@<device IP>` (e.g. `ftp://musicpad:musicpad@192.168.1.187`)
+4. During transfer the page shows live status, filename, and progress; the page takes over the system (no sleep, voice assistant paused, no switching away)
+5. Tap "Exit" anytime to disconnect and return to Settings
 
 **Notes:**
 - Passive mode only (PASV/EPSV); FileZilla / WinSCP / Explorer work by default
@@ -351,7 +351,7 @@ Developed with VS Code + the ESP-IDF extension, ESP-IDF v5.4.4.
 
 Built automatically via **GitHub Actions**. Pushing a `v*` tag triggers:
 
-1. Firmware build in the `espressif/idf:v5.4.4` container
+1. Firmware build in the `espressif/idf:v5.5.5` container
 2. Two images:
    - `0x0_full_*.bin` — full 16 MB image for first flash / unbricking (wipes settings)
    - `0x10000_app_*.bin` — app-only image for routine upgrades (keeps NVS settings)
@@ -447,6 +447,10 @@ This project used or learned from the following open-source projects — many th
 
 ### Inspiration
 - [CYD-MIDI-Controller](https://github.com/NickCulbertson/CYD-MIDI-Controller) — inspiration for Zen Mode (marbles/raindrops)
+
+### Fonts
+- [AlimamaFangYuanTi](https://fonts.alibabagroup.com) — Chinese UI font (free for commercial use)
+- [Font Awesome 6 Free](https://fontawesome.com) — UI icon font (CC BY 4.0 / SIL OFL 1.1)
 
 ### Built-in soundfont
 - **Florestan Basic GM GS** — Public Domain

@@ -31,6 +31,7 @@ typedef struct {
     int16_t y;
     uint8_t finger_id;  /**< touch: finger id; mouse: button id; keyboard: key code */
     uint8_t flags;      /**< mouse: button state; keyboard: modifier */
+    uint8_t pressure;   /**< touch: 按键力度 0~127（引擎层归一化）；非触摸输入置 0 */
 } app_input_event_t;
 
 #ifdef __cplusplus

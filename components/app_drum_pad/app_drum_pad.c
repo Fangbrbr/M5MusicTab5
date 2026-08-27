@@ -15,6 +15,7 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_lvgl_port.h"
+#include "service_i18n.h"
 #include "service_nvs.h"
 #include "lvgl.h"
 #include <string.h>
@@ -24,6 +25,7 @@ static const char *TAG = "app_drum_pad";
 #define DRUM_NOTE_OFF_MS        250
 #define DRUM_ACTIVE_MAX         8
 #define DRUM_TOUCH_MAX_FINGERS  5
+#define DRUM_DEFAULT_VELOCITY   110
 
 /* GM 鼓映射（10 通道） */
 #define DRUM_NOTE_CRASH         49
@@ -197,7 +199,14 @@ static void drum_midi_note(uint8_t note, uint8_t velocity)
     engine_midi_publish(&midi, 0);
 }
 
-static void drum_hit(uint8_t note)
+/* 触摸力度带往 MIDI velocity；无力度事件（pressure=0，如 UI 矩阵按钮/初始帧）
+ * 回退默认力度，保证老按键手感不变 */
+static uint8_t drum_velocity(uint8_t pressure)
+{
+    return (pressure > 0) ? pressure : DRUM_DEFAULT_VELOCITY;
+}
+
+static void drum_hit(uint8_t note, uint8_t velocity)
 {
     if (s_drum.active_count >= DRUM_ACTIVE_MAX) {
         drum_midi_note(s_drum.active[0].note, 0);
@@ -206,7 +215,7 @@ static void drum_hit(uint8_t note)
         s_drum.active_count--;
     }
 
-    drum_midi_note(note, 110);
+    drum_midi_note(note, velocity);
     s_drum.active[s_drum.active_count].note = note;
     s_drum.active[s_drum.active_count].off_at_us =
         esp_timer_get_time() + (int64_t)DRUM_NOTE_OFF_MS * 1000;
@@ -546,7 +555,7 @@ static void app_drum_pad_on_input(app_base_t *self, const app_input_event_t *evt
     }
 
     if (new_pad >= 0) {
-        drum_hit(s_pads_vkit[new_pad].note);
+        drum_hit(s_pads_vkit[new_pad].note, drum_velocity(evt->pressure));
     }
     s_drum.finger_pad[evt->finger_id] = new_pad;
 }
@@ -563,21 +572,21 @@ static void app_drum_pad_on_ui_event(app_base_t *self, lv_event_t *e)
     ui_screen_drum_t *ui = &s_drum_ui;
 
     if (target == ui->crash_m) {
-        drum_hit(DRUM_NOTE_CRASH);
+        drum_hit(DRUM_NOTE_CRASH, DRUM_DEFAULT_VELOCITY);
     } else if (target == ui->closedhh_m) {
-        drum_hit(DRUM_NOTE_CLOSEDHH);
+        drum_hit(DRUM_NOTE_CLOSEDHH, DRUM_DEFAULT_VELOCITY);
     } else if (target == ui->ride_m) {
-        drum_hit(DRUM_NOTE_RIDE);
+        drum_hit(DRUM_NOTE_RIDE, DRUM_DEFAULT_VELOCITY);
     } else if (target == ui->kick_m) {
-        drum_hit(DRUM_NOTE_KICK);
+        drum_hit(DRUM_NOTE_KICK, DRUM_DEFAULT_VELOCITY);
     } else if (target == ui->snare_n) {
-        drum_hit(DRUM_NOTE_SNARE);
+        drum_hit(DRUM_NOTE_SNARE, DRUM_DEFAULT_VELOCITY);
     } else if (target == ui->floortom_m) {
-        drum_hit(DRUM_NOTE_FLOORTOM);
+        drum_hit(DRUM_NOTE_FLOORTOM, DRUM_DEFAULT_VELOCITY);
     } else if (target == ui->clap_m) {
-        drum_hit(DRUM_NOTE_CLAP);
+        drum_hit(DRUM_NOTE_CLAP, DRUM_DEFAULT_VELOCITY);
     } else if (target == ui->openhht_m) {
-        drum_hit(DRUM_NOTE_OPENHH);
+        drum_hit(DRUM_NOTE_OPENHH, DRUM_DEFAULT_VELOCITY);
     }
 }
 
@@ -605,7 +614,7 @@ static void app_drum_pad_rec_btn_cb(lv_event_t *e)
     if (s_drum.recording_self) {
         service_recorder_result_t r = app_manager_record_stop();
         if (r != RECORDER_OK && r != RECORDER_ERR_NOT_RECORDING) {
-            app_manager_show_notification_timeout("停止录制失败", 2000);
+            app_manager_show_notification_timeout(_("停止录制失败"), 2000);
         }
         return;
     }
@@ -613,7 +622,7 @@ static void app_drum_pad_rec_btn_cb(lv_event_t *e)
     service_recorder_result_t r = app_manager_record_start(TAG);
     switch (r) {
     case RECORDER_OK:
-        app_manager_show_notification_timeout("开始录制", 1000);
+        app_manager_show_notification_timeout(_("开始录制"), 1000);
         s_drum.recording_self = true;
         s_drum.recording_stop_pending = false;
         if (ui->btn_rec != NULL) {
@@ -621,13 +630,13 @@ static void app_drum_pad_rec_btn_cb(lv_event_t *e)
         }
         break;
     case RECORDER_ERR_NO_SD:
-        app_manager_show_notification_timeout("未检测到 SD 卡", 2000);
+        app_manager_show_notification_timeout(_("未检测到 SD 卡"), 2000);
         break;
     case RECORDER_ERR_BUSY:
-        app_manager_show_notification_timeout("正在录制中", 1500);
+        app_manager_show_notification_timeout(_("正在录制中"), 1500);
         break;
     default:
-        app_manager_show_notification_timeout("录制启动失败", 2000);
+        app_manager_show_notification_timeout(_("录制启动失败"), 2000);
         break;
     }
 }
@@ -679,9 +688,9 @@ static void app_drum_pad_on_update(app_base_t *self)
     if (s_drum.recording_stop_pending && !app_manager_record_is_recording()) {
         char path[256];
         if (app_manager_record_get_last_path(path, sizeof(path))) {
-            app_manager_show_notification_timeout("录音已保存", 2000);
+            app_manager_show_notification_timeout(_("录音已保存"), 2000);
         } else {
-            app_manager_show_notification_timeout("录制时间过短，已丢弃", 2000);
+            app_manager_show_notification_timeout(_("录制时间过短，已丢弃"), 2000);
         }
         s_drum.recording_stop_pending = false;
     }

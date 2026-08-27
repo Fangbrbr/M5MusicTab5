@@ -2,3 +2,16 @@
 # 每行一个仓库相对路径：仅在公仓 tree 中排除，本地/私有仓保留
 # 内部发布工具自身（含私有 remote 名与内部工作流，不属于开源门面）
 tools/public_release.sh
+# Agent 开发 apparatus：内部流程、私有机器路径、私有 remote 工作流（AGENTS.md §2.3）
+AGENTS.md
+.github/agents/
+.github/prompts/
+.github/instructions/
+doc/agent_prompt.md
+doc/build_prompt.md
+doc/xiaozhi-esp32-core-analysis.md
+# 内部开发工具/文档：含私有机器路径或仅服务内部工作流，公仓用户无构建依赖
+doc/app_nvs_pattern.md
+tools/flash_all.ps1
+tools/gen_arch.py
+tools/extract_chinese.py

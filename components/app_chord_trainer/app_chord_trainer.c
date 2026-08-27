@@ -12,6 +12,7 @@
 #include "app_manager.h"
 #include "engine_gui.h"
 #include "engine_midi.h"
+#include "service_i18n.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -229,7 +230,7 @@ static void chord_populate_type_buttons(void)
         lv_obj_t *label = lv_label_create(btn);
         char label_text[32];
         snprintf(label_text, sizeof(label_text), "%s\n%s", 
-                 s_chord_types[i].cn_name, 
+                 _(s_chord_types[i].cn_name), 
                  s_chord_types[i].suffix[0] ? s_chord_types[i].suffix : "");
         lv_label_set_text(label, label_text);
         lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
@@ -513,7 +514,7 @@ static void chord_refresh_labels(void)
 
     lvgl_port_lock(portMAX_DELAY);
     lv_label_set_text(s_chord_ui.chord_name, name);
-    lv_label_set_text(s_chord_ui.chord_definition, s_chord_types[s_chord.type].definition);
+    lv_label_set_text(s_chord_ui.chord_definition, _(s_chord_types[s_chord.type].definition));
     lvgl_port_unlock();
 }
 

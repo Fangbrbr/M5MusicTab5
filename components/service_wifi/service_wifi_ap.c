@@ -10,6 +10,7 @@
 
 #include "service_wifi.h"
 #include "service_nvs.h"
+#include "service_i18n.h"
 
 #include "esp_log.h"
 #include "esp_wifi.h"
@@ -97,38 +98,161 @@ static const char *s_captive_html =
     "display:flex;justify-content:space-between;cursor:pointer;}"
     ".ssid-item:active{background:#f5f5f5;}"
     ".ssid-rssi{font-size:12px;color:#999;}"
+    /* 语言选择器：右上角浮动按钮 */
+    ".lang-switch{position:fixed;top:16px;right:16px;z-index:99;}"
+    ".lang-btn{background:#fff;border:1px solid #e0e0e0;border-radius:20px;"
+    "padding:6px 12px;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08);"
+    "line-height:1;}"
+    ".lang-btn:active{background:#f5f5f5;}"
+    ".lang-menu{display:none;position:absolute;top:42px;right:0;background:#fff;"
+    "border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);"
+    "overflow:hidden;min-width:110px;}"
+    ".lang-menu.show{display:block;}"
+    ".lang-menu-item{padding:10px 14px;cursor:pointer;font-size:14px;color:#333;"
+    "display:flex;align-items:center;gap:8px;}"
+    ".lang-menu-item:hover{background:#f5f5f5;}"
+    ".lang-menu-item.active{background:#fff0f0;color:#FF6B6B;font-weight:600;}"
+    ".lang-menu-item .flag{font-size:18px;}"
     "</style>"
     "</head>"
     "<body>"
+    "<!-- 语言选择器：右上角浮动按钮 + 下拉菜单 -->"
+    "<div class='lang-switch'>"
+    "<button class='lang-btn' id='langBtn' title='Language'>🌐</button>"
+    "<div class='lang-menu' id='langMenu'></div>"
+    "</div>"
     "<div class='box'>"
-    "<h1>WiFi 配置</h1>"
-    "<p>选择您的 WiFi 网络并输入密码</p>"
-    "<div id='scan-list'><p style='text-align:center;padding:12px;color:#999;'>正在扫描...</p></div>"
-    "<p style='font-size:13px;color:#999;text-align:center;padding:8px;'>点击列表项可快速填入，每 10 秒刷新</p>"
+    "<h1 data-i18n='title_wifi'>WiFi Setup</h1>"
+    "<p data-i18n='select_wifi'>Select your Wi-Fi network and enter password</p>"
+    "<div id='scan-list'><p data-i18n='scanning' style='text-align:center;padding:12px;color:#999;'>Scanning...</p></div>"
+    "<p data-i18n='scan_hint' style='font-size:13px;color:#999;text-align:center;padding:8px;'>Tap list to fill, refresh every 10s</p>"
     "<form action='/save' method='POST' autocomplete='off'>"
-    "<label>WiFi 名称</label>"
-    "<input name='ssid' id='ssid' placeholder='选择上方 Wi-Fi 或手动输入' required maxlength='32'>"
-    "<label>WiFi 密码</label>"
-    "<input name='pwd' type='password' placeholder='开放网络可留空' maxlength='64'>"
-    "<button type='submit'>保存并连接</button>"
+    "<label data-i18n='wifi_name'>Wi-Fi Name</label>"
+    "<input name='ssid' id='ssid' data-i18n-ph='choose_or_type' required maxlength='32'>"
+    "<label data-i18n='wifi_pwd'>Wi-Fi Password</label>"
+    "<input name='pwd' type='password' data-i18n-ph='open_network_blank' maxlength='64'>"
+    "<button type='submit' data-i18n='save_connect'>Save and Connect</button>"
     "</form>"
     "</div>"
     "<script>"
+    "/* ---- Web i18n 字典（与 translations.tsv 同步维护，key 需手动对齐） ---- */"
+    "const WEB_I18N={"
+    "'zh-CN':{"
+    "title_wifi:'WiFi 配置',"
+    "select_wifi:'选择您的 WiFi 网络并输入密码',"
+    "scanning:'正在扫描...',"
+    "scan_hint:'点击列表项可快速填入，每 10 秒刷新',"
+    "wifi_name:'WiFi 名称',"
+    "wifi_pwd:'WiFi 密码',"
+    "choose_or_type:'选择上方 Wi-Fi 或手动输入',"
+    "open_network_blank:'开放网络可留空',"
+    "save_connect:'保存并连接',"
+    "no_wifi:'未找到 Wi-Fi',"
+    "scan_fail:'扫描失败，请手动输入'"
+    "},"
+    "en:{"
+    "title_wifi:'WiFi Setup',"
+    "select_wifi:'Select your Wi-Fi network and enter password',"
+    "scanning:'Scanning...',"
+    "scan_hint:'Tap list to fill, refresh every 10s',"
+    "wifi_name:'Wi-Fi Name',"
+    "wifi_pwd:'Wi-Fi Password',"
+    "choose_or_type:'Select above or type manually',"
+    "open_network_blank:'Leave blank for open networks',"
+    "save_connect:'Save and Connect',"
+    "no_wifi:'No Wi-Fi found',"
+    "scan_fail:'Scan failed, please type manually'"
+    "}"
+    "};"
+    "/* 语言 ID -> 显示标签（emoji 国旗 + 语言名） */"
+    "const WEB_LANG_META={"
+    "'zh-CN':{flag:'🇨🇳',name:'中文'},"
+    "'en':{flag:'🇺🇸',name:'English'}"
+    "};"
+    "/* 当前激活语言（从设备 API 拉取，fallback 到浏览器或 zh-CN） */"
+    "let curLang='zh-CN';"
+    "/* ---- 应用翻译到 DOM ---- */"
+    "function applyI18n(lang){"
+    "const dict=WEB_I18N[lang]||WEB_I18N['zh-CN'];"
+    "document.querySelectorAll('[data-i18n]').forEach(el=>{"
+    "const key=el.dataset.i18n;"
+    "if(dict[key]!==undefined) el.textContent=dict[key];});"
+    "document.querySelectorAll('[data-i18n-ph]').forEach(el=>{"
+    "const key=el.dataset.i18nPh;"
+    "if(dict[key]!==undefined) el.placeholder=dict[key];});"
+    "document.documentElement.lang=lang;"
+    "curLang=lang;"
+    "}"
+    "/* ---- 构建语言下拉菜单 ---- */"
+    "function buildLangMenu(available){"
+    "const menu=document.getElementById('langMenu');"
+    "menu.innerHTML='';"
+    "available.forEach(id=>{"
+    "const meta=WEB_LANG_META[id]||{flag:'🌐',name:id};"
+    "const item=document.createElement('div');"
+    "item.className='lang-menu-item'+(id===curLang?' active':'');"
+    "item.innerHTML=`<span class='flag'>${meta.flag}</span><span>${meta.name}</span>`;"
+    "item.onclick=()=>switchLang(id);"
+    "menu.appendChild(item);});"
+    "/* 关闭：点击外部收起 */"
+    "document.onclick=(e)=>{"
+    "const btn=document.getElementById('langBtn');"
+    "if(!document.querySelector('.lang-switch').contains(e.target))"
+    "{menu.classList.remove('show');}};"
+    "}"
+    "/* 切换语言：POST 到设备 + 刷新页面 */"
+    "async function switchLang(id){"
+    "try{"
+    "await fetch('/api/lang',{"
+    "method:'POST',"
+    "headers:{'Content-Type':'application/x-www-form-urlencoded'},"
+    "body:'lang='+encodeURIComponent(id)"
+    "});"
+    "location.reload();"
+    "}catch(e){"
+    "applyI18n(id);"
+    "document.getElementById('langMenu').classList.remove('show');"
+    "buildLangMenu(Object.keys(WEB_I18N));"
+    "}}"
+    "/* 下拉按钮切换显示 */"
+    "document.addEventListener('DOMContentLoaded',()=>{"
+    "document.getElementById('langBtn').onclick=(e)=>{"
+    "e.stopPropagation();"
+    "document.getElementById('langMenu').classList.toggle('show');};"
+    "});"
+    "/* ---- 启动：拉取设备语言 ---- */"
+    "async function initI18n(){"
+    "try{"
+    "const r=await fetch('/api/lang');"
+    "const d=await r.json();"
+    "if(d.lang&&WEB_I18N[d.lang]) curLang=d.lang;"
+    "applyI18n(curLang);"
+    "buildLangMenu(d.available||Object.keys(WEB_I18N));"
+    "}catch(e){"
+    "applyI18n(curLang);"
+    "buildLangMenu(Object.keys(WEB_I18N));"
+    "}}"
+    "initI18n();"
+    "/* ---- WiFi 扫描 ---- */"
     "function loadScan(){"
     "fetch('/scan').then(r=>r.json()).then(data=>{"
     "const list=document.getElementById('scan-list');"
+    "const dict=WEB_I18N[curLang]||WEB_I18N['zh-CN'];"
     "if(!data.aps||data.aps.length===0){"
-    "list.innerHTML='<p style=\"text-align:center;padding:12px;color:#999;\">未找到 Wi-Fi</p>';return;}"
+    "list.innerHTML=`<p style='text-align:center;padding:12px;color:#999;'>${dict.no_wifi}</p>`;return;}"
     "let html='';"
     "data.aps.forEach(ap=>{"
-    "html+=`<div class=\"ssid-item\" onclick='selectSsid(${JSON.stringify(ap.ssid)})'><span>${ap.ssid}</span><span class=\"ssid-rssi\">${ap.rssi}dBm ${ap.auth}</span></div>`;});"
+    "html+=`<div class='ssid-item' onclick='selectSsid(${JSON.stringify(ap.ssid)})'><span>${ap.ssid}</span><span class='ssid-rssi'>${ap.rssi}dBm ${ap.auth}</span></div>`;});"
     "list.innerHTML=html;}).catch(e=>{"
-    "document.getElementById('scan-list').innerHTML='<p style=\"text-align:center;padding:12px;color:#999;\">扫描失败，请手动输入</p>';});}"
+    "const dict=WEB_I18N[curLang]||WEB_I18N['zh-CN'];"
+    "document.getElementById('scan-list').innerHTML=`<p style='text-align:center;padding:12px;color:#999;'>${dict.scan_fail}</p>`;});}"
     "function selectSsid(ssid){document.getElementById('ssid').value=ssid;}"
     "loadScan();setInterval(loadScan,10000);"
     "</script>"
     "</body>"
     "</html>";
+
+/* ---- 旧 HTML 已替换为带语言选择器的版本 ---- */
 
 static int url_decode(const char *src, char *dst, size_t dst_len)
 {
@@ -254,8 +378,31 @@ static esp_err_t ap_save_handler(httpd_req_t *req)
 static esp_err_t ap_saved_handler(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "text/html; charset=utf-8");
-    const char *msg = "<html><body style='font-family:sans-serif;text-align:center;padding-top:80px;'>"
-                      "<h1>配置已保存</h1><p>设备正在连接 Wi-Fi...</p></body></html>";
+    /* 极简 saved 页：语言由服务器当前设置决定（无客户端 JS），
+     * 避免额外代码体积。中/英硬编码二选一。 */
+    const char *cur = service_i18n_get_language_id();
+    bool is_en = (cur != NULL && strcmp(cur, "en") == 0);
+
+    const char *msg;
+    if (is_en) {
+        msg = "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+              "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+              "<title>Hammy Setup</title></head>"
+              "<body style='font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;"
+              "background:#FFF8E7;color:#333;text-align:center;padding-top:80px;'>"
+              "<h1>Config Saved</h1><p>Device is connecting to Wi-Fi...</p>"
+              "<p style='color:#999;font-size:13px;margin-top:32px;'>"
+              "You can close this page.</p></body></html>";
+    } else {
+        msg = "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+              "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+              "<title>Hammy Setup</title></head>"
+              "<body style='font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;"
+              "background:#FFF8E7;color:#333;text-align:center;padding-top:80px;'>"
+              "<h1>配置已保存</h1><p>设备正在连接 Wi-Fi...</p>"
+              "<p style='color:#999;font-size:13px;margin-top:32px;'>"
+              "可以关闭本页面</p></body></html>";
+    }
     httpd_resp_send(req, msg, strlen(msg));
     return ESP_OK;
 }
@@ -263,6 +410,70 @@ static esp_err_t ap_saved_handler(httpd_req_t *req)
 static esp_err_t ap_success_handler(httpd_req_t *req)
 {
     httpd_resp_send(req, "success", 7);
+    return ESP_OK;
+}
+
+/* /api/lang GET：返回当前设备语言与可用语言列表（JSON） */
+static esp_err_t ap_lang_get_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "application/json; charset=utf-8");
+
+    const char *cur = service_i18n_get_language_id();
+    if (cur == NULL) {
+        cur = "zh-CN";
+    }
+
+    /* 直接引用 gen_i18n 生成的语言 ID 数组（头文件声明 extern） */
+    const char * const *ids = g_i18n_language_ids;
+    int count = I18N_LANG_COUNT;
+
+    /* JSON 缓冲区：当前语言 key + available 数组。
+     * 每条语言 ID 最长约 16 字符，加上引号和逗号；预留 512 足够 */
+    char buf[512];
+    int pos = snprintf(buf, sizeof(buf), "{\"lang\":\"%s\",\"available\":[", cur);
+
+    for (int i = 0; i < count && pos < (int)sizeof(buf) - 64; i++) {
+        if (i > 0) {
+            pos += snprintf(buf + pos, sizeof(buf) - pos, ",");
+        }
+        pos += snprintf(buf + pos, sizeof(buf) - pos, "\"%s\"", ids[i]);
+    }
+    pos += snprintf(buf + pos, sizeof(buf) - pos, "]}");
+
+    httpd_resp_send(req, buf, (ssize_t)pos);
+    return ESP_OK;
+}
+
+/* /api/lang POST：设置设备语言，参数 lang=xx（form-urlencoded） */
+static esp_err_t ap_lang_post_handler(httpd_req_t *req)
+{
+    char body[256];
+    int ret = httpd_req_recv(req, body, sizeof(body) - 1);
+    if (ret <= 0) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "empty body");
+        return ESP_FAIL;
+    }
+    body[ret] = '\0';
+
+    char lang_id[SERVICE_I18N_LANG_ID_MAX_LEN] = {0};
+    form_find_value(body, "lang", lang_id, sizeof(lang_id));
+
+    if (lang_id[0] == '\0') {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "lang required");
+        return ESP_FAIL;
+    }
+
+    bool ok = service_i18n_set_language_by_id(lang_id);
+    if (!ok) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "unsupported lang");
+        return ESP_FAIL;
+    }
+
+    /* 切语言后立即落盘，下次开机恢复 */
+    service_nvs_commit();
+
+    httpd_resp_set_type(req, "application/json; charset=utf-8");
+    httpd_resp_send(req, "{\"ok\":true}", 12);
     return ESP_OK;
 }
 
@@ -564,12 +775,24 @@ static esp_err_t http_server_start(void)
         .method = HTTP_GET,
         .handler = ap_success_handler,
     };
+    httpd_uri_t lang_get_uri = {
+        .uri = "/api/lang",
+        .method = HTTP_GET,
+        .handler = ap_lang_get_handler,
+    };
+    httpd_uri_t lang_post_uri = {
+        .uri = "/api/lang",
+        .method = HTTP_POST,
+        .handler = ap_lang_post_handler,
+    };
 
     httpd_register_uri_handler(s_httpd, &root_uri);
     httpd_register_uri_handler(s_httpd, &save_uri);
     httpd_register_uri_handler(s_httpd, &scan_uri);
     httpd_register_uri_handler(s_httpd, &saved_uri);
     httpd_register_uri_handler(s_httpd, &success_uri);
+    httpd_register_uri_handler(s_httpd, &lang_get_uri);
+    httpd_register_uri_handler(s_httpd, &lang_post_uri);
 
     return ESP_OK;
 }

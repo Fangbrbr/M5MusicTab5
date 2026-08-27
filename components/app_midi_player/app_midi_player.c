@@ -18,6 +18,7 @@
 #include "engine_midi_rec.h"
 #include "engine_midi_smf.h"
 #include "service_audio.h"
+#include "service_i18n.h"
 #include "service_player.h"
 #include "service_nvs.h"
 #include "service_xiaozhi.h"
@@ -654,7 +655,7 @@ static void player_load_file(play_type_t type, int index)
 
     if (type == PLAY_TYPE_MUSIC) {
         if (service_player_load(files[index].path) != ESP_OK) {
-            app_manager_show_notification_timeout("音乐文件打开失败", 2000);
+            app_manager_show_notification_timeout(_("音乐文件打开失败"), 2000);
             return;
         }
         s_mp.is_music = true;
@@ -665,7 +666,7 @@ static void player_load_file(play_type_t type, int index)
         }
     } else if (type == PLAY_TYPE_HMR) {
         if (engine_midi_rec_parse_file(files[index].path, &s_mp.rec) != ESP_OK) {
-            app_manager_show_notification_timeout("录音文件解析失败", 2000);
+            app_manager_show_notification_timeout(_("录音文件解析失败"), 2000);
             return;
         }
         s_mp.is_rec = true;
@@ -674,7 +675,7 @@ static void player_load_file(play_type_t type, int index)
         player_send_rec_initial_state();
     } else {
         if (engine_midi_smf_parse_file(files[index].path, &s_mp.smf) != ESP_OK) {
-            app_manager_show_notification_timeout("MIDI 文件解析失败", 2000);
+            app_manager_show_notification_timeout(_("MIDI 文件解析失败"), 2000);
             return;
         }
         s_mp.is_rec = false;
@@ -839,7 +840,7 @@ static void player_play_toggle(void)
                 int idx = (player_current_index() >= 0) ? player_current_index() : 0;
                 player_load_and_play(s_mp.play_type, idx);
             } else {
-                app_manager_show_notification_timeout("未找到音乐文件", 0);
+                app_manager_show_notification_timeout(_("未找到音乐文件"), 0);
             }
             return;
         }
@@ -874,7 +875,7 @@ static void player_play_toggle(void)
             player_load_and_play(s_mp.play_type, idx);
         } else {
             const char *msg = (s_mp.play_type == PLAY_TYPE_HMR)
-                ? "未找到录音文件" : "未找到 MIDI 文件";
+                ? _("未找到录音文件") : _("未找到 MIDI 文件");
             app_manager_show_notification_timeout(msg, 0);
         }
         return;
@@ -907,7 +908,7 @@ static void player_play_step(int delta)
     }
     int next = player_current_index() + delta;
     if (next < 0 || next >= count) {
-        app_manager_show_notification_timeout(delta < 0 ? "已经是第一首" : "已经是最后一首", 2000);
+        app_manager_show_notification_timeout(delta < 0 ? _("已经是第一首") : _("已经是最后一首"), 2000);
         return;
     }
     player_load_and_play(s_mp.play_type, next);

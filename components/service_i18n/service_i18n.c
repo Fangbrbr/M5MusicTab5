@@ -65,12 +65,24 @@ static int i18n_entry_cmp(const void *a, const void *b)
     return strcmp(ea->key, eb->key);
 }
 
+static int i18n_rev_cmp(const void *a, const void *b)
+{
+    const i18n_rev_entry_t *ea = (const i18n_rev_entry_t *)a;
+    const i18n_rev_entry_t *eb = (const i18n_rev_entry_t *)b;
+    return strcmp(ea->text, eb->text);
+}
+
+/* 反向索引由生成器输出（g_i18n_rev_tables / g_i18n_rev_counts）。
+ * Why 双向查表：EEZ 屏终身缓存只建一次，运行时切语言由引擎遍历对象树就地改写；
+ * 已改写成英文的 label 再切回中文时，原文 key 已丢失，必须能以译文反查词条。 */
+
 const char *service_i18n_translate(const char *key)
 {
     if (key == NULL) {
         return "";
     }
 
+    /* 正向：key（中文原文）命中 */
     i18n_entry_t target = { .key = key };
     const i18n_entry_t *found = bsearch(
         &target,
@@ -79,6 +91,24 @@ const char *service_i18n_translate(const char *key)
         sizeof(i18n_entry_t),
         i18n_entry_cmp
     );
+
+    if (found == NULL) {
+        /* 反向：输入已是某种语言的译文（屏幕就地改写后的存量文本），反查词条 */
+        i18n_rev_entry_t rev_target = { .text = key, .entry_idx = 0 };
+        for (size_t t = 0; t < g_i18n_rev_table_count; t++) {
+            const i18n_rev_entry_t *hit = bsearch(
+                &rev_target,
+                g_i18n_rev_tables[t],
+                g_i18n_rev_counts[t],
+                sizeof(i18n_rev_entry_t),
+                i18n_rev_cmp
+            );
+            if (hit != NULL) {
+                found = &g_i18n_entries[hit->entry_idx];
+                break;
+            }
+        }
+    }
 
     if (found == NULL) {
         return key;

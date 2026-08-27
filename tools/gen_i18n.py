@@ -28,6 +28,11 @@ def to_enum_name(lang_id: str) -> str:
     return f"I18N_LANG_{safe}"
 
 
+def unescape_tsv_field(s: str) -> str:
+    """TSV 字段转义约定：字面 \\n 表示真实换行（dropdown options 等多行 key）。"""
+    return s.replace("\\n", "\n")
+
+
 def escape_c_string(s: str) -> str:
     """转义 C 字符串中的特殊字符。"""
     s = s.replace("\\", "\\\\")
@@ -61,15 +66,15 @@ def generate(tsv_path: Path, out_dir: Path) -> int:
     languages = header[1:]  # 去掉 key 列
     data_rows = rows[1:]
 
-    # 过滤空行，并确保每行至少与表头等长
+    # 过滤空行，并确保每行至少与表头等长；字段按约定把字面 \n 还原为真实换行
     entries = []
     for row in data_rows:
         if not row or (len(row) == 1 and row[0].strip() == ""):
             continue
-        key = row[0]
+        key = unescape_tsv_field(row[0])
         if not key.strip():
             continue
-        translations = [row[i] if i < len(row) else "" for i in range(1, len(header))]
+        translations = [unescape_tsv_field(row[i]) if i < len(row) else "" for i in range(1, len(header))]
         entries.append((key, translations))
 
     if not entries:
@@ -101,15 +106,25 @@ def generate(tsv_path: Path, out_dir: Path) -> int:
         f.write("#ifndef SERVICE_I18N_GENERATED_H\n")
         f.write("#define SERVICE_I18N_GENERATED_H\n\n")
         f.write('#include "service_i18n_generated_enum.h"\n')
-        f.write('#include <stddef.h>\n\n')
+        f.write('#include <stddef.h>\n')
+        f.write('#include <stdint.h>\n\n')
         f.write("typedef struct {\n")
         f.write("    const char *key;\n")
         f.write(f"    const char *translations[I18N_LANG_COUNT];\n")
         f.write("} i18n_entry_t;\n\n")
+        f.write("/* 反向索引项：某语言译文 -> 词条序号（按译文排序，供双向查表） */\n")
+        f.write("typedef struct {\n")
+        f.write("    const char *text;\n")
+        f.write("    uint16_t entry_idx;\n")
+        f.write("} i18n_rev_entry_t;\n\n")
         f.write("extern const i18n_entry_t g_i18n_entries[I18N_ENTRY_COUNT];\n")
         f.write("extern const size_t g_i18n_entry_count;\n")
         f.write("extern const char * const g_i18n_language_ids[I18N_LANG_COUNT];\n\n")
-        f.write("#endif /* SERVICE_I18N_GENERATED_H */\n")
+        f.write("/* 反向索引注册表（列 1..N-1；第 0 列即 key 列，正向已覆盖） */\n")
+        f.write("extern const i18n_rev_entry_t * const g_i18n_rev_tables[];\n")
+        f.write("extern const size_t g_i18n_rev_counts[];\n")
+        f.write("extern const size_t g_i18n_rev_table_count;\n")
+        f.write("\n#endif /* SERVICE_I18N_GENERATED_H */\n")
 
     # 生成 C 文件
     gen_c = out_dir / "service_i18n_generated.c"
@@ -126,7 +141,30 @@ def generate(tsv_path: Path, out_dir: Path) -> int:
         f.write("const char * const g_i18n_language_ids[I18N_LANG_COUNT] = {\n")
         for lang in languages:
             f.write(f'    "{escape_c_string(lang)}",\n')
-        f.write("};\n")
+        f.write("};\n\n")
+        # 每种语言（除 key 列）的反向索引（译文非空才收录；按译文 UTF-8 字节序排序）
+        rev_table_names = []
+        for li in range(1, len(languages)):
+            safe = languages[li].replace("-", "_")
+            rev = sorted(
+                ((e[1][li], i) for i, e in enumerate(entries) if e[1][li]),
+                key=lambda x: x[0].encode("utf-8"),
+            )
+            name = f"g_i18n_rev_{safe}"
+            rev_table_names.append(name)
+            f.write(f"static const i18n_rev_entry_t {name}[] = {{\n")
+            for text, i in rev:
+                f.write(f'    {{ "{escape_c_string(text)}", {i} }},\n')
+            f.write("};\n\n")
+        f.write("const i18n_rev_entry_t * const g_i18n_rev_tables[] = {\n")
+        for name in rev_table_names:
+            f.write(f"    {name},\n")
+        f.write("};\n\n")
+        f.write("const size_t g_i18n_rev_counts[] = {\n")
+        for name in rev_table_names:
+            f.write(f"    sizeof({name}) / sizeof({name}[0]),\n")
+        f.write("};\n\n")
+        f.write(f"const size_t g_i18n_rev_table_count = {len(rev_table_names)};\n")
 
     print(f"generated: {enum_h}, {gen_h}, {gen_c}")
     return 0

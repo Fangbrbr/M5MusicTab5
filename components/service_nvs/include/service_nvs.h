@@ -176,6 +176,9 @@ struct s_system_parameters {
 
     /* App 分组 */
     uint32_t ear_best[6];                                /*!< 练耳历史最高分 */
+    uint8_t  ear_mode;                                   /*!< 练耳当前模式：0 绝对/1 相对 */
+    uint8_t  ear_difficulty;                             /*!< 练耳当前难度：0 初级/1 中级/2 高级 */
+    bool     ear_practice_mode;                          /*!< 练耳练习/挑战模式：true 练习 */
     service_nvs_metronome_t metronome;                   /*!< 节拍器参数 */
     service_nvs_piano_t piano;                           /*!< 小钢琴音色选择参数 */
     service_nvs_drum_t drum;                             /*!< 鼓垫 App 参数 */
@@ -359,6 +362,13 @@ uint32_t service_nvs_get_ear_best(uint8_t index);
  * @param[in] score 得分
  */
 esp_err_t service_nvs_set_ear_best(uint8_t index, uint32_t score);
+
+/**
+ * @brief 写入练耳 App 当前配置（模式/难度/练习挑战），下次进入时恢复
+ *
+ * 标记脏位后由 service_nvs_commit 统一落盘，调用方在 App 退出前调用一次即可。
+ */
+esp_err_t service_nvs_set_ear_cfg(uint8_t mode, uint8_t difficulty, bool practice_mode);
 
 /**
  * @brief 读取节拍器参数

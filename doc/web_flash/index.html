@@ -201,6 +201,28 @@
         .footer a { color: var(--c-primary-dark); text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
 
+        /* ---------- 语言切换器（右上角浮动按钮 + 下拉） ---------- */
+        .lang-switch { position: fixed; top: 16px; right: 16px; z-index: 99; }
+        .lang-btn {
+            background: var(--c-card); border: 1px solid var(--c-border); border-radius: 20px;
+            padding: 6px 12px; font-size: 18px; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(120, 90, 40, 0.10); line-height: 1;
+        }
+        .lang-btn:hover { background: var(--c-tint); }
+        .lang-menu {
+            display: none; position: absolute; top: 42px; right: 0;
+            background: var(--c-card); border: 1px solid var(--c-border); border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(120, 90, 40, 0.14); overflow: hidden; min-width: 120px;
+        }
+        .lang-menu.show { display: block; }
+        .lang-menu-item {
+            padding: 10px 14px; cursor: pointer; font-size: 14px; color: var(--c-text);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .lang-menu-item:hover { background: var(--c-tint); }
+        .lang-menu-item.active { color: var(--c-primary-darker); font-weight: 600; }
+        .lang-menu-item .flag { font-size: 16px; }
+
         @media (max-width: 1080px) {
             .layout { grid-template-columns: 1fr; }
             .log-card { position: static; }
@@ -212,17 +234,22 @@
     </style>
 </head>
 <body>
+<!-- 语言切换器：右上角浮动按钮 + 下拉菜单（选项由 JS 按 I18N 字典构建） -->
+<div class="lang-switch">
+    <button class="lang-btn" id="langBtn" title="Language / 语言">🌐</button>
+    <div class="lang-menu" id="langMenu"></div>
+</div>
 <div class="page">
     <div class="page-header">
-        <h1>🐹 M5MusicTab5 在线烧录</h1>
-        <span class="sub">金丝熊橙版 · 基于 esptool-js · 官方固件自动取自最新 Release</span>
+        <h1 data-i18n="header.title">🐹 M5MusicTab5 在线烧录</h1>
+        <span class="sub" data-i18n="header.sub">金丝熊橙版 · 基于 esptool-js · 官方固件自动取自最新 Release</span>
     </div>
 
-    <div id="supportBanner" class="banner">
+    <div id="supportBanner" class="banner" data-i18n="banner.support">
         使用 <strong>Chrome / Edge</strong> 桌面浏览器（需 Web Serial 支持），USB-C <strong>数据线</strong>连接设备；烧录过程勿断开设备或关闭页面。
         连接失败时：按住设备 BOOT 键再点「连接芯片」。
     </div>
-    <div id="noSerialBanner" class="banner error hidden">
+    <div id="noSerialBanner" class="banner error hidden" data-i18n="banner.noserial">
         当前浏览器不支持 Web Serial，无法烧录。请使用桌面版 Chrome 或 Edge 打开本页。
     </div>
 
@@ -232,46 +259,46 @@
             <div class="card toolbar">
                 <button id="connectBtn" class="btn btn-primary">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M6.5 1.5V4M9.5 1.5V4M6.5 12v2.5M9.5 12v2.5M1.5 6.5H4M1.5 9.5H4M12 6.5h2.5M12 9.5h2.5"/></svg>
-                    <span>连接芯片</span>
+                    <span data-i18n="btn.connect">连接芯片</span>
                 </button>
                 <button id="monitorBtn" class="btn btn-ghost">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1.5" y="2.5" width="13" height="9.5" rx="1.5"/><path d="M8 12v1.8M5 14.5h6"/></svg>
-                    <span>串口监视器</span>
+                    <span data-i18n="btn.monitor">串口监视器</span>
                 </button>
-                <button id="reconnectBtn" class="btn btn-ghost btn-icon" title="重新连接">
+                <button id="reconnectBtn" class="btn btn-ghost btn-icon" title="重新连接" data-i18n-title="btn.reconnect.title">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 8a5.5 5.5 0 1 1-1.7-4"/><path d="M13.6 1.6v2.9h-2.9"/></svg>
                 </button>
-                <span id="connStatus" class="status">未连接</span>
+                <span id="connStatus" class="status" data-i18n="status.disconnected">未连接</span>
             </div>
 
             <!-- 固件区 -->
             <div class="card">
                 <div class="fw-header">
                     <div>
-                        <h2>固件</h2>
+                        <h2 data-i18n="fw.title">固件</h2>
                         <p id="fwMeta" class="meta">0 个文件</p>
                     </div>
                     <div id="presetWrap" style="min-width: 260px;">
                         <select id="presetSelect">
-                            <option value="full" selected>整机固件（首次 / 救砖）</option>
-                            <option value="app">仅 App 固件（日常升级）</option>
+                            <option value="full" selected data-i18n="opt.preset.full">整机固件（首次 / 救砖）</option>
+                            <option value="app" data-i18n="opt.preset.app">仅 App 固件（日常升级）</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="fw-table-head">
-                    <span>分区</span><span>偏移地址</span><span>固件文件</span><span>大小</span><span></span>
+                    <span data-i18n="th.partition">分区</span><span data-i18n="th.offset">偏移地址</span><span data-i18n="th.file">固件文件</span><span data-i18n="th.size">大小</span><span></span>
                 </div>
                 <div id="fwRows"></div>
 
                 <button id="addRowBtn" class="btn btn-ghost add-btn hidden">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-                    <span>添加固件</span>
+                    <span data-i18n="btn.addrow">添加固件</span>
                 </button>
 
                 <label class="advanced-line">
                     <input type="checkbox" id="advancedChk">
-                    高级模式：自定义固件文件与偏移地址（勾选后变为通用烧录器，不再自动填充官方固件）
+                    <span data-i18n="adv.label">高级模式：自定义固件文件与偏移地址（勾选后变为通用烧录器，不再自动填充官方固件）</span>
                 </label>
 
                 <div id="progressBar" class="progress"><div></div></div>
@@ -279,11 +306,11 @@
 
             <!-- 烧录参数 -->
             <div class="card">
-                <h2>烧录参数</h2>
-                <p class="meta">已启用压缩写入</p>
+                <h2 data-i18n="param.title">烧录参数</h2>
+                <p class="meta" data-i18n="param.meta">已启用压缩写入</p>
                 <div class="param-grid">
                     <div>
-                        <label>上传波特率</label>
+                        <label data-i18n="param.baud">上传波特率</label>
                         <select id="baudSelect">
                             <option value="115200">115200</option>
                             <option value="460800" selected>460800</option>
@@ -291,24 +318,24 @@
                         </select>
                     </div>
                     <div>
-                        <label>连接复位</label>
+                        <label data-i18n="param.reset">连接复位</label>
                         <select id="resetSelect">
-                            <option value="default_reset" selected>自动复位</option>
-                            <option value="no_reset">手动下载模式（不复位）</option>
+                            <option value="default_reset" selected data-i18n="opt.reset.auto">自动复位</option>
+                            <option value="no_reset" data-i18n="opt.reset.no">手动下载模式（不复位）</option>
                         </select>
                     </div>
                     <div>
-                        <label>烧录后</label>
+                        <label data-i18n="param.after">烧录后</label>
                         <select id="afterSelect">
-                            <option value="no_reset" selected>保持不复位（烧录后手动按复位键）</option>
-                            <option value="hard_reset">硬复位（RTS，转接板适用）</option>
-                            <option value="soft_reset">软复位运行（仅 ESP8266 支持，P4 不可用）</option>
+                            <option value="no_reset" selected data-i18n="opt.after.no">保持不复位（烧录后手动按复位键）</option>
+                            <option value="hard_reset" data-i18n="opt.after.hard">硬复位（RTS，转接板适用）</option>
+                            <option value="soft_reset" data-i18n="opt.after.soft">软复位运行（仅 ESP8266 支持，P4 不可用）</option>
                         </select>
                     </div>
                     <div>
-                        <label>闪存模式</label>
+                        <label data-i18n="param.mode">闪存模式</label>
                         <select id="flashModeSelect">
-                            <option value="keep" selected>保持固件设置</option>
+                            <option value="keep" selected data-i18n="opt.keep">保持固件设置</option>
                             <option value="dio">dio</option>
                             <option value="qio">qio</option>
                             <option value="dout">dout</option>
@@ -316,9 +343,9 @@
                         </select>
                     </div>
                     <div>
-                        <label>闪存频率</label>
+                        <label data-i18n="param.freq">闪存频率</label>
                         <select id="flashFreqSelect">
-                            <option value="keep" selected>保持固件设置</option>
+                            <option value="keep" selected data-i18n="opt.keep">保持固件设置</option>
                             <option value="80m">80m</option>
                             <option value="40m">40m</option>
                             <option value="26m">26m</option>
@@ -326,11 +353,11 @@
                         </select>
                     </div>
                     <div>
-                        <label>闪存容量</label>
+                        <label data-i18n="param.size">闪存容量</label>
                         <select id="flashSizeSelect">
                             <option value="16MB" selected>16MB</option>
-                            <option value="detect">自动检测</option>
-                            <option value="keep">保持固件设置</option>
+                            <option value="detect" data-i18n="opt.detect">自动检测</option>
+                            <option value="keep" data-i18n="opt.keep">保持固件设置</option>
                             <option value="8MB">8MB</option>
                             <option value="4MB">4MB</option>
                         </select>
@@ -338,20 +365,20 @@
                 </div>
 
                 <div class="check-grid">
-                    <label><input type="checkbox" id="eraseChk" checked>烧录前整片擦除</label>
-                    <label><input type="checkbox" id="md5Chk" checked>写入后 MD5 校验</label>
-                    <label><input type="checkbox" id="releaseChk" checked>烧录后释放串口</label>
-                    <label><input type="checkbox" id="debugChk">详细调试日志</label>
+                    <label><input type="checkbox" id="eraseChk" checked><span data-i18n="chk.erase">烧录前整片擦除</span></label>
+                    <label><input type="checkbox" id="md5Chk" checked><span data-i18n="chk.md5">写入后 MD5 校验</span></label>
+                    <label><input type="checkbox" id="releaseChk" checked><span data-i18n="chk.release">烧录后释放串口</span></label>
+                    <label><input type="checkbox" id="debugChk"><span data-i18n="chk.debug">详细调试日志</span></label>
                 </div>
 
                 <div class="actions">
                     <button id="eraseBtn" class="btn btn-danger">
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12.8 9.3 3a1.5 1.5 0 0 1 2.1 0l1.6 1.9a1.5 1.5 0 0 1 0 2.1L6.2 15H2.5v-2.2z"/><path d="M7.5 5.5l4 4.6"/></svg>
-                        <span>整片擦除</span>
+                        <span data-i18n="btn.erase">整片擦除</span>
                     </button>
                     <button id="flashBtn" class="btn btn-primary">
                         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.2 1.4 3.4 9.1h3.4L5.9 14.6l5.8-7.7H8.3l0.9-5.5z"/></svg>
-                        <span>开始烧录</span>
+                        <span data-i18n="btn.flash">开始烧录</span>
                     </button>
                 </div>
             </div>
@@ -361,21 +388,21 @@
         <div class="log-col">
             <div class="card log-card">
                 <div class="log-header">
-                    <h2>日志</h2>
+                    <h2 data-i18n="log.title">日志</h2>
                     <span id="logCount" class="count">0 条</span>
-                    <button id="clearLogBtn" class="clear" title="清空日志">
+                    <button id="clearLogBtn" class="clear" title="清空日志" data-i18n-title="log.clear.title">
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.7 9.2a1 1 0 0 0 1 .8h4.6a1 1 0 0 0 1-.8L12 4"/><path d="M6.5 7v4M9.5 7v4"/></svg>
                     </button>
                 </div>
-                <div id="logArea" class="log-area"><div class="empty">等待串口日志</div></div>
+                <div id="logArea" class="log-area"><div class="empty" data-i18n="log.empty">等待串口日志</div></div>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        <a href="https://github.com/Fangbrbr/M5MusicTab5" target="_blank">GitHub 仓库</a>
-        · <a href="https://github.com/Fangbrbr/M5MusicTab5/releases" target="_blank">下载固件手动烧录</a><br>
-        M5MusicTab5 在线烧录工具 · Powered by esptool-js 0.6.1
+        <a href="https://github.com/Fangbrbr/M5MusicTab5" target="_blank" data-i18n="footer.repo">GitHub 仓库</a>
+        · <a href="https://github.com/Fangbrbr/M5MusicTab5/releases" target="_blank" data-i18n="footer.manual">下载固件手动烧录</a><br>
+        <span data-i18n="footer.brand">M5MusicTab5 在线烧录工具 · Powered by esptool-js 0.6.1</span>
     </div>
 </div>
 
@@ -383,13 +410,14 @@
     /* 本地化的 esptool-js（CDN 在国内不稳定，模块加载失败会导致整页脚本不执行、连接按钮无反应） */
     import { ESPLoader, Transport } from "./vendor/esptool-js.js";
 
-    /* 官方固件预设：文件由 pages.yml 部署时镜像自最新 release，与页面同源（release 资产跨域无 CORS 头，不能直接 fetch） */
+    /* 官方固件预设：文件由 pages.yml 部署时镜像自最新 release，与页面同源（release 资产跨域无 CORS 头，不能直接 fetch）。
+     * tagKey/warnKey/badgeKey 为 i18n key，渲染时经 t() 求值，切语言后可随 renderRows() 刷新 */
     const RELEASE_BASE = "./";
     const PRESETS = {
-        full: { tag: "整机", file: "0x0_full_TAB5_Music_Pad.bin",   offset: 0x0,     erase: true,
-                warn: "整机烧录将清空所有设置（Wi-Fi、校准等），恢复出厂状态" },
-        app:  { tag: "App",  file: "0x10000_app_TAB5_Music_Pad.bin", offset: 0x10000, erase: false,
-                warn: "仅升级应用区，保留所有设置；前提是设备已烧过同系列完整固件" },
+        full: { tagKey: "preset.tag.full", file: "0x0_full_TAB5_Music_Pad.bin",   offset: 0x0,     erase: true,
+                warnKey: "preset.warn.full" },
+        app:  { tagKey: "preset.tag.app",  file: "0x10000_app_TAB5_Music_Pad.bin", offset: 0x10000, erase: false,
+                warnKey: "preset.warn.app" },
     };
 
     const $ = (id) => document.getElementById(id);
@@ -404,6 +432,295 @@
         logArea: $("logArea"), logCount: $("logCount"), clearLogBtn: $("clearLogBtn"),
         noSerialBanner: $("noSerialBanner"),
     };
+
+    /* ---------------- Web i18n（与 service_wifi_ap.c 配网页同款字典模式） ---------------- */
+    const I18N = {
+        "zh-CN": {
+            "page.title": "M5MusicTab5 在线烧录工具",
+            "header.title": "🐹 M5MusicTab5 在线烧录",
+            "header.sub": "金丝熊橙版 · 基于 esptool-js · 官方固件自动取自最新 Release",
+            "banner.support": "使用 <strong>Chrome / Edge</strong> 桌面浏览器（需 Web Serial 支持），USB-C <strong>数据线</strong>连接设备；烧录过程勿断开设备或关闭页面。连接失败时：按住设备 BOOT 键再点「连接芯片」。",
+            "banner.noserial": "当前浏览器不支持 Web Serial，无法烧录。请使用桌面版 Chrome 或 Edge 打开本页。",
+            "btn.connect": "连接芯片",
+            "btn.disconnect": "断开连接",
+            "btn.monitor": "串口监视器",
+            "btn.monitor.stop": "停止监视",
+            "btn.reconnect.title": "重新连接",
+            "btn.flash": "开始烧录",
+            "btn.flashing": "烧录中…",
+            "btn.erase": "整片擦除",
+            "btn.addrow": "添加固件",
+            "status.disconnected": "未连接",
+            "status.connected": "已连接：{0}",
+            "fw.title": "固件",
+            "fw.count": "{0} 个文件",
+            "fw.count.size": "{0} 个文件，{1}",
+            "opt.preset.full": "整机固件（首次 / 救砖）",
+            "opt.preset.app": "仅 App 固件（日常升级）",
+            "th.partition": "分区",
+            "th.offset": "偏移地址",
+            "th.file": "固件文件",
+            "th.size": "大小",
+            "adv.label": "高级模式：自定义固件文件与偏移地址（勾选后变为通用烧录器，不再自动填充官方固件）",
+            "param.title": "烧录参数",
+            "param.meta": "已启用压缩写入",
+            "param.baud": "上传波特率",
+            "param.reset": "连接复位",
+            "param.after": "烧录后",
+            "param.mode": "闪存模式",
+            "param.freq": "闪存频率",
+            "param.size": "闪存容量",
+            "opt.reset.auto": "自动复位",
+            "opt.reset.no": "手动下载模式（不复位）",
+            "opt.after.no": "保持不复位（烧录后手动按复位键）",
+            "opt.after.hard": "硬复位（RTS，转接板适用）",
+            "opt.after.soft": "软复位运行（仅 ESP8266 支持，P4 不可用）",
+            "opt.keep": "保持固件设置",
+            "opt.detect": "自动检测",
+            "chk.erase": "烧录前整片擦除",
+            "chk.md5": "写入后 MD5 校验",
+            "chk.release": "烧录后释放串口",
+            "chk.debug": "详细调试日志",
+            "log.title": "日志",
+            "log.clear.title": "清空日志",
+            "log.empty": "等待串口日志",
+            "log.count": "{0} 条",
+            "footer.repo": "GitHub 仓库",
+            "footer.manual": "下载固件手动烧录",
+            "footer.brand": "M5MusicTab5 在线烧录工具 · Powered by esptool-js 0.6.1",
+            "log.offset.invalid": "偏移地址格式无效：{0}",
+            "cell.repick.title": "点击重新选择文件",
+            "cell.loading.pre": "准备下载…",
+            "cell.dlfail": "固件下载失败",
+            "cell.retry": "点击重试",
+            "cell.pick": "选择固件文件",
+            "cell.autodl": "点击「开始烧录」后自动下载",
+            "row.del.title": "删除此行",
+            "log.file.picked": "已选择文件 {0}（{1}）→ {2}",
+            "dl.stalled": "下载停滞",
+            "progress.dl.pct": "下载中 {0}%（{1}/{2}）",
+            "log.dl.pct": "下载 {0}：{1}%（{2}/{3}）",
+            "progress.dl.size": "下载中（{0}）",
+            "log.dl.size": "下载 {0}：{1}",
+            "progress.extract": "解压中…",
+            "log.dl.done": "下载完成（{0}），解压中…",
+            "log.fw.ready": "解压完成，固件就绪：{0}（{1}）",
+            "log.dl.retry": "固件下载中断（{0}），自动重试 {1}/{2}…",
+            "log.dl.fail": "固件下载失败：{0} — {1}",
+            "badge.latest": "最新 Release",
+            "preset.tag.full": "整机",
+            "preset.tag.app": "App",
+            "tag.custom": "自定义",
+            "preset.warn.full": "整机烧录将清空所有设置（Wi-Fi、校准等），恢复出厂状态",
+            "preset.warn.app": "仅升级应用区，保留所有设置；前提是设备已烧过同系列完整固件",
+            "reset.no": "不复位",
+            "reset.auto": "自动复位",
+            "log.connecting": "正在连接（{0}，{1} baud）…",
+            "log.connect.ok": "连接成功：{0}",
+            "log.connect.fail": "连接失败：{0}",
+            "log.disconnected": "已断开连接",
+            "err.no.port": "未选择串口设备",
+            "log.monitor.started": "串口监视器已开启（115200 baud），再次点击停止",
+            "log.monitor.stopped": "串口监视器已停止",
+            "log.monitor.err": "监视器读取出错：{0}",
+            "log.monitor.fail": "监视器开启失败：{0}",
+            "err.no.rows": "错误：没有固件行",
+            "log.dl.start": "开始下载固件 {0}…",
+            "err.still.downloading": "错误：固件仍在下载中，请等待",
+            "err.row.not.ready": "错误：存在未准备好文件的固件行",
+            "err.offset.invalid": "错误：偏移地址无效",
+            "log.flashsize.detect": "自动检测闪存容量：{0}",
+            "log.flashsize.fail": "闪存容量自动检测失败，按 16MB 处理",
+            "err.over.capacity": "错误：{0}（{1} @ {2}）超出闪存容量 {3}",
+            "log.flash.start": "开始烧录：{0} 个文件，共 {1}{2}",
+            "log.flash.erase.suffix": "（先整片擦除）",
+            "log.flash.done": "烧录完成 ✅",
+            "log.reset.done": "设备已复位运行",
+            "log.reset.skip": "复位未执行（固件已烧录成功），请手动按设备复位键：{0}",
+            "log.port.released": "串口已释放",
+            "log.flash.fail": "烧录失败：{0}",
+            "confirm.erase": "整片擦除将清空全部 Flash（固件、设置、资源全部丢失），确定继续？",
+            "log.erase.busy": "整片擦除中（16MB 约需数十秒）…",
+            "log.erase.done": "整片擦除完成",
+            "log.erase.fail": "擦除失败：{0}",
+            "log.advanced.on": "高级模式：固件区已解锁，可自定义文件与偏移地址",
+            "log.ready": "就绪：请选择串口并连接芯片；固件在点击「开始烧录」后自动从最新 Release 下载",
+        },
+        "en": {
+            "page.title": "M5MusicTab5 Web Flasher",
+            "header.title": "🐹 M5MusicTab5 Web Flasher",
+            "header.sub": "Hamster Orange Edition · Powered by esptool-js · Official firmware auto-fetched from the latest Release",
+            "banner.support": "Use desktop <strong>Chrome / Edge</strong> (Web Serial required) with a USB-C <strong>data cable</strong>; do not disconnect the device or close this page while flashing. If connection fails: hold the BOOT button on the device, then click \"Connect\".",
+            "banner.noserial": "This browser does not support Web Serial, so flashing is unavailable. Please open this page in desktop Chrome or Edge.",
+            "btn.connect": "Connect",
+            "btn.disconnect": "Disconnect",
+            "btn.monitor": "Serial Monitor",
+            "btn.monitor.stop": "Stop Monitor",
+            "btn.reconnect.title": "Reconnect",
+            "btn.flash": "Flash",
+            "btn.flashing": "Flashing…",
+            "btn.erase": "Erase Flash",
+            "btn.addrow": "Add Firmware",
+            "status.disconnected": "Not connected",
+            "status.connected": "Connected: {0}",
+            "fw.title": "Firmware",
+            "fw.count": (n) => `${n} file${n === 1 ? "" : "s"}`,
+            "fw.count.size": (n, size) => `${n} file${n === 1 ? "" : "s"}, ${size}`,
+            "opt.preset.full": "Full firmware (first flash / unbrick)",
+            "opt.preset.app": "App firmware only (routine update)",
+            "th.partition": "Partition",
+            "th.offset": "Offset",
+            "th.file": "Firmware File",
+            "th.size": "Size",
+            "adv.label": "Advanced mode: custom firmware files & offsets (turns this into a generic flasher; official firmware is no longer auto-filled)",
+            "param.title": "Flash Options",
+            "param.meta": "Compressed writes enabled",
+            "param.baud": "Upload Baud Rate",
+            "param.reset": "Reset on Connect",
+            "param.after": "After Flashing",
+            "param.mode": "Flash Mode",
+            "param.freq": "Flash Frequency",
+            "param.size": "Flash Size",
+            "opt.reset.auto": "Auto reset",
+            "opt.reset.no": "Manual download mode (no reset)",
+            "opt.after.no": "No reset (press RESET manually after flashing)",
+            "opt.after.hard": "Hard reset (RTS; for adapter boards)",
+            "opt.after.soft": "Soft reset & run (ESP8266 only; not available on P4)",
+            "opt.keep": "Keep firmware setting",
+            "opt.detect": "Auto-detect",
+            "chk.erase": "Erase entire flash before flashing",
+            "chk.md5": "Verify MD5 after writing",
+            "chk.release": "Release serial port after flashing",
+            "chk.debug": "Verbose debug logging",
+            "log.title": "Log",
+            "log.clear.title": "Clear log",
+            "log.empty": "Waiting for serial output",
+            "log.count": (n) => `${n} ${n === 1 ? "entry" : "entries"}`,
+            "footer.repo": "GitHub Repository",
+            "footer.manual": "Download firmware for manual flashing",
+            "footer.brand": "M5MusicTab5 Web Flasher · Powered by esptool-js 0.6.1",
+            "log.offset.invalid": "Invalid offset format: {0}",
+            "cell.repick.title": "Click to choose a different file",
+            "cell.loading.pre": "Preparing download…",
+            "cell.dlfail": "Firmware download failed",
+            "cell.retry": "Retry",
+            "cell.pick": "Choose firmware file",
+            "cell.autodl": "Auto-downloads when you click Flash",
+            "row.del.title": "Remove this row",
+            "log.file.picked": "Selected file {0} ({1}) → {2}",
+            "dl.stalled": "Download stalled",
+            "progress.dl.pct": "Downloading {0}% ({1}/{2})",
+            "log.dl.pct": "Downloading {0}: {1}% ({2}/{3})",
+            "progress.dl.size": "Downloading ({0})",
+            "log.dl.size": "Downloading {0}: {1}",
+            "progress.extract": "Extracting…",
+            "log.dl.done": "Download complete ({0}), extracting…",
+            "log.fw.ready": "Extraction complete, firmware ready: {0} ({1})",
+            "log.dl.retry": "Firmware download interrupted ({0}), retrying {1}/{2}…",
+            "log.dl.fail": "Firmware download failed: {0} — {1}",
+            "badge.latest": "Latest Release",
+            "preset.tag.full": "Full",
+            "preset.tag.app": "App",
+            "tag.custom": "Custom",
+            "preset.warn.full": "Full flashing erases all settings (Wi-Fi, calibration, etc.) and restores factory state",
+            "preset.warn.app": "Updates the app partition only and keeps all settings; requires a full firmware from the same series already flashed",
+            "reset.no": "no reset",
+            "reset.auto": "auto reset",
+            "log.connecting": "Connecting ({0}, {1} baud)…",
+            "log.connect.ok": "Connected: {0}",
+            "log.connect.fail": "Connection failed: {0}",
+            "log.disconnected": "Disconnected",
+            "err.no.port": "No serial port selected",
+            "log.monitor.started": "Serial monitor started (115200 baud); click again to stop",
+            "log.monitor.stopped": "Serial monitor stopped",
+            "log.monitor.err": "Monitor read error: {0}",
+            "log.monitor.fail": "Failed to start monitor: {0}",
+            "err.no.rows": "Error: no firmware rows",
+            "log.dl.start": "Downloading firmware {0}…",
+            "err.still.downloading": "Error: firmware is still downloading, please wait",
+            "err.row.not.ready": "Error: some rows have no file ready",
+            "err.offset.invalid": "Error: invalid offset address",
+            "log.flashsize.detect": "Detected flash size: {0}",
+            "log.flashsize.fail": "Flash size detection failed; assuming 16MB",
+            "err.over.capacity": "Error: {0} ({1} @ {2}) exceeds flash capacity {3}",
+            "log.flash.start": (n, size, suffix) => `Flashing ${n} file${n === 1 ? "" : "s"}, ${size} total${suffix}`,
+            "log.flash.erase.suffix": " (full erase first)",
+            "log.flash.done": "Flashing complete ✅",
+            "log.reset.done": "Device reset and running",
+            "log.reset.skip": "Reset not performed (firmware flashed successfully); press the device reset button manually: {0}",
+            "log.port.released": "Serial port released",
+            "log.flash.fail": "Flashing failed: {0}",
+            "confirm.erase": "Erasing wipes the entire flash (firmware, settings and assets will all be lost). Continue?",
+            "log.erase.busy": "Erasing entire flash (16MB takes tens of seconds)…",
+            "log.erase.done": "Flash erased",
+            "log.erase.fail": "Erase failed: {0}",
+            "log.advanced.on": "Advanced mode: firmware area unlocked — custom files and offsets allowed",
+            "log.ready": "Ready: select a serial port and connect. Firmware downloads automatically from the latest Release when you click Flash.",
+        },
+    };
+    /* 语言 ID -> 菜单显示（emoji 旗帜 + 语言名） */
+    const LANG_META = {
+        "zh-CN": { flag: "🇨🇳", name: "中文" },
+        "en": { flag: "🇺🇸", name: "English" },
+    };
+    /* 当前语言：localStorage 恢复，默认中文 */
+    let curLang = "zh-CN";
+    try { curLang = localStorage.getItem("webflash_lang") || "zh-CN"; } catch (e) {}
+    if (!I18N[curLang]) curLang = "zh-CN";
+
+    /* 翻译函数：支持 {0} {1}… 占位替换；字典值也可为函数（处理英文复数等） */
+    function t(key, ...args) {
+        let v = (I18N[curLang] || {})[key];
+        if (v === undefined) v = I18N["zh-CN"][key];
+        if (v === undefined) return key;
+        if (typeof v === "function") return v(...args);
+        return v.replace(/\{(\d+)\}/g, (m, i) => (args[+i] !== undefined ? args[+i] : m));
+    }
+
+    /* 应用语言：重写 [data-i18n]/[data-i18n-ph]/[data-i18n-title]，并刷新 JS 动态维护的文本 */
+    function applyLang(lang) {
+        if (!I18N[lang]) lang = "zh-CN";
+        curLang = lang;
+        try { localStorage.setItem("webflash_lang", lang); } catch (e) {}
+        document.documentElement.lang = lang;
+        document.title = t("page.title");
+        /* banner 等词条内含 <strong> 标签，统一用 innerHTML（词条全部为静态可信内容） */
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+            el.innerHTML = t(el.dataset.i18n);
+        });
+        document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+            el.placeholder = t(el.dataset.i18nPh);
+        });
+        document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+            el.title = t(el.dataset.i18nTitle);
+        });
+        /* 动态维护的控件文本随语言即时刷新（历史日志不追溯） */
+        setConnUI(!!state.esploader);
+        els.monitorBtn.querySelector("span").textContent = state.monitoring ? t("btn.monitor.stop") : t("btn.monitor");
+        els.flashBtn.querySelector("span").textContent = state.busy ? t("btn.flashing") : t("btn.flash");
+        els.logCount.textContent = t("log.count", state.logLines);
+        const empty = els.logArea.querySelector(".empty");
+        if (empty) empty.textContent = t("log.empty");
+        renderRows();
+    }
+
+    /* 构建语言下拉菜单（当前项高亮） */
+    function buildLangMenu() {
+        const menu = $("langMenu");
+        menu.innerHTML = "";
+        for (const id of Object.keys(I18N)) {
+            const meta = LANG_META[id] || { flag: "🌐", name: id };
+            const item = document.createElement("div");
+            item.className = "lang-menu-item" + (id === curLang ? " active" : "");
+            item.innerHTML = `<span class="flag">${meta.flag}</span><span>${meta.name}</span>`;
+            item.onclick = () => {
+                applyLang(id);
+                buildLangMenu();
+                menu.classList.remove("show");
+            };
+            menu.appendChild(item);
+        }
+    }
 
     const state = {
         port: null, transport: null, esploader: null, chipName: null,
@@ -431,7 +748,7 @@
         div.textContent = text;
         els.logArea.appendChild(div);
         state.logLines++;
-        els.logCount.textContent = state.logLines + " 条";
+        els.logCount.textContent = t("log.count", state.logLines);
         /* 上限裁剪，防止长烧录撑爆 DOM */
         while (els.logArea.childElementCount > 3000) els.logArea.firstElementChild.remove();
         els.logArea.scrollTop = els.logArea.scrollHeight;
@@ -469,8 +786,8 @@
 
     function addRow(init) {
         const row = Object.assign({
-            id: state.nextRowId++, tag: "自定义", offset: 0x10000,
-            fileName: "", data: null, status: "empty", progress: 0, badge: "",
+            id: state.nextRowId++, tag: "", tagKey: "tag.custom", offset: 0x10000,
+            fileName: "", data: null, status: "empty", progress: 0, badge: "", badgeKey: "",
         }, init || {});
         state.rows.push(row);
         return row;
@@ -485,7 +802,7 @@
 
             const tag = document.createElement("span");
             tag.className = "tag";
-            tag.textContent = row.tag;
+            tag.textContent = row.tagKey ? t(row.tagKey) : row.tag;
             div.appendChild(tag);
 
             const off = document.createElement("input");
@@ -497,7 +814,7 @@
                 if (state.busy) { off.value = fmtOffset(row.offset); return; }
                 const v = parseInt(off.value, 16);
                 if (Number.isFinite(v) && v >= 0) { row.offset = v; off.value = fmtOffset(v); }
-                else { off.value = fmtOffset(row.offset); log("偏移地址格式无效：" + off.value, "err"); }
+                else { off.value = fmtOffset(row.offset); log(t("log.offset.invalid", off.value), "err"); }
             };
             div.appendChild(off);
 
@@ -510,37 +827,37 @@
                 name.className = "fname";
                 name.textContent = row.fileName;
                 cell.appendChild(name);
-                if (row.badge) {
+                if (row.badge || row.badgeKey) {
                     const badge = document.createElement("span");
                     badge.className = "badge";
-                    badge.textContent = row.badge;
+                    badge.textContent = row.badgeKey ? t(row.badgeKey) : row.badge;
                     cell.appendChild(badge);
                 }
                 if (editable) {
                     cell.classList.add("clickable");
                     cell.style.cursor = "pointer";
-                    cell.title = "点击重新选择文件";
+                    cell.title = t("cell.repick.title");
                     cell.onclick = () => pickFile(row);
                 }
             } else if (row.status === "loading") {
                 cell.classList.add("loading");
-                cell.textContent = row.progressText || "准备下载…";
+                cell.textContent = row.progressText || t("cell.loading.pre");
             } else if (row.status === "error") {
                 cell.classList.add("error");
-                cell.textContent = "固件下载失败 ";
+                cell.textContent = t("cell.dlfail") + " ";
                 const retry = document.createElement("button");
                 retry.className = "retry";
-                retry.textContent = "点击重试";
+                retry.textContent = t("cell.retry");
                 retry.onclick = () => fetchRow(row);
                 cell.appendChild(retry);
             } else {
                 cell.classList.add("empty");
                 if (editable) {
                     cell.classList.add("clickable");
-                    cell.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 2.5v7M5 6.5l3 3 3-3M2.5 13.5h11"/></svg><span>选择固件文件</span>`;
+                    cell.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 2.5v7M5 6.5l3 3 3-3M2.5 13.5h11"/></svg><span>${t("cell.pick")}</span>`;
                     cell.onclick = () => pickFile(row);
                 } else {
-                    cell.textContent = "点击「开始烧录」后自动下载";
+                    cell.textContent = t("cell.autodl");
                 }
             }
             div.appendChild(cell);
@@ -552,7 +869,7 @@
 
             const del = document.createElement("button");
             del.className = "row-del";
-            del.title = "删除此行";
+            del.title = t("row.del.title");
             del.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.7 9.2a1 1 0 0 0 1 .8h4.6a1 1 0 0 0 1-.8L12 4"/><path d="M6.5 7v4M9.5 7v4"/></svg>`;
             del.disabled = !editable;
             del.onclick = () => {
@@ -566,8 +883,8 @@
         }
         const total = state.rows.reduce((s, r) => s + (r.data ? r.data.length : 0), 0);
         els.fwMeta.textContent = total > 0
-            ? `${state.rows.length} 个文件，${humanSize(total)}`
-            : `${state.rows.length} 个文件`;
+            ? t("fw.count.size", state.rows.length, humanSize(total))
+            : t("fw.count", state.rows.length);
     }
 
     function pickFile(row) {
@@ -581,8 +898,9 @@
             row.data = new Uint8Array(await f.arrayBuffer());
             row.fileName = f.name;
             row.badge = "";
+            row.badgeKey = "";
             row.status = "ready";
-            log(`已选择文件 ${f.name}（${humanSize(f.size)}）→ ${fmtOffset(row.offset)}`);
+            log(t("log.file.picked", f.name, humanSize(f.size), fmtOffset(row.offset)));
             renderRows();
         };
         inp.click();
@@ -625,7 +943,7 @@
                         if (row.gen !== state.fetchGen) return;   /* 预设已切换，作废旧下载 */
                         let timer;
                         const stall = new Promise((_, reject) => {
-                            timer = setTimeout(() => reject(new Error("下载停滞")), FETCH_STALL_MS);
+                            timer = setTimeout(() => reject(new Error(t("dl.stalled"))), FETCH_STALL_MS);
                         });
                         const { value, done } = await Promise.race([reader.read(), stall])
                             .finally(() => clearTimeout(timer));
@@ -636,19 +954,19 @@
                             const pct = Math.min(99, Math.round(got * 100 / total));
                             if (pct !== row.progress) {
                                 row.progress = pct;
-                                row.progressText = `下载中 ${pct}%（${humanSize(got)}/${humanSize(total)}）`;
+                                row.progressText = t("progress.dl.pct", pct, humanSize(got), humanSize(total));
                                 /* 下载进度每 10% 进一次日志 */
                                 if (Math.floor(pct / 10) > Math.floor(row._loggedPct / 10)) {
                                     row._loggedPct = pct;
-                                    log(`下载 ${row.fileName}：${pct}%（${humanSize(got)}/${humanSize(total)}）`, "dim");
+                                    log(t("log.dl.pct", row.fileName, pct, humanSize(got), humanSize(total)), "dim");
                                 }
                                 renderRows();
                             }
                         } else {
-                            row.progressText = `下载中（${humanSize(got)}）`;
+                            row.progressText = t("progress.dl.size", humanSize(got));
                             if (got - row._loggedMark >= 1024 * 1024) {
                                 row._loggedMark = got;
-                                log(`下载 ${row.fileName}：${humanSize(got)}`, "dim");
+                                log(t("log.dl.size", row.fileName, humanSize(got)), "dim");
                             }
                             renderRows();
                         }
@@ -658,8 +976,8 @@
                     for (const c of chunks) { gzBuf.set(c, pos); pos += c.length; }
 
                     if (row.gen !== state.fetchGen) return;
-                    row.progressText = "解压中…";
-                    log(`下载完成（${humanSize(got)}），解压中…`);
+                    row.progressText = t("progress.extract");
+                    log(t("log.dl.done", humanSize(got)));
                     renderRows();
 
                     if (gzBuf.length > 2 && gzBuf[0] === 0x1F && gzBuf[1] === 0x8B) {
@@ -675,19 +993,19 @@
                     if (row.gen !== state.fetchGen) return;
                     attempt++;
                     if (attempt >= FETCH_MAX_RETRY) throw e;
-                    log(`固件下载中断（${e.message}），自动重试 ${attempt}/${FETCH_MAX_RETRY - 1}…`, "err");
+                    log(t("log.dl.retry", e.message, attempt, FETCH_MAX_RETRY - 1), "err");
                     await new Promise((r) => setTimeout(r, 1500));
                 }
             }
             if (row.gen !== state.fetchGen) return;
             row.data = buf;
             row.status = "ready";
-            log(`解压完成，固件就绪：${row.fileName}（${humanSize(buf.length)}）`, "ok");
+            log(t("log.fw.ready", row.fileName, humanSize(buf.length)), "ok");
         } catch (e) {
             if (row.gen !== state.fetchGen) return;
             row.status = "error";
             row.data = null;
-            log(`固件下载失败：${row.fileName} — ${e.message}`, "err");
+            log(t("log.dl.fail", row.fileName, e.message), "err");
         }
         renderRows();
     }
@@ -698,19 +1016,19 @@
         state.fetchGen++;   /* 作废旧下载（若有） */
         state.rows = [];
         addRow({
-            tag: p.tag, offset: p.offset, fileName: p.file,
-            badge: "最新 Release", status: "empty",
+            tagKey: p.tagKey, offset: p.offset, fileName: p.file,
+            badgeKey: "badge.latest", status: "empty",
         });
         els.eraseChk.checked = p.erase;
         renderRows();
-        log(p.warn, "dim");
+        log(t(p.warnKey), "dim");
     }
 
     /* ---------------- 串口连接 ---------------- */
 
     function setConnUI(connected) {
-        els.connectBtn.querySelector("span").textContent = connected ? "断开连接" : "连接芯片";
-        els.connStatus.textContent = connected ? `已连接：${state.chipName}` : "未连接";
+        els.connectBtn.querySelector("span").textContent = connected ? t("btn.disconnect") : t("btn.connect");
+        els.connStatus.textContent = connected ? t("status.connected", state.chipName) : t("status.disconnected");
         els.connStatus.classList.toggle("connected", connected);
     }
 
@@ -719,7 +1037,7 @@
         try {
             state.port = await navigator.serial.requestPort();
         } catch (e) {
-            throw new Error("未选择串口设备");
+            throw new Error(t("err.no.port"));
         }
         return state.port;
     }
@@ -728,13 +1046,13 @@
         if (!state.monitoring) return;
         state.monitoring = false;
         els.monitorBtn.classList.remove("active");
-        els.monitorBtn.querySelector("span").textContent = "串口监视器";
+        els.monitorBtn.querySelector("span").textContent = t("btn.monitor");
         try { if (state.monitorReader) await state.monitorReader.cancel(); } catch (e) {}
         /* 等待 read 循环退出并关闭端口，避免紧接着重连时端口仍被占用 */
         try { if (state.monitorDone) await state.monitorDone; } catch (e) {}
         state.monitorReader = null;
         state.monitorDone = null;
-        log("串口监视器已停止", "dim");
+        log(t("log.monitor.stopped"), "dim");
     }
 
     async function disconnectDevice() {
@@ -757,7 +1075,7 @@
             state.transport = null;
             state.esploader = null;
         }
-        log(`正在连接（${els.resetSelect.value === "no_reset" ? "不复位" : "自动复位"}，${els.baudSelect.value} baud）…`);
+        log(t("log.connecting", els.resetSelect.value === "no_reset" ? t("reset.no") : t("reset.auto"), els.baudSelect.value));
         const transport = new Transport(port, false);
         const esploader = new ESPLoader({
             transport,
@@ -770,7 +1088,7 @@
         state.esploader = esploader;
         state.chipName = chip;
         setConnUI(true);
-        log(`连接成功：${chip}`, "ok");
+        log(t("log.connect.ok", chip), "ok");
     }
 
     async function ensureConnected() {
@@ -787,8 +1105,8 @@
         state.monitoring = true;
         state.monitorReader = null;
         els.monitorBtn.classList.add("active");
-        els.monitorBtn.querySelector("span").textContent = "停止监视";
-        log("串口监视器已开启（115200 baud），再次点击停止", "dim");
+        els.monitorBtn.querySelector("span").textContent = t("btn.monitor.stop");
+        log(t("log.monitor.started"), "dim");
         const reader = port.readable.getReader();
         state.monitorReader = reader;
         const decoder = new TextDecoder();
@@ -800,14 +1118,14 @@
                     if (value) logChunk(decoder.decode(value, { stream: true }));
                 }
             } catch (e) {
-                log("监视器读取出错：" + e.message, "err");
+                log(t("log.monitor.err", e.message), "err");
             } finally {
                 try { reader.releaseLock(); } catch (e) {}
                 try { await port.close(); } catch (e) {}
                 state.monitoring = false;
                 state.monitorReader = null;
                 els.monitorBtn.classList.remove("active");
-                els.monitorBtn.querySelector("span").textContent = "串口监视器";
+                els.monitorBtn.querySelector("span").textContent = t("btn.monitor");
             }
         })();
     }
@@ -824,7 +1142,7 @@
         els.presetSelect.disabled = b;
         els.advancedChk.disabled = b;
         els.addRowBtn.disabled = b;
-        els.flashBtn.querySelector("span").textContent = text || "开始烧录";
+        els.flashBtn.querySelector("span").textContent = text || t("btn.flash");
         if (!b) els.progressBar.classList.remove("show");
     }
     function setProgress(frac) {
@@ -841,21 +1159,21 @@
 
     async function startFlash() {
         if (state.busy) return;
-        if (state.rows.length === 0) { log("错误：没有固件行", "err"); return; }
-        setBusy(true, "烧录中…");
+        if (state.rows.length === 0) { log(t("err.no.rows"), "err"); return; }
+        setBusy(true, t("btn.flashing"));
         logFlush();
         try {
             /* 按需下载：预设固件在点击烧录后才拉取，避免进页面就白下 16MB */
             for (const r of state.rows) {
                 if (r.status === "empty" && r.fileName && !r.data) {
-                    log(`开始下载固件 ${r.fileName}…`);
+                    log(t("log.dl.start", r.fileName));
                     await fetchRow(r);
                 }
             }
             for (const r of state.rows) {
-                if (r.status === "loading") { log("错误：固件仍在下载中，请等待", "err"); return; }
-                if (!r.data || r.data.length === 0) { log("错误：存在未准备好文件的固件行", "err"); return; }
-                if (!Number.isFinite(r.offset) || r.offset < 0) { log("错误：偏移地址无效", "err"); return; }
+                if (r.status === "loading") { log(t("err.still.downloading"), "err"); return; }
+                if (!r.data || r.data.length === 0) { log(t("err.row.not.ready"), "err"); return; }
+                if (!Number.isFinite(r.offset) || r.offset < 0) { log(t("err.offset.invalid"), "err"); return; }
             }
             await ensureConnected();
             /* Trap: esptool-js 0.6.1 的 writeFlash 不识别 "detect"，
@@ -865,26 +1183,26 @@
             if (flashSize === "detect") {
                 try {
                     flashSize = await state.esploader.detectFlashSize();
-                    log(`自动检测闪存容量：${flashSize}`, "dim");
+                    log(t("log.flashsize.detect", flashSize), "dim");
                 } catch (e) {
                     flashSize = "16MB";
-                    log("闪存容量自动检测失败，按 16MB 处理", "err");
+                    log(t("log.flashsize.fail"), "err");
                 }
             }
-            /* 本地预检，给出中文明确错误（esptool-js 的英文报错不含容量信息） */
+            /* 本地预检，给出明确错误（esptool-js 的英文报错不含容量信息） */
             if (flashSize !== "keep") {
                 const sizeBytes = parseInt(flashSize, 10) * (flashSize.indexOf("KB") !== -1 ? 1024 : 1024 * 1024);
                 for (const r of state.rows) {
                     if (r.offset + r.data.length > sizeBytes) {
-                        log(`错误：${r.fileName}（${humanSize(r.data.length)} @ ${fmtOffset(r.offset)}）超出闪存容量 ${flashSize}`, "err");
+                        log(t("err.over.capacity", r.fileName, humanSize(r.data.length), fmtOffset(r.offset), flashSize), "err");
                         return;
                     }
                 }
             }
             const fileArray = state.rows.map((r) => ({ data: r.data, address: r.offset }));
             const totalAll = state.rows.reduce((s, r) => s + r.data.length, 0);
-            log(`开始烧录：${state.rows.length} 个文件，共 ${humanSize(totalAll)}` +
-                (els.eraseChk.checked ? "（先整片擦除）" : ""));
+            log(t("log.flash.start", state.rows.length, humanSize(totalAll),
+                els.eraseChk.checked ? t("log.flash.erase.suffix") : ""));
             const options = {
                 fileArray,
                 flashMode: els.flashModeSelect.value,
@@ -901,22 +1219,22 @@
             };
             await state.esploader.writeFlash(options);
             setProgress(1);
-            log("烧录完成 ✅", "ok");
+            log(t("log.flash.done"), "ok");
             /* Trap: esptool-js softReset 仅支持 ESP8266，P4 上直接抛错；
              * hard_reset 对 USB Serial/JTAG 是空操作（仅 setRTS(false) 无脉冲）。
              * 默认 no_reset 由用户手动复位；复位失败不得冒泡成“烧录失败” */
             try {
                 await state.esploader.after(els.afterSelect.value);
-                if (els.afterSelect.value !== "no_reset") log("设备已复位运行", "dim");
+                if (els.afterSelect.value !== "no_reset") log(t("log.reset.done"), "dim");
             } catch (e) {
-                log("复位未执行（固件已烧录成功），请手动按设备复位键：" + (e && e.message ? e.message : e));
+                log(t("log.reset.skip", e && e.message ? e.message : e));
             }
             if (els.releaseChk.checked) {
                 await disconnectDevice();
-                log("串口已释放", "dim");
+                log(t("log.port.released"), "dim");
             }
         } catch (e) {
-            log("烧录失败：" + (e && e.message ? e.message : e), "err");
+            log(t("log.flash.fail", e && e.message ? e.message : e), "err");
         } finally {
             logFlush();
             setBusy(false);
@@ -925,15 +1243,15 @@
 
     async function eraseAllFlash() {
         if (state.busy) return;
-        if (!confirm("整片擦除将清空全部 Flash（固件、设置、资源全部丢失），确定继续？")) return;
+        if (!confirm(t("confirm.erase"))) return;
         setBusy(true);
         try {
             await ensureConnected();
-            log("整片擦除中（16MB 约需数十秒）…");
+            log(t("log.erase.busy"));
             await state.esploader.eraseFlash();
-            log("整片擦除完成", "ok");
+            log(t("log.erase.done"), "ok");
         } catch (e) {
-            log("擦除失败：" + (e && e.message ? e.message : e), "err");
+            log(t("log.erase.fail", e && e.message ? e.message : e), "err");
         } finally {
             logFlush();
             setBusy(false);
@@ -945,24 +1263,24 @@
     els.connectBtn.onclick = async () => {
         if (state.busy) return;
         try {
-            if (state.esploader) { await disconnectDevice(); log("已断开连接", "dim"); }
+            if (state.esploader) { await disconnectDevice(); log(t("log.disconnected"), "dim"); }
             else await connectDevice();
         } catch (e) {
             await disconnectDevice();
-            log("连接失败：" + (e && e.message ? e.message : e), "err");
+            log(t("log.connect.fail", e && e.message ? e.message : e), "err");
         }
     };
     els.reconnectBtn.onclick = async () => {
         if (state.busy) return;
         try { await disconnectDevice(); await connectDevice(); }
-        catch (e) { await disconnectDevice(); log("连接失败：" + (e && e.message ? e.message : e), "err"); }
+        catch (e) { await disconnectDevice(); log(t("log.connect.fail", e && e.message ? e.message : e), "err"); }
     };
     els.monitorBtn.onclick = async () => {
         if (state.busy) return;
         try {
             if (state.monitoring) await stopMonitor();
             else await startMonitor();
-        } catch (e) { log("监视器开启失败：" + (e && e.message ? e.message : e), "err"); }
+        } catch (e) { log(t("log.monitor.fail", e && e.message ? e.message : e), "err"); }
     };
     els.presetSelect.onchange = () => loadPreset(els.presetSelect.value);
     els.advancedChk.onchange = () => {
@@ -970,24 +1288,39 @@
         els.presetWrap.classList.toggle("hidden", on);
         els.addRowBtn.classList.toggle("hidden", !on);
         if (on) {
-            log("高级模式：固件区已解锁，可自定义文件与偏移地址", "dim");
-            if (state.rows.length === 0) { addRow({ tag: "App", offset: 0x10000 }); renderRows(); }
+            log(t("log.advanced.on"), "dim");
+            if (state.rows.length === 0) { addRow({ tag: "App", tagKey: "", offset: 0x10000 }); renderRows(); }
             else renderRows();
         } else {
             loadPreset(els.presetSelect.value);
         }
     };
-    els.addRowBtn.onclick = () => { addRow({ tag: "自定义", offset: 0x10000 }); renderRows(); };
+    els.addRowBtn.onclick = () => { addRow({ offset: 0x10000 }); renderRows(); };
     els.flashBtn.onclick = startFlash;
     els.eraseBtn.onclick = eraseAllFlash;
     els.clearLogBtn.onclick = () => {
-        els.logArea.innerHTML = '<div class="empty">等待串口日志</div>';
+        els.logArea.innerHTML = '<div class="empty">' + t("log.empty") + '</div>';
         state.logLines = 0;
-        els.logCount.textContent = "0 条";
+        els.logCount.textContent = t("log.count", 0);
         logBuf = "";
     };
 
+    /* 语言切换：🌐 按钮展开下拉，点击外部收起 */
+    $("langBtn").onclick = (e) => {
+        e.stopPropagation();
+        $("langMenu").classList.toggle("show");
+    };
+    document.addEventListener("click", (e) => {
+        const menu = $("langMenu");
+        if (menu.classList.contains("show") && !e.target.closest(".lang-switch")) {
+            menu.classList.remove("show");
+        }
+    });
+
     /* ---------------- 初始化 ---------------- */
+
+    applyLang(curLang);
+    buildLangMenu();
 
     if (!("serial" in navigator)) {
         els.noSerialBanner.classList.remove("hidden");
@@ -996,7 +1329,7 @@
         els.flashBtn.disabled = true;
         els.eraseBtn.disabled = true;
     } else {
-        log("就绪：请选择串口并连接芯片；固件在点击「开始烧录」后自动从最新 Release 下载", "dim");
+        log(t("log.ready"), "dim");
         loadPreset("full");
     }
 </script>

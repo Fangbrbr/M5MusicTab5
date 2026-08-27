@@ -26,6 +26,7 @@ static const char *TAG = "app_tiny_piano";
 
 #define PIANO_PAD_COUNT     15
 #define PIANO_TOUCH_MAX_FINGERS 5
+#define PIANO_DEFAULT_VELOCITY 100
 
 /* 主题配色槽位（语义见 EEZ 主题定义） */
 #define PIANO_C_BG          COLOR_BG_PRIMARY
@@ -229,6 +230,12 @@ static void piano_midi_note(uint8_t note, uint8_t velocity)
     engine_midi_publish(&midi, 0);
 }
 
+/* 触摸力度带往 MIDI velocity；无力度事件（pressure=0）回退默认值保手感 */
+static uint8_t piano_velocity(uint8_t pressure)
+{
+    return (pressure > 0) ? pressure : PIANO_DEFAULT_VELOCITY;
+}
+
 /* 全部滑行音符立即 note-off（退出/暂停/切布局时调用） */
 static void piano_glide_stop_all(void)
 {
@@ -360,7 +367,7 @@ static void piano_matrix_touch(const app_input_event_t *evt)
             piano_midi_note(old_note, 0);
         }
         if (new_note != 0) {
-            piano_midi_note(new_note, 100);
+            piano_midi_note(new_note, piano_velocity(evt->pressure));
         }
         s_piano.finger_note[evt->finger_id] = new_note;
     }
@@ -663,7 +670,7 @@ static void piano_canvas_touch(const app_input_event_t *evt)
         piano_midi_note(old_note, 0);
     }
     if (new_note != 0) {
-        piano_midi_note(new_note, 100);
+        piano_midi_note(new_note, piano_velocity(evt->pressure));
     }
     s_piano.finger_note[evt->finger_id] = new_note;
 }

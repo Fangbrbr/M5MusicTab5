@@ -543,6 +543,12 @@ static void book_cover_anim_completed_cb(lv_anim_t *a)
         lv_label_set_text(s_ui.fun_tip_label, _("再次翻转查看下一则答案"));
 }
 
+/* 数据表语言索引：0=中文 1=英文；未收录语言回退中文 */
+static int fun_lang_index(void)
+{
+    return (service_i18n_get_language() == I18N_LANG_ZH_CN) ? 0 : 1;
+}
+
 static void book_start_draw(void)
 {
     s_app_state = FUN_APP_STATE_DRAWING;
@@ -550,8 +556,9 @@ static void book_start_draw(void)
     int idx = (int)esp_random() % ANSWER_COUNT;
     s_book.selected_index = idx;
 
-    const char *zh_title = answer_list[idx][0][0];
-    const char *zh_desc = answer_list[idx][0][1];
+    int lang = fun_lang_index();
+    const char *zh_title = answer_list[idx][lang][0];
+    const char *zh_desc = answer_list[idx][lang][1];
     ESP_LOGI(TAG, "Answer: %s", zh_title);
 
     if (s_ui.book_answer_text)
@@ -649,19 +656,21 @@ static void tarot_draw_all_cards(void)
         s_tarot.drawn_cards[slot] = idx;
         s_tarot.reversed[slot] = reversed;
 
-        const tarot_card_t *card = tarot_get_card_by_index(idx);
+        const tarot_card_t *card = (fun_lang_index() == 1)
+            ? tarot_get_card_by_index_en(idx)
+            : tarot_get_card_by_index(idx);
         if (!card)
             continue;
 
         lv_obj_t *close_panel, *open_panel, *name_label, *pos_label;
         tarot_get_card_widgets(slot, &close_panel, &open_panel, &name_label, &pos_label);
-        ESP_LOGI(TAG, "Tarot card %d: %s (%s)", slot + 1, card->name, reversed ? "逆位↓" : "正位↑");
+        ESP_LOGI(TAG, "Tarot card %d: %s (%s)", slot + 1, card->name, reversed ? _("逆位") : _("正位"));
 
         if (name_label)
             lv_label_set_text(name_label, card->name);
         if (pos_label)
         {
-            lv_label_set_text(pos_label, reversed ? "逆位" : "正位");
+            lv_label_set_text(pos_label, reversed ? _("逆位") : _("正位"));
             lv_obj_set_style_text_color(pos_label, engine_gui_theme_color(reversed ? COLOR_ERROR : COLOR_PRIMARY), 0);
         }
     }
@@ -961,7 +970,9 @@ static void tarot_toggle_detail(int slot)
 
     if (lv_obj_has_flag(detail_panel, LV_OBJ_FLAG_HIDDEN))
     {
-        const tarot_card_t *card = tarot_get_card_by_index(s_tarot.drawn_cards[slot]);
+        const tarot_card_t *card = (fun_lang_index() == 1)
+            ? tarot_get_card_by_index_en(s_tarot.drawn_cards[slot])
+            : tarot_get_card_by_index(s_tarot.drawn_cards[slot]);
         if (card && detail_text)
         {
             const char *meaning = s_tarot.reversed[slot] ? card->reversed : card->upright;

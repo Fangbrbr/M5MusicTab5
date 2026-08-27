@@ -16,6 +16,7 @@
 #include "service_power.h"
 #include "service_wifi.h"
 #include "service_xiaozhi.h"
+#include "service_i18n.h"
 #include "esp_lvgl_port.h"
 #include "esp_log.h"
 #include "stdio.h"
@@ -150,11 +151,11 @@ static void ftp_progress_timer_cb(lv_timer_t *timer)
         /* Trap: 文件名上限 255 + 字节数后缀，96 会触发 -Werror=format-truncation */
         char buf[320];
         if (st.file_size > 0) {
-            snprintf(buf, sizeof(buf), "%s  %lu/%lu 字节", st.file_name,
+            snprintf(buf, sizeof(buf), _("%s  %lu/%lu 字节"), st.file_name,
                      (unsigned long)st.bytes_done, (unsigned long)st.file_size);
         } else {
             /* STOR 上传总字节未知，只显示已传 */
-            snprintf(buf, sizeof(buf), "%s  %lu 字节", st.file_name,
+            snprintf(buf, sizeof(buf), _("%s  %lu 字节"), st.file_name,
                      (unsigned long)st.bytes_done);
         }
         lv_label_set_text(objects.ftp_label_file, buf);
@@ -168,10 +169,10 @@ static void ftp_refresh_status(const service_ftp_status_t *st)
         char ip[16];
         if (service_wifi_get_sta_ip_str(ip, sizeof(ip)) == ESP_OK) {
             char buf[64];
-            snprintf(buf, sizeof(buf), "ftp://%s  账号密码: musicpad", ip);
+            snprintf(buf, sizeof(buf), _("ftp://%s  账号密码: musicpad"), ip);
             lv_label_set_text(objects.ftp_label_ip, buf);
         } else {
-            lv_label_set_text(objects.ftp_label_ip, "WiFi 未连接");
+            lv_label_set_text(objects.ftp_label_ip, _("WiFi 未连接"));
         }
     }
 
@@ -179,22 +180,22 @@ static void ftp_refresh_status(const service_ftp_status_t *st)
         char buf[64];
         const char *text = "";
         if (s_start_err != ESP_OK) {
-            snprintf(buf, sizeof(buf), "服务启动失败 (%d)，请检查 SD 卡", (int)s_start_err);
+            snprintf(buf, sizeof(buf), _("服务启动失败 (%d)，请检查 SD 卡"), (int)s_start_err);
             text = buf;
         } else {
             switch (st->state) {
             case SERVICE_FTP_STATE_OFF:
-                text = "服务未启动";
+                text = _("服务未启动");
                 break;
             case SERVICE_FTP_STATE_LISTENING:
-                text = "等待客户端连接...";
+                text = _("等待客户端连接...");
                 break;
             case SERVICE_FTP_STATE_CONNECTED:
-                snprintf(buf, sizeof(buf), "已连接: %s", st->client_ip);
+                snprintf(buf, sizeof(buf), _("已连接: %s"), st->client_ip);
                 text = buf;
                 break;
             case SERVICE_FTP_STATE_TRANSFERRING:
-                snprintf(buf, sizeof(buf), "传输中: %s", st->client_ip);
+                snprintf(buf, sizeof(buf), _("传输中: %s"), st->client_ip);
                 text = buf;
                 break;
             default:
@@ -210,10 +211,10 @@ static void ftp_refresh_status(const service_ftp_status_t *st)
         buf[0] = '\0';
         if (st->file_name[0] != '\0') {
             if (st->file_size > 0) {
-                snprintf(buf, sizeof(buf), "%s  %lu/%lu 字节", st->file_name,
+                snprintf(buf, sizeof(buf), _("%s  %lu/%lu 字节"), st->file_name,
                          (unsigned long)st->bytes_done, (unsigned long)st->file_size);
             } else {
-                snprintf(buf, sizeof(buf), "%s  %lu 字节", st->file_name,
+                snprintf(buf, sizeof(buf), _("%s  %lu 字节"), st->file_name,
                          (unsigned long)st->bytes_done);
             }
         }

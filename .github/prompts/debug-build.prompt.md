@@ -24,7 +24,7 @@ $env:MSYS = ''
 **解决**：检查 PATH 中是否包含工具链目录：
 
 ```powershell
-$env:PATH = 'S:\Espressif\tools\riscv32-esp-elf\esp-14.2.0_20260121\riscv32-esp-elf\bin;' + $env:PATH
+$env:PATH = 'C:\Espressif\tools\riscv32-esp-elf\esp-14.2.0_20260121\riscv32-esp-elf\bin;' + $env:PATH
 ```
 
 ### 组件未找到
@@ -60,10 +60,11 @@ $env:PATH = 'S:\Espressif\tools\riscv32-esp-elf\esp-14.2.0_20260121\riscv32-esp-
 cat > /tmp/build.ps1 << 'EOF'
 $env:MSYSTEM = ''
 $env:MSYS = ''
-$env:ESP_IDF_VERSION = '5.4'
-$env:IDF_PATH = 'S:\Espressif\frameworks\esp-idf-v5.4.4'
-$env:PATH = 'S:\Espressif\python_env\idf5.4_py3.11_env\Scripts;S:\Espressif\tools\ninja\1.12.1;S:\Espressif\tools\cmake\3.30.2\bin;S:\Espressif\tools\riscv32-esp-elf\esp-14.2.0_20260121\riscv32-esp-elf\bin;' + $env:PATH
-& 'S:\Espressif\python_env\idf5.4_py3.11_env\Scripts\python.exe' 'S:\Espressif\frameworks\esp-idf-v5.4.4\tools\idf.py' build
+$env:ESP_IDF_VERSION = '5.5'
+$env:IDF_PATH = 'S:\Espressif\.espressif\v5.5.5\esp-idf'
+$env:ESP_ROM_ELF_DIR = 'C:\Espressif\tools\esp-rom-elfs\20241011'
+$env:PATH = 'C:\Espressif\tools\python\v5.5.5\venv\Scripts;C:\Espressif\tools\ninja\1.12.1;C:\Espressif\tools\cmake\3.30.2\bin;C:\Espressif\tools\riscv32-esp-elf\esp-14.2.0_20260121\riscv32-esp-elf\bin;' + $env:PATH
+& 'C:\Espressif\tools\python\v5.5.5\venv\Scripts\python.exe' 'S:\Espressif\.espressif\v5.5.5\esp-idf\tools\idf.py' build
 EOF
 powershell -NoProfile -ExecutionPolicy Bypass -File /tmp/build.ps1
 ```

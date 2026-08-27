@@ -13,6 +13,7 @@
 #include "service_power.h"
 #include "service_audio.h"
 #include "service_rtc.h"
+#include "service_i18n.h"
 #include "service_wifi.h"
 #include "engine_midi.h"
 #include "esp_lvgl_port.h"
@@ -26,6 +27,10 @@
 static const char *TAG = "service_page_onboard";
 
 #define ONBOARD_STEP_COUNT 6
+
+/* 与设置页一致的语言表；顺序必须与 EEZ 下拉 options 一致（中文/English） */
+#define ONBOARD_LANG_COUNT 2
+static const char *s_onboard_lang_ids[ONBOARD_LANG_COUNT] = {"zh-CN", "en"};
 
 static int s_onboard_step = 0;
 static lv_obj_t *s_step_panels[ONBOARD_STEP_COUNT] = {0};
@@ -255,9 +260,9 @@ static void onboard_save_time(void)
     if (objects.ob_set_time_result != NULL) {
         char msg[96];
         if (s_time_save_ok) {
-            snprintf(msg, sizeof(msg), "保存成功");
+            snprintf(msg, sizeof(msg), _("保存成功"));
         } else {
-            snprintf(msg, sizeof(msg), "保存失败%s", s_time_save_extra);
+            snprintf(msg, sizeof(msg), _("保存失败%s"), s_time_save_extra);
         }
         lv_label_set_text(objects.ob_set_time_result, msg);
     }
@@ -280,21 +285,21 @@ static void onboard_save_time_cb(lv_event_t *e)
 static const char *wifi_reason_to_str(int reason)
 {
     switch (reason) {
-        case 1:  return "未指定错误";
-        case 2:  return "认证超时";
-        case 3:  return "AP 离开 / 无响应";
-        case 4:  return "关联失败（资源不足）";
-        case 5:  return "认证失败（密码错误？）";
-        case 6:  return "不支持该 AP 信道";
-        case 7:  return "关联被 AP 拒绝";
-        case 8:  return "AP 未找到（SSID 错误？）";
-        case 9:  return "上次关联已过期";
-        case 10: return "AP 过载拒绝关联";
-        case 11: return "安全模式不支持";
-        case 13: return "需要 BSS 变换失败";
-        case 14: return "探针响应超时";
-        case 15: return "信标超时（信号太弱？）";
-        case 200: return "扫描超时（周边无 AP？）";
+        case 1:  return _("未指定错误");
+        case 2:  return _("认证超时");
+        case 3:  return _("AP 离开 / 无响应");
+        case 4:  return _("关联失败（资源不足）");
+        case 5:  return _("认证失败（密码错误？）");
+        case 6:  return _("不支持该 AP 信道");
+        case 7:  return _("关联被 AP 拒绝");
+        case 8:  return _("AP 未找到（SSID 错误？）");
+        case 9:  return _("上次关联已过期");
+        case 10: return _("AP 过载拒绝关联");
+        case 11: return _("安全模式不支持");
+        case 13: return _("需要 BSS 变换失败");
+        case 14: return _("探针响应超时");
+        case 15: return _("信标超时（信号太弱？）");
+        case 200: return _("扫描超时（周边无 AP？）");
         default: break;
     }
     return NULL;
@@ -319,28 +324,28 @@ static void onboard_refresh_wifi_tip_now(void)
              * 无凭证时不显示任何默认 SSID（禁止内置个人热点名） */
             if (has_ssid) {
                 snprintf(line, sizeof(line),
-                         "扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1（当前 SSID：%s）", ssid);
+                         _("扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1（当前 SSID：%s）"), ssid);
             } else {
                 snprintf(line, sizeof(line),
-                         "扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1");
+                         _("扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1"));
             }
             break;
         case SERVICE_WIFI_STA_CONNECTING:
-            snprintf(line, sizeof(line), "正在连接 %s ...", has_ssid ? ssid : "Wi-Fi");
+            snprintf(line, sizeof(line), _("正在连接 %s ..."), has_ssid ? ssid : _("Wi-Fi"));
             break;
         case SERVICE_WIFI_STA_CONNECTED:
-            snprintf(line, sizeof(line), "已关联 %s，等待 IP...", has_ssid ? ssid : "Wi-Fi");
+            snprintf(line, sizeof(line), _("已关联 %s，等待 IP..."), has_ssid ? ssid : _("Wi-Fi"));
             break;
         case SERVICE_WIFI_STA_GOT_IP:
-            snprintf(line, sizeof(line), "连接成功！Wi-Fi 已就绪");
+            snprintf(line, sizeof(line), _("连接成功！Wi-Fi 已就绪"));
             break;
         case SERVICE_WIFI_STA_FAILED:
         default: {
             const char *desc = wifi_reason_to_str(reason);
             if (desc != NULL) {
-                snprintf(line, sizeof(line), "连接失败：%s（原因码 %d），稍后重试", desc, reason);
+                snprintf(line, sizeof(line), _("连接失败：%s（原因码 %d），稍后重试"), desc, reason);
             } else {
-                snprintf(line, sizeof(line), "连接失败（原因码 %d），稍后重试", reason);
+                snprintf(line, sizeof(line), _("连接失败（原因码 %d），稍后重试"), reason);
             }
             break;
         }
@@ -448,9 +453,9 @@ static void onboard_refresh_panels(void)
             lv_obj_t *label = lv_obj_get_child(objects.ob_step_next, 0);
             if (label != NULL && lv_obj_check_type(label, &lv_label_class)) {
                 if (s_onboard_step == 4) {
-                    lv_label_set_text(label, "跳过");
+                    lv_label_set_text(label, _("跳过"));
                 } else {
-                    lv_label_set_text(label, "下一步");
+                    lv_label_set_text(label, _("下一步"));
                 }
             }
         }
@@ -588,6 +593,31 @@ static void onboard_auto_sleep_cb(lv_event_t *e)
     service_power_idle_set_auto_sleep_enabled(checked);
 }
 
+/* ---------- 语言切换：立即生效（改 i18n + 落 NVS + 重载 onboard_step 屏） ---------- */
+static void onboard_language_cb(lv_event_t *e)
+{
+    (void)e;
+    if (objects.ob_set_language == NULL) {
+        return;
+    }
+    uint16_t sel = lv_dropdown_get_selected(objects.ob_set_language);
+    if (sel >= ONBOARD_LANG_COUNT) {
+        return;
+    }
+    const char *lang_id = s_onboard_lang_ids[sel];
+    ESP_LOGI(TAG, "onboard language changed: %s", lang_id);
+    service_i18n_set_language_by_id(lang_id);
+    if (service_nvs_set_language(lang_id) != ESP_OK) {
+        ESP_LOGW(TAG, "onboard language save failed");
+    }
+    if (service_nvs_commit() != ESP_OK) {
+        ESP_LOGW(TAG, "onboard language commit failed");
+    }
+    /* 同屏重载：经 replacePageHook 无条件 createScreen → _() 按新语言重求值，
+     * 切屏后再 translate_obj_tree 兜底存量文本，双向查表保证英文→中文可恢复 */
+    engine_gui_switch_screen("onboard_step");
+}
+
 /* ========================================================================== */
 /* ============== 每 10ms 在 LVGL 上下文中轮询一次：刷新控件 ================= */
 /* ========================================================================== */
@@ -703,6 +733,9 @@ void service_page_onboard_init(void)
     if (objects.ob_setting_auto_sleep != NULL) {
         lv_obj_add_event_cb(objects.ob_setting_auto_sleep, onboard_auto_sleep_cb, LV_EVENT_VALUE_CHANGED, NULL);
     }
+    if (objects.ob_set_language != NULL) {
+        lv_obj_add_event_cb(objects.ob_set_language, onboard_language_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    }
 
     lvgl_port_unlock();
 
@@ -784,6 +817,21 @@ void service_page_onboard_on_screen_loaded(void)
         } else {
             lv_obj_clear_state(objects.ob_setting_auto_sleep, LV_STATE_CHECKED);
         }
+    }
+
+    /* 语言下拉框回显：按当前 i18n 语言匹配 s_onboard_lang_ids；
+     * onboard 可能是用户首次设置语言（NVS 尚未落盘），直接读当前语言而非 NVS，
+     * 确保重载 onboarding_step 时下拉框选中项与实际生效语言一致 */
+    if (objects.ob_set_language != NULL) {
+        const char *cur = service_i18n_get_language_id();
+        uint16_t sel = 0;
+        for (int i = 0; i < ONBOARD_LANG_COUNT; i++) {
+            if (strcmp(cur, s_onboard_lang_ids[i]) == 0) {
+                sel = (uint16_t)i;
+                break;
+            }
+        }
+        lv_dropdown_set_selected(objects.ob_set_language, sel);
     }
 
     /* 时间控件默认值：读取当前 RTC，回填到下拉和滚轮；用户不改就保存为"现在" */

@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "service_i18n_generated_enum.h"
+#include "service_i18n_generated.h"
 
 #ifdef __cplusplus
 extern "C" {

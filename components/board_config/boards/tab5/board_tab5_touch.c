@@ -6,7 +6,7 @@
 #include "board_hal.h"
 #include "bsp/touch.h"
 
-static const char *TAG = "board_tab5_touch";
+// static const char *TAG = "board_tab5_touch";
 
 esp_err_t board_touch_create(esp_lcd_touch_handle_t *out_tp)
 {

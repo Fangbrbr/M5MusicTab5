@@ -294,9 +294,9 @@ SD 卡音乐（.mp3）/ MIDI 曲目（.mid）/ 演奏录音（.hmr）三模式�
 1. 确保设备已连接 Wi-Fi（状态栏出现 📶）
 2. 进入 设置 → 高级设置 → FTP 文件传输，页面显示 `ftp://<设备IP>` 与账号密码（均为 `musicpad`）
 3. 电脑与设备在同一局域网，用 FileZilla / WinSCP / Windows 资源管理器地址栏输入该地址即可连接
-       ——（说明：我实测我的win11 Windows资源管理器无法弹出账密窗口，输入需要采用 ftp://musicpad:musicpad@屏幕显示的IP，如ftp://musicpad:musicpad@192.168.1.187 即可）
-5. 传输中页面实时显示状态、文件名与进度；页面独占系统（不熄屏、语音助手暂停、无法切走）
-6. 点「退出」按钮随时主动断开并返回设置页
+   - Windows 资源管理器若不弹账密输入框，地址栏改用完整凭据格式：`ftp://musicpad:musicpad@<设备IP>`（如 `ftp://musicpad:musicpad@192.168.1.187`）
+4. 传输中页面实时显示状态、文件名与进度；页面独占系统（不熄屏、语音助手暂停、无法切走）
+5. 点「退出」按钮随时主动断开并返回设置页
 
 **说明：**
 - 仅支持被动模式（PASV/EPSV），FileZilla / WinSCP / 资源管理器默认即可连
@@ -352,7 +352,7 @@ SD 卡音乐（.mp3）/ MIDI 曲目（.mid）/ 演奏录音（.hmr）三模式�
 
 本项目使用 **GitHub Actions** 自动构建。推送到 `v*` 标签时自动触发：
 
-1. 使用 `espressif/idf:v5.4.4` 容器构建固件
+1. 使用 `espressif/idf:v5.5.5` 容器构建固件
 2. 输出两个镜像：
    - `0x0_full_*.bin` — 整片 16 MB，首次烧录 / 救砖用（会清空设置）
    - `0x10000_app_*.bin` — 仅应用固件，日常升级用（保留 NVS 设置）
@@ -449,6 +449,10 @@ esptool.py --chip esp32p4 -p COMx write_flash 0x10000 xxx_app.bin
 
 ### 灵感来源
 - [CYD-MIDI-Controller](https://github.com/NickCulbertson/CYD-MIDI-Controller) — 禅模式（弹珠/雨滴）的灵感来源
+
+### 字体
+- [阿里妈妈方圆体](https://fonts.alibabagroup.com) — 中文界面字库（免费商用授权）
+- [Font Awesome 6 Free](https://fontawesome.com) — 界面图标字库（CC BY 4.0 / SIL OFL 1.1）
 
 ### 内置音色
 - **Florestan Basic GM GS** — Public Domain

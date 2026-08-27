@@ -19,6 +19,7 @@
 #include "app_manager.h"
 #include "engine_gui.h"
 #include "engine_midi.h"
+#include "service_i18n.h"
 #include "service_nvs.h"
 #include "esp_log.h"
 #include "esp_random.h"
@@ -46,9 +47,9 @@ static const char *TAG = "app_ear_trainer";
 #define EAR_GAME_OVER_MS        3000
 
 /* 欢迎词与引导词：均常驻展示（timeout 0），用户错过时机也不会不知所措 */
-#define EAR_WELCOME_PRACTICE    "欢迎来到练耳！练习模式：通知栏将展示答案，听音后请点击对应按钮"
-#define EAR_WELCOME_CHALLENGE   "欢迎来到练耳！挑战模式：听音后作答，答错扣血，无二次机会"
-#define EAR_CHALLENGE_HINT      "挑战模式：请听音后点击按钮作答，可点播放键重听"
+#define EAR_WELCOME_PRACTICE    _("欢迎来到练耳！练习模式：通知栏将展示答案，听音后请点击对应按钮")
+#define EAR_WELCOME_CHALLENGE   _("欢迎来到练耳！挑战模式：听音后作答，答错扣血，无二次机会")
+#define EAR_CHALLENGE_HINT      _("挑战模式：请听音后点击按钮作答，可点播放键重听")
 #define EAR_MIN_NOTE            48  /* C3 */
 #define EAR_MAX_NOTE            83  /* B5 */
 #define EAR_MIDDLE_C            60  /* C4 */
@@ -227,7 +228,7 @@ static void ear_answer_text(char *out, size_t len)
     if (s_state.mode == EAR_MODE_ABSOLUTE) {
         ear_note_name(s_state.target_note, out, len);
     } else {
-        snprintf(out, len, "%s", s_interval_names[s_state.interval]);
+        snprintf(out, len, "%s", _(s_interval_names[s_state.interval]));
     }
 }
 
@@ -241,7 +242,7 @@ static void ear_show_practice_notification(const char *lead)
     ear_answer_text(answer, sizeof(answer));
 
     if (s_state.mode == EAR_MODE_ABSOLUTE) {
-        snprintf(buf, sizeof(buf), "%s答案：%s，听音后点击对应琴键", lead, answer);
+        snprintf(buf, sizeof(buf), _("%s答案：%s，听音后点击对应琴键"), lead, answer);
     } else {
         char root_name[8];
         char target_name[8];
@@ -250,8 +251,8 @@ static void ear_show_practice_notification(const char *lead)
                          s_state.root_note - s_state.interval;
         ear_note_name(s_state.root_note, root_name, sizeof(root_name));
         ear_note_name(target, target_name, sizeof(target_name));
-        snprintf(buf, sizeof(buf), "%s答案：%s%s（%s - %s），点击对应音程按钮",
-                 lead, s_state.ascending ? "上行" : "下行", answer,
+        snprintf(buf, sizeof(buf), _("%s答案：%s%s（%s - %s），点击对应音程按钮"),
+                 lead, s_state.ascending ? _("上行") : _("下行"), answer,
                  root_name, target_name);
     }
     app_manager_show_notification_timeout(buf, 0);
@@ -568,23 +569,23 @@ static void ear_handle_answer(bool correct, const char *answer_text)
      * 直到点对匹配按钮本轮才结束；答对短暂展示后进入下一题 */
     if (s_state.practice_mode) {
         if (correct) {
-            app_manager_show_notification_timeout("回答正确！", EAR_RESULT_MS);
+            app_manager_show_notification_timeout(_("回答正确！"), EAR_RESULT_MS);
             ear_set_play_enabled(false);
             s_state.result_pending = true;
             s_state.result_until_us = esp_timer_get_time() + (int64_t)EAR_RESULT_MS * 1000;
         } else {
-            ear_show_practice_notification("不对哦，再试试。");
+            ear_show_practice_notification(_("不对哦，再试试。"));
         }
         return;
     }
 
     if (correct) {
         s_state.score++;
-        app_manager_show_notification_timeout("回答正确！", EAR_RESULT_MS);
+        app_manager_show_notification_timeout(_("回答正确！"), EAR_RESULT_MS);
         ear_check_best();
     } else {
         char buf[64];
-        snprintf(buf, sizeof(buf), "回答错误，正确答案是%s。", answer_text);
+        snprintf(buf, sizeof(buf), _("回答错误，正确答案是%s。"), answer_text);
         app_manager_show_notification_timeout(buf, EAR_RESULT_WRONG_MS);
 
         /* 答错消耗一条生命；耗尽即游戏结束，展示血量耗尽 3s 后重开一局 */
@@ -593,7 +594,7 @@ static void ear_handle_answer(bool correct, const char *answer_text)
         }
         ear_update_lives();
         if (s_state.lives == 0) {
-            app_manager_show_notification_timeout("三条生命已用完，游戏即将重新开始", EAR_GAME_OVER_MS);
+            app_manager_show_notification_timeout(_("三条生命已用完，游戏即将重新开始"), EAR_GAME_OVER_MS);
             ear_set_play_enabled(false);
             s_state.result_pending = true;
             s_state.result_until_us = esp_timer_get_time() + (int64_t)EAR_GAME_OVER_MS * 1000;
@@ -650,7 +651,7 @@ static void ear_handle_interval_answer(lv_obj_t *btnm)
 
     uint8_t selected = (uint8_t)(btn + 1);
     bool correct = (selected == s_state.interval);
-    ear_handle_answer(correct, s_interval_names[s_state.interval]);
+    ear_handle_answer(correct, _(s_interval_names[s_state.interval]));
 }
 
 /* -------------------- 题目生命周期 -------------------- */
@@ -726,9 +727,14 @@ static bool app_ear_trainer_on_init(app_base_t *self, void *screen_ctx)
     (void)screen_ctx;
 
     memset(&s_state, 0, sizeof(s_state));
-    s_state.mode = EAR_MODE_ABSOLUTE;
-    s_state.difficulty = EAR_DIFF_EASY;
-    s_state.practice_mode = true; /* 默认练习模式，对应 ear_trainer_test 下拉框索引 1 */
+    /* 从 NVS 恢复上次选择的模式/难度/练习挑战；系统参数在 service_nvs_init 已读入 */
+    s_state.mode = (ear_mode_t)system_parameters.ear_mode;
+    s_state.difficulty = (ear_difficulty_t)system_parameters.ear_difficulty;
+    s_state.practice_mode = system_parameters.ear_practice_mode;
+    /* 防御性边界：NVS 中若写入了非法值则回默认 */
+    if (s_state.mode > EAR_MODE_RELATIVE)          s_state.mode = EAR_MODE_ABSOLUTE;
+    if (s_state.difficulty > EAR_DIFF_HARD)        s_state.difficulty = EAR_DIFF_EASY;
+
     s_state.welcome_until_us = esp_timer_get_time() + (int64_t)EAR_WELCOME_MS * 1000;
     s_state.welcome_switched = false;
 
@@ -752,15 +758,18 @@ static bool app_ear_trainer_on_init(app_base_t *self, void *screen_ctx)
         lv_obj_add_event_cb(ui->ear_key_try_play, app_ear_trainer_event_cb, LV_EVENT_PRESSED, self);
     }
     if (ui->ear_mode != NULL) {
+        /* 先同步选中态再注册回调，避免 set_selected 触发伪切换 */
+        lv_dropdown_set_selected(ui->ear_mode, s_state.mode);
         lv_obj_add_event_cb(ui->ear_mode, app_ear_trainer_event_cb, LV_EVENT_VALUE_CHANGED, self);
     }
     if (ui->ear_trainer_test != NULL) {
         /* 默认选中练习模式（索引 1）；先设置再注册回调，避免 set_selected
          * 触发的伪 VALUE_CHANGED 进入模式切换逻辑 */
-        lv_dropdown_set_selected(ui->ear_trainer_test, 1);
+        lv_dropdown_set_selected(ui->ear_trainer_test, s_state.practice_mode ? 1 : 0);
         lv_obj_add_event_cb(ui->ear_trainer_test, app_ear_trainer_event_cb, LV_EVENT_VALUE_CHANGED, self);
     }
     if (ui->ear_difficult != NULL) {
+        lv_dropdown_set_selected(ui->ear_difficult, s_state.difficulty);
         lv_obj_add_event_cb(ui->ear_difficult, app_ear_trainer_event_cb, LV_EVENT_VALUE_CHANGED, self);
     }
     if (ui->ear_key_major != NULL) {
@@ -773,6 +782,26 @@ static bool app_ear_trainer_on_init(app_base_t *self, void *screen_ctx)
         lv_obj_add_event_cb(ui->ear_key_minor3, app_ear_trainer_event_cb, LV_EVENT_VALUE_CHANGED, self);
     }
     if (ui->ear_key_interval != NULL) {
+        /* 动态翻译 ear_key_interval 按钮矩阵文字：EEZ buttonmatrix 不支持多语言配置，
+         * 运行时按当前语言重建 map。
+         * Trap-1: lv_buttonmatrix_set_map 只存指针不拷贝，map 数组必须 static。
+         * Trap-2: 二次进入时 get_map 返回的是上次已翻译的 map，按中文表 strcmp 会失配；
+         *         经 _() 双向查表（中/英可互反查）可幂等重译。 */
+        static const char *s_translated_map[16];
+        const char * const *orig_map = lv_buttonmatrix_get_map(ui->ear_key_interval);
+        int idx = 0;
+        if (orig_map != NULL) {
+            for (int i = 0; orig_map[i] != NULL && idx < 15; i++) {
+                const char *s = orig_map[i];
+                if (s[0] == '\0' || (s[0] == '\n' && s[1] == '\0')) {
+                    s_translated_map[idx++] = s;   /* 换行/空占位原样保留 */
+                } else {
+                    s_translated_map[idx++] = _(s);
+                }
+            }
+        }
+        s_translated_map[idx] = NULL;
+        lv_buttonmatrix_set_map(ui->ear_key_interval, s_translated_map);
         lv_obj_add_event_cb(ui->ear_key_interval, app_ear_trainer_event_cb, LV_EVENT_VALUE_CHANGED, self);
     }
     lvgl_port_unlock();
@@ -808,7 +837,7 @@ static void app_ear_trainer_on_ui_event(app_base_t *self, lv_event_t *e)
 
         if (s_state.tries_left == 0) {
             ear_set_play_enabled(false);
-            app_manager_show_notification_timeout("没有试听次数啦，试着做出选择吧~", 0);
+            app_manager_show_notification_timeout(_("没有试听次数啦，试着做出选择吧~"), 0);
         }
         return;
     }
@@ -930,7 +959,7 @@ static void app_ear_trainer_on_update(app_base_t *self)
         s_state.welcome_switched = true;
         char cur[128];
         if (app_manager_get_notification(cur, sizeof(cur)) == ESP_OK &&
-            strncmp(cur, "欢迎来到练耳", strlen("欢迎来到练耳")) == 0) {
+            (strcmp(cur, EAR_WELCOME_PRACTICE) == 0 || strcmp(cur, EAR_WELCOME_CHALLENGE) == 0)) {
             if (s_state.practice_mode) {
                 ear_show_practice_notification("");
             } else {
@@ -957,6 +986,12 @@ static void app_ear_trainer_on_destroy(app_base_t *self)
 {
     (void)self;
     ear_stop_all_notes();
+
+    /* 持久化当前模式/难度/练习挑战，下次进入时恢复 */
+    service_nvs_set_ear_cfg((uint8_t)s_state.mode,
+                            (uint8_t)s_state.difficulty,
+                            s_state.practice_mode);
+    service_nvs_commit();
 
     /* 移除 on_init 注册的事件回调：EEZ 屏幕对象持久存在，
      * 不移除会在再次进入时重复注册导致一次事件多次触发（判题/试听重复） */

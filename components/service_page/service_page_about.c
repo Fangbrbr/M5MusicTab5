@@ -7,6 +7,7 @@
 #include "screens.h"
 #include "engine_gui.h"
 #include "app_manager.h"
+#include "service_i18n.h"
 #include "esp_lvgl_port.h"
 #include "esp_log.h"
 #include "stdio.h"
@@ -40,17 +41,17 @@ void service_page_about_event(lv_event_t *e)
 static void format_uptime(uint32_t seconds, char *buf, size_t len)
 {
     if (seconds < 60) {
-        snprintf(buf, len, "系统运行时长: %lu秒", (unsigned long)seconds);
+        snprintf(buf, len, _("系统运行时长: %lu秒"), (unsigned long)seconds);
     } else if (seconds < 3600) {
         uint32_t m = seconds / 60;
         uint32_t s = seconds % 60;
-        snprintf(buf, len, "系统运行时长: %lu分%lu秒", (unsigned long)m, (unsigned long)s);
+        snprintf(buf, len, _("系统运行时长: %lu分%lu秒"), (unsigned long)m, (unsigned long)s);
     } else if (seconds < 86400) {
         uint32_t h = seconds / 3600;
         uint32_t rem = seconds % 3600;
         uint32_t m = rem / 60;
         uint32_t s = rem % 60;
-        snprintf(buf, len, "系统运行时长: %lu时%lu分%lu秒", (unsigned long)h, (unsigned long)m, (unsigned long)s);
+        snprintf(buf, len, _("系统运行时长: %lu时%lu分%lu秒"), (unsigned long)h, (unsigned long)m, (unsigned long)s);
     } else {
         uint32_t d = seconds / 86400;
         uint32_t rem = seconds % 86400;
@@ -58,7 +59,7 @@ static void format_uptime(uint32_t seconds, char *buf, size_t len)
         rem = rem % 3600;
         uint32_t m = rem / 60;
         uint32_t s = rem % 60;
-        snprintf(buf, len, "系统运行时长: %lu天%lu时%lu分%lu秒", (unsigned long)d, (unsigned long)h, (unsigned long)m, (unsigned long)s);
+        snprintf(buf, len, _("系统运行时长: %lu天%lu时%lu分%lu秒"), (unsigned long)d, (unsigned long)h, (unsigned long)m, (unsigned long)s);
     }
 }
 

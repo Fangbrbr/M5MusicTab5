@@ -28,6 +28,9 @@ static const char *TAG = "service_nvs";
 #define SERVICE_NVS_KEY_LANGUAGE        "language"
 #define SERVICE_NVS_KEY_THEME           "theme"
 #define SERVICE_NVS_KEY_EAR_BEST        "ear_best"
+#define SERVICE_NVS_KEY_EAR_MODE        "ear_mode"
+#define SERVICE_NVS_KEY_EAR_DIFF        "ear_diff"
+#define SERVICE_NVS_KEY_EAR_PRAC        "ear_prac"
 #define SERVICE_NVS_KEY_METRONOME       "metronome"
 #define SERVICE_NVS_KEY_XIAOZHI         "xiaozhi"
 #define SERVICE_NVS_KEY_CLOCK_12H       "clock_12h"
@@ -67,6 +70,9 @@ static const char *TAG = "service_nvs";
  * 记录；真正的擦除在 reset_to_defaults 末尾通过显式 erase_key 完成。 */
 #define SERVICE_NVS_DIRTY_APP_FUN_MANA  (1U << 25)
 #define SERVICE_NVS_DIRTY_MIDI_PLAYER   (1U << 26)
+#define SERVICE_NVS_DIRTY_EAR_MODE      (1U << 27)
+#define SERVICE_NVS_DIRTY_EAR_DIFF      (1U << 28)
+#define SERVICE_NVS_DIRTY_EAR_PRAC      (1U << 29)
 
 static nvs_handle_t s_handle = 0;
 static SemaphoreHandle_t s_mutex = NULL;
@@ -98,6 +104,9 @@ static void service_nvs_set_defaults(void)
     system_parameters.theme_name[sizeof(system_parameters.theme_name) - 1] = '\0';
 
     memset(system_parameters.ear_best, 0, sizeof(system_parameters.ear_best));
+    system_parameters.ear_mode = 0;        /* 默认绝对音感 */
+    system_parameters.ear_difficulty = 0;  /* 默认初级 */
+    system_parameters.ear_practice_mode = true; /* 默认练习模式 */
 
     system_parameters.metronome.bpm = 120;
     system_parameters.metronome.sig_top = 4;
@@ -310,6 +319,27 @@ static esp_err_t service_nvs_load_internal(void)
                                 sizeof(system_parameters.ear_best));
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "read ear_best failed: %d", ret);
+        return ret;
+    }
+
+    ret = service_nvs_read_u8(SERVICE_NVS_KEY_EAR_MODE, &system_parameters.ear_mode,
+                              system_parameters.ear_mode);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "read ear_mode failed: %d", ret);
+        return ret;
+    }
+
+    ret = service_nvs_read_u8(SERVICE_NVS_KEY_EAR_DIFF, &system_parameters.ear_difficulty,
+                              system_parameters.ear_difficulty);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "read ear_diff failed: %d", ret);
+        return ret;
+    }
+
+    ret = service_nvs_read_bool(SERVICE_NVS_KEY_EAR_PRAC, &system_parameters.ear_practice_mode,
+                                system_parameters.ear_practice_mode);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "read ear_prac failed: %d", ret);
         return ret;
     }
 
@@ -526,6 +556,27 @@ esp_err_t service_nvs_commit(void)
         }
     }
 
+    if (s_dirty & SERVICE_NVS_DIRTY_EAR_MODE) {
+        ret = service_nvs_write_u8(SERVICE_NVS_KEY_EAR_MODE, system_parameters.ear_mode);
+        if (ret != ESP_OK) {
+            goto commit_exit;
+        }
+    }
+
+    if (s_dirty & SERVICE_NVS_DIRTY_EAR_DIFF) {
+        ret = service_nvs_write_u8(SERVICE_NVS_KEY_EAR_DIFF, system_parameters.ear_difficulty);
+        if (ret != ESP_OK) {
+            goto commit_exit;
+        }
+    }
+
+    if (s_dirty & SERVICE_NVS_DIRTY_EAR_PRAC) {
+        ret = service_nvs_write_bool(SERVICE_NVS_KEY_EAR_PRAC, system_parameters.ear_practice_mode);
+        if (ret != ESP_OK) {
+            goto commit_exit;
+        }
+    }
+
     if (s_dirty & SERVICE_NVS_DIRTY_METRONOME) {
         ret = service_nvs_write_blob(SERVICE_NVS_KEY_METRONOME, &system_parameters.metronome,
                                      sizeof(system_parameters.metronome));
@@ -662,6 +713,9 @@ esp_err_t service_nvs_reset_to_defaults(void)
               SERVICE_NVS_DIRTY_LANGUAGE |
               SERVICE_NVS_DIRTY_THEME |
               SERVICE_NVS_DIRTY_EAR_BEST |
+              SERVICE_NVS_DIRTY_EAR_MODE |
+              SERVICE_NVS_DIRTY_EAR_DIFF |
+              SERVICE_NVS_DIRTY_EAR_PRAC |
               SERVICE_NVS_DIRTY_METRONOME |
               SERVICE_NVS_DIRTY_XIAOZHI |
               SERVICE_NVS_DIRTY_CLOCK_12H |
@@ -1072,6 +1126,23 @@ esp_err_t service_nvs_set_ear_best(uint8_t index, uint32_t score)
 
     system_parameters.ear_best[index] = score;
     s_dirty |= SERVICE_NVS_DIRTY_EAR_BEST;
+
+    service_nvs_give();
+    return ESP_OK;
+}
+
+esp_err_t service_nvs_set_ear_cfg(uint8_t mode, uint8_t difficulty, bool practice_mode)
+{
+    if (!service_nvs_take()) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    system_parameters.ear_mode = mode;
+    system_parameters.ear_difficulty = difficulty;
+    system_parameters.ear_practice_mode = practice_mode;
+    s_dirty |= SERVICE_NVS_DIRTY_EAR_MODE |
+               SERVICE_NVS_DIRTY_EAR_DIFF |
+               SERVICE_NVS_DIRTY_EAR_PRAC;
 
     service_nvs_give();
     return ESP_OK;

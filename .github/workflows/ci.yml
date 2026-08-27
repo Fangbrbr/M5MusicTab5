@@ -1,0 +1,42 @@
+name: CI Build
+
+# 每次 push 到 main 即编译验证（零错误即通过），不产出发布物；
+# 出固件走 release.yml（v* 标签）。私仓/公仓同用（公仓发布后同样生效）。
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Trap: 容器内 run 步骤的 HOME（/github/home）与 checkout（node 动作）不同，
+      # 不显式声明则构建期 git 全部报 dubious ownership，版本号静默退化为 unknown
+      - name: Mark workspace as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache managed components
+        uses: actions/cache@v4
+        with:
+          path: managed_components
+          key: ${{ runner.os }}-idf-${{ hashFiles('dependencies.lock') }}
+
+      - name: Build firmware
+        run: |
+          . /opt/esp/idf/export.sh
+          # 构建前自检：git 必须能读到 commit，否则立即失败而不是产出 unknown 版本
+          git rev-parse --short=7 HEAD
+          idf.py build

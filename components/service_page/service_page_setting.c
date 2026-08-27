@@ -85,6 +85,11 @@ static void setting_language_cb(lv_event_t *e)
     ESP_LOGI(TAG, "language changed: %s", lang_id);
     service_i18n_set_language_by_id(lang_id);
     service_nvs_set_language(lang_id);
+    service_nvs_commit();
+
+    /* 重载设置屏：EEZ translated-literal 的 _() 只在屏幕创建时求值，
+     * 同屏 set_screen 经 replacePageHook 无条件 createScreen，立即可见新语言 */
+    engine_gui_switch_screen("setting");
 }
 
 static void setting_brightness_cb(lv_event_t *e)
@@ -183,19 +188,19 @@ static void setting_update_wifi_tip(void)
     char buf[96];
     if (!service_nvs_get_feature_flag(SERVICE_NVS_FLAG_WIFI_ENABLED)) {
         lv_label_set_text(objects.setting_wifi_connect_tip,
-                          "WiFi 已关闭");
+                          _("WiFi 已关闭"));
         return;
     }
     char ssid[SERVICE_NVS_SSID_MAX_LEN] = {0};
     service_nvs_get_wifi_ssid(ssid, sizeof(ssid));
     if (ssid[0] == '\0') {
         lv_label_set_text(objects.setting_wifi_connect_tip,
-                          "扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1");
+                          _("扫码连接 HammySetup（密码：12345678）\n浏览器访问 http://192.168.4.1"));
     } else if (service_wifi_is_connected()) {
-        snprintf(buf, sizeof(buf), "已连接 %s", ssid);
+        snprintf(buf, sizeof(buf), _("已连接 %s"), ssid);
         lv_label_set_text(objects.setting_wifi_connect_tip, buf);
     } else {
-        snprintf(buf, sizeof(buf), "已配置 %s，连接中…", ssid);
+        snprintf(buf, sizeof(buf), _("已配置 %s，连接中…"), ssid);
         lv_label_set_text(objects.setting_wifi_connect_tip, buf);
     }
 }
@@ -350,7 +355,7 @@ static void setting_sf2_rebuild_options(void)
 
     int count = engine_sf2_sd_rescan();
     size_t pos = 0;
-    int n = snprintf(s_sf2_options, sizeof(s_sf2_options), "内部预设");
+    int n = snprintf(s_sf2_options, sizeof(s_sf2_options), "%s", _("内部预设"));
     pos += (n > 0) ? (size_t)n : 0;
     for (int i = 0; i < count && pos < sizeof(s_sf2_options) - 24; i++) {
         char disp[SETTING_SF2_DISPLAY_MAX + 4];
@@ -390,7 +395,7 @@ static void setting_sf2_progress(int percent, void *user_data)
         s_sf2_last_percent = percent;
         /* timeout 用 0 会被 app_manager 视为"不显示"直接忽略；加载需常驻，
          * 用大 timeout 保证全程可见，完成态通知会覆盖 */
-        app_manager_show_notificationf_timeout(60000, "音色加载 %d%%", percent);
+        app_manager_show_notificationf_timeout(60000, _("音色加载 %d%%"), percent);
     }
 }
 
@@ -413,15 +418,15 @@ static void setting_sf2_apply(int sel)
         snprintf(fit_path, sizeof(fit_path), "%s/%s", ENGINE_SF2_SD_DIR, name);
         if (!engine_sf2_check_fit(fit_path)) {
             app_manager_show_notification_timeout(
-                "音源过大，内存不足，已保留当前音源", 4000);
+                _("音源过大，内存不足，已保留当前音源"), 4000);
             return;
         }
     }
 
     if (sel == 0) {
-        app_manager_show_notification_timeout("正在加载内部预设音色…", 60000);
+        app_manager_show_notification_timeout(_("正在加载内部预设音色…"), 60000);
     } else {
-        app_manager_show_notificationf_timeout(60000, "正在加载音色： %s", name);
+        app_manager_show_notificationf_timeout(60000, _("正在加载音色： %s"), name);
     }
 
     /* 进度节流在每次加载前复位：上次加载可能停在中间百分比，
@@ -437,19 +442,19 @@ static void setting_sf2_apply(int sel)
     if (ok) {
         service_nvs_set_sf2_source((sel == 0) ? "" : name);
         if (sel == 0) {
-            app_manager_show_notification_timeout("已切换为内部预设音色", 3000);
+            app_manager_show_notification_timeout(_("已切换为内部预设音色"), 3000);
         } else {
-            app_manager_show_notificationf_timeout(3000, "音色已切换： %s", name);
+            app_manager_show_notificationf_timeout(3000, _("音色已切换： %s"), name);
         }
     } else {
         ESP_LOGW(TAG, "sf2 load failed (sel=%d), fallback to internal", sel);
         if (sel != 0) {
             /* Trap: 上游加载失败即丢旧音色，必须补载内部预设恢复出声 */
-            app_manager_show_notification_timeout("音色加载失败，回退内部预设", 3000);
+            app_manager_show_notification_timeout(_("音色加载失败，回退内部预设"), 3000);
             engine_sf2_load_internal();
             service_nvs_set_sf2_source("");
         } else {
-            app_manager_show_notification_timeout("内部预设音色加载失败", 3000);
+            app_manager_show_notification_timeout(_("内部预设音色加载失败"), 3000);
         }
     }
 
@@ -480,7 +485,7 @@ void service_page_setting_process(void)
             }
             if (!exists && s_sf2_pending < 0) {
                 ESP_LOGW(TAG, "current sf2 %s removed, fallback to internal", cur);
-                app_manager_show_notification_timeout("音源文件已被移除，回退内部预设", 3000);
+                app_manager_show_notification_timeout(_("音源文件已被移除，回退内部预设"), 3000);
                 s_sf2_pending = 0;
             }
         }
@@ -535,7 +540,7 @@ static void setting_sysreset_update_label(int32_t remain_sec)
         return;
     }
     char buf[32];
-    snprintf(buf, sizeof(buf), "再按 %lds …", (long)remain_sec);
+    snprintf(buf, sizeof(buf), _("再按 %lds …"), (long)remain_sec);
     lv_label_set_text(s_sysreset_btn_label, buf);
 }
 

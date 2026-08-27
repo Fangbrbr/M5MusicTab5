@@ -11,6 +11,7 @@
 #include "engine_gui.h"
 #include "fonts.h"
 #include "engine_midi.h"
+#include "service_i18n.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_lvgl_port.h"
@@ -221,10 +222,10 @@ static void fifth_refresh_labels(void)
     char buf[64];
     lvgl_port_lock(portMAX_DELAY);
 
-    snprintf(buf, sizeof(buf), "%s大调 / %s小调", k->name, k->rel_root);
+    snprintf(buf, sizeof(buf), _("%s大调 / %s小调"), k->name, k->rel_root);
     lv_label_set_text(s_fifth_ui.name, buf);
 
-    snprintf(buf, sizeof(buf), "调号: %s", k->sig);
+    snprintf(buf, sizeof(buf), _("调号: %s"), k->sig);
     lv_label_set_text(s_fifth_ui.key_sig, buf);
 
     lv_label_set_text(s_fifth_ui.scale, k->scale);

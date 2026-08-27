@@ -11,7 +11,7 @@
 #include "bsp/m5stack_tab5.h"
 #include "esp_log.h"
 
-static const char *TAG = "board_tab5_audio";
+// static const char *TAG = "board_tab5_audio";
 
 esp_codec_dev_handle_t board_audio_speaker_codec_init(void)
 {

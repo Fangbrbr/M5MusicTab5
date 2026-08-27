@@ -1,6 +1,7 @@
 idf_component_register(SRCS "app_ai_agent.c"
                        INCLUDE_DIRS "include"
                        REQUIRES app_manager
+                                service_i18n
                                 engine_gui
                                 service_xiaozhi
                                 service_nvs

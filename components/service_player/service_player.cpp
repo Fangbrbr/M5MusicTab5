@@ -87,7 +87,7 @@ typedef struct {
     bool eos_sent;               /* 是否已发送 end_of_stream */
 } player_state_t;
 
-static player_state_t s_state = {0};
+static player_state_t s_state = {};
 
 /* -------------------- 辅助函数 -------------------- */
 

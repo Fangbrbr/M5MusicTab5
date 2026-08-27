@@ -625,6 +625,7 @@ typedef struct {
     uint16_t y;
     uint16_t prev_x;
     uint16_t prev_y;
+    uint16_t strength;  /* 触点强度原始值（ST7123: 8bit area；GT911: 16bit pressure） */
 } touch_slot_t;
 
 static touch_slot_t s_slots[MULTI_TOUCH_MAX_POINTS];
@@ -638,7 +639,8 @@ static bool s_touch_swallow_gesture = false;
 #define GUI_SYSEX_CMD_INPUT    ENUM_SYS_COMMAND_CMD_INPUT
 #define GUI_SYSEX_FUNC_TOUCH   0
 
-static void gui_publish_touch(app_input_type_t type, int16_t x, int16_t y, uint8_t finger)
+static void gui_publish_touch(app_input_type_t type, int16_t x, int16_t y, uint8_t finger,
+                              uint8_t pressure)
 {
     if (s_touch_event_queue == NULL) {
         return;
@@ -650,6 +652,7 @@ static void gui_publish_touch(app_input_type_t type, int16_t x, int16_t y, uint8
         .y = y,
         .finger_id = finger,
         .flags = 0,
+        .pressure = pressure,
     };
 
     BaseType_t ret = xQueueSend(s_touch_event_queue, &evt, 0);
@@ -742,6 +745,7 @@ static void touch_assign_slots(void)
         next[i].active = true;
         next[i].x = s_touch_cache.points[j].x;
         next[i].y = s_touch_cache.points[j].y;
+        next[i].strength = s_touch_cache.points[j].strength;
         point_used[j] = true;
     }
 
@@ -766,6 +770,7 @@ static void touch_assign_slots(void)
         next[free_slot].active = true;
         next[free_slot].x = s_touch_cache.points[j].x;
         next[free_slot].y = s_touch_cache.points[j].y;
+        next[free_slot].strength = s_touch_cache.points[j].strength;
         point_used[j] = true;
     }
 
@@ -859,6 +864,24 @@ static inline void touch_to_logical(uint16_t raw_x, uint16_t raw_y,
     }
 }
 
+static uint8_t touch_strength_to_pressure(uint16_t strength)
+{
+    static uint16_t s_str_max = 1;  /* 自适应峰值，单调递增（reset 时复位即可） */
+
+    if (strength > s_str_max) {
+        s_str_max = (uint16_t)(((uint32_t)s_str_max * 3 + strength) / 4);
+    }
+
+    uint32_t p = ((uint32_t)strength * 127) / s_str_max;
+    if (p < 1) {
+        p = 1;   /* MIDI velocity 0 = note off，至少给 1 表“按下” */
+    }
+    if (p > 127) {
+        p = 127;
+    }
+    return (uint8_t)p;
+}
+
 static void multi_touch_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
 {
     int point_idx = (int)(intptr_t)lv_indev_get_driver_data(indev);
@@ -888,15 +911,17 @@ static void multi_touch_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
             slot->prev_x = slot->x;
             slot->prev_y = slot->y;
             touch_to_logical(slot->x, slot->y, &log_x, &log_y);
-            gui_publish_touch(APP_INPUT_TOUCH_DOWN, log_x, log_y, (uint8_t)point_idx);
+            gui_publish_touch(APP_INPUT_TOUCH_DOWN, log_x, log_y, (uint8_t)point_idx,
+                              touch_strength_to_pressure(slot->strength));
         } else {
             touch_to_logical(slot->prev_x, slot->prev_y, &log_x, &log_y);
-            gui_publish_touch(APP_INPUT_TOUCH_UP, log_x, log_y, (uint8_t)point_idx);
+            gui_publish_touch(APP_INPUT_TOUCH_UP, log_x, log_y, (uint8_t)point_idx, 0);
         }
     } else if (slot->active &&
                (slot->x != slot->prev_x || slot->y != slot->prev_y)) {
         touch_to_logical(slot->x, slot->y, &log_x, &log_y);
-        gui_publish_touch(APP_INPUT_TOUCH_MOVE, log_x, log_y, (uint8_t)point_idx);
+        gui_publish_touch(APP_INPUT_TOUCH_MOVE, log_x, log_y, (uint8_t)point_idx,
+                          touch_strength_to_pressure(slot->strength));
         slot->prev_x = slot->x;
         slot->prev_y = slot->y;
     }
@@ -1409,10 +1434,11 @@ esp_err_t engine_gui_init(void)
 
     /* 极简启动画面先行点亮背光：EEZ 全量建屏约 2.7s 期间保持有内容。
      * 配色取持久化主题索引（白屏闪病根因治理：首刷即为主题色，无跳变）。
-     * 背光设下限：NVS 中过低亮度会让开机阶段看似黑屏 */
+     * 背光直接用 NVS 配置值（全局亮度一致，无 boot 专属下限；duty 底线由
+     * board 层查找表保证 1% 可见）。NVS=0 属异常值（UI 滑条最小 1%），回退 50。 */
     uint32_t theme_idx = engine_gui_saved_theme_index();
     lv_obj_t *splash = engine_gui_splash_show(theme_idx);
-    uint8_t boot_brightness = (initial_brightness < 30) ? 30 : (uint8_t)initial_brightness;
+    uint8_t boot_brightness = (initial_brightness > 0) ? (uint8_t)initial_brightness : 50;
     board_display_brightness_set(boot_brightness);
     lv_timer_handler();
 
@@ -1949,9 +1975,9 @@ static void engine_gui_hide_canvas_recursive(lv_obj_t *obj)
     }
 }
 
-/* 递归翻译对象树内所有 label 静态文案：EEZ 生成代码硬编码中文，不允许直接改，
- * 在切屏时按当前语言整体替换。未命中词条表的文本（动态内容/无翻译）
- * 由 service_i18n_translate 原样返回，不重写。 */
+/* 递归翻译对象树内所有可翻译文案：EEZ 屏终身缓存只建一次（_() 只在创建时求值），
+ * 运行时切语言靠本函数就地改写。service_i18n_translate 双向查表（译文可反查词条），
+ * 未命中词条表的文本（动态内容/无翻译）原样返回，不重写。 */
 void engine_gui_translate_obj_tree(lv_obj_t *obj)
 {
     if (obj == NULL) {
@@ -1963,6 +1989,22 @@ void engine_gui_translate_obj_tree(lv_obj_t *obj)
             const char *tr = service_i18n_translate(txt);
             if (tr != txt && strcmp(tr, txt) != 0) {
                 lv_label_set_text(obj, tr);
+            }
+        }
+    } else if (lv_obj_check_type(obj, &lv_dropdown_class)) {
+        const char *opts = lv_dropdown_get_options(obj);
+        if (opts != NULL && opts[0] != '\0') {
+            const char *tr = service_i18n_translate(opts);
+            if (tr != opts && strcmp(tr, opts) != 0) {
+                lv_dropdown_set_options(obj, tr);
+            }
+        }
+    } else if (lv_obj_check_type(obj, &lv_roller_class)) {
+        const char *opts = lv_roller_get_options(obj);
+        if (opts != NULL && opts[0] != '\0') {
+            const char *tr = service_i18n_translate(opts);
+            if (tr != opts && strcmp(tr, opts) != 0) {
+                lv_roller_set_options(obj, tr, LV_ROLLER_MODE_NORMAL);
             }
         }
     }

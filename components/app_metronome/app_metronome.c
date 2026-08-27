@@ -15,6 +15,7 @@
 #include "esp_lvgl_port.h"
 #include "esp_timer.h"
 #include "lvgl.h"
+#include "service_i18n.h"
 #include "service_nvs.h"
 #include <stdio.h>
 #include <string.h>
@@ -403,7 +404,7 @@ static bool app_metronome_on_init(app_base_t *self, void *screen_ctx)
     /* 音色下拉初始化 */
     if (ui->sound)
     {
-        lv_dropdown_set_options(ui->sound, "标准\n指针式\n木鱼式\n鼓组式\n打击乐式\n体感式\n2/4强弱式");
+        lv_dropdown_set_options(ui->sound, _("标准\n指针式\n木鱼式\n鼓组式\n打击乐式\n体感式\n2/4强弱式"));
         lv_dropdown_set_selected(ui->sound, s_metron.sound);
     }
 

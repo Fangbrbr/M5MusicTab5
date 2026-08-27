@@ -18,6 +18,7 @@
 #include "esp_log.h"
 #include "esp_lvgl_port.h"
 #include "lvgl.h"
+#include "service_i18n.h"
 #include <math.h>
 #include <string.h>
 
@@ -358,9 +359,9 @@ static void app_xy_pad_on_update(app_base_t *self)
     if (s_xy.recording_stop_pending && !app_manager_record_is_recording()) {
         char path[256];
         if (app_manager_record_get_last_path(path, sizeof(path))) {
-            app_manager_show_notification_timeout("录音已保存", 2000);
+            app_manager_show_notification_timeout(_("录音已保存"), 2000);
         } else {
-            app_manager_show_notification_timeout("录制时间过短，已丢弃", 2000);
+            app_manager_show_notification_timeout(_("录制时间过短，已丢弃"), 2000);
         }
         s_xy.recording_stop_pending = false;
     }
@@ -459,7 +460,7 @@ static void app_xy_pad_rec_btn_cb(lv_event_t *e)
     if (s_xy.recording_self) {
         service_recorder_result_t r = app_manager_record_stop();
         if (r != RECORDER_OK && r != RECORDER_ERR_NOT_RECORDING) {
-            app_manager_show_notification_timeout("停止录制失败", 2000);
+            app_manager_show_notification_timeout(_("停止录制失败"), 2000);
         }
         return;
     }
@@ -467,7 +468,7 @@ static void app_xy_pad_rec_btn_cb(lv_event_t *e)
     service_recorder_result_t r = app_manager_record_start(TAG);
     switch (r) {
     case RECORDER_OK:
-        app_manager_show_notification_timeout("开始录制", 1000);
+        app_manager_show_notification_timeout(_("开始录制"), 1000);
         s_xy.recording_self = true;
         s_xy.recording_stop_pending = false;
         if (ui->btn_rec != NULL) {
@@ -475,13 +476,13 @@ static void app_xy_pad_rec_btn_cb(lv_event_t *e)
         }
         break;
     case RECORDER_ERR_NO_SD:
-        app_manager_show_notification_timeout("未检测到 SD 卡", 2000);
+        app_manager_show_notification_timeout(_("未检测到 SD 卡"), 2000);
         break;
     case RECORDER_ERR_BUSY:
-        app_manager_show_notification_timeout("正在录制中", 1500);
+        app_manager_show_notification_timeout(_("正在录制中"), 1500);
         break;
     default:
-        app_manager_show_notification_timeout("录制启动失败", 2000);
+        app_manager_show_notification_timeout(_("录制启动失败"), 2000);
         break;
     }
 }
