@@ -223,16 +223,19 @@ static void chord_populate_type_buttons(void)
         lv_obj_set_style_border_width(btn, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_color(btn, engine_gui_theme_color(COLOR_SHADOW), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(btn, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(btn, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_color(btn, engine_gui_theme_color(COLOR_CARD), LV_PART_MAIN | LV_STATE_CHECKED);
         lv_obj_set_style_text_color(btn, engine_gui_theme_color(COLOR_TEXT_PRIMARY), LV_PART_MAIN | LV_STATE_CHECKED);
 
-        /* 创建标签，显示 "中文名\n符号" 两行 */
+        /* 创建标签，显示 "中文名\n符号" 两行；long_mode=SCROLL 防英文长文本溢出 */
         lv_obj_t *label = lv_label_create(btn);
-        char label_text[32];
+        char label_text[48];
         snprintf(label_text, sizeof(label_text), "%s\n%s", 
                  _(s_chord_types[i].cn_name), 
                  s_chord_types[i].suffix[0] ? s_chord_types[i].suffix : "");
         lv_label_set_text(label, label_text);
+        lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
         lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_center(label);
 

@@ -3612,6 +3612,11 @@ CONFIG_USB_HOST_SUSPEND_ENTRY_MS=20
 # CONFIG_USB_HOST_HUBS_SUPPORTED is not set
 # end of Hub Driver Configuration
 
+#
+# Power management
+#
+# end of Power management
+
 # CONFIG_USB_HOST_ENABLE_ENUM_FILTER_CALLBACK is not set
 # CONFIG_USB_HOST_DWC_DMA_CAP_MEMORY_IN_PSRAM is not set
 CONFIG_USB_OTG_SUPPORTED=y

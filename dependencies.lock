@@ -10,7 +10,7 @@ dependencies:
       type: service
     version: 0.4.0
   espp/base_component:
-    component_hash: bf0ae988a3c2899e09207ecc278619ede7811af0e3628ee957893c643ee97f95
+    component_hash: 5651445974f90d0686116afaec12615f1552632713cbc194bb984062799c3350
     dependencies:
     - name: espp/logger
       registry_url: https://components.espressif.com
@@ -22,9 +22,9 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 1.1.8
+    version: 1.2.0
   espp/base_peripheral:
-    component_hash: dea5a9a445ae7eccd284525ad9cb333ed8f71c22135a68bc79f2011aa0bf32fe
+    component_hash: 16772a02f5cd2f5521c0a1c2fe2724c57076ac12d42f843dc9ffdc501601affa
     dependencies:
     - name: espp/base_component
       registry_url: https://components.espressif.com
@@ -36,9 +36,9 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 1.1.8
+    version: 1.2.0
   espp/format:
-    component_hash: 2e56a327f5a5dcc34768a4b0dfd5f97db746826f302217cae8091233598092fe
+    component_hash: 6fac1268bda6124e276943c8c85d406b8142b99ffcfab2025d313119315004a8
     dependencies:
     - name: idf
       require: private
@@ -46,9 +46,9 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 1.1.8
+    version: 1.2.0
   espp/logger:
-    component_hash: 4d7ddd30b22b5f77570853456b5a786715ca54bb23324152fce84254b6a9c6ef
+    component_hash: 061e900870fecd8e9ce74f47dbc0fed541a993eed9e4d7d7835d4d6506ba1d23
     dependencies:
     - name: espp/format
       registry_url: https://components.espressif.com
@@ -60,7 +60,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 1.1.8
+    version: 1.2.0
   espp/rx8130ce:
     component_hash: 3ab0788e2c930303943d0f171d1db77186d5306e6268345f760e186a620b2b4f
     dependencies:
@@ -607,11 +607,11 @@ dependencies:
     - esp32s31
     version: 0.21.0~1
   espressif/usb:
-    component_hash: 1d90d7c7b0682dbfcc36f47cf5acf224a5cfb850a62f39cd86d3159cfec12a81
+    component_hash: 6c2cff118141dbbca181d0d27d71801fdddfc78f7ac03ae43f6e5a8cbd89cb99
     dependencies:
     - name: idf
       require: private
-      version: '>=5.4'
+      version: '>=5.5.3'
     source:
       registry_url: https://components.espressif.com
       type: service
@@ -622,7 +622,7 @@ dependencies:
     - esp32p4
     - esp32h4
     - linux
-    version: 1.4.1
+    version: 1.5.0
   espressif/usb_host_hid:
     component_hash: a6c5366f9b6d80b0d5f56d085d62941464512e0968b96c5877e76a80fcc23f13
     dependencies:
@@ -709,6 +709,6 @@ direct_dependencies:
 - espressif/m5stack_tab5
 - espressif/usb_host_hid
 - idf
-manifest_hash: 5755acad4d3a8725c60b4319ceea721add0306f5fd76a87b20a6c44d8bfb8e44
+manifest_hash: 7eeb034eadf9e0b6474d3f1273833f578ba0a86113a015826c82d5e82d317078
 target: esp32p4
 version: 2.0.0

@@ -61,7 +61,7 @@ Wifi总开关：	Wifi总开关：	Wi-Fi:
 练耳	练耳	Ear Trainer
 组鼓	组鼓	Drum Kit
 AI导师	AI导师	AI Mentor
-答案之书	答案之书	Book & Tarot
+占卜	占卜	Divination
 语言/Language：	语言/Language：	Language:
 网络设置：	网络设置：	Network:
 全局重置：	全局重置：	Factory reset:
@@ -129,8 +129,9 @@ Hi，喵喵。	Hi，喵喵。	Hi, Miao Miao.
 时钟	时钟	Clock
 万年历	万年历	Calendar
 计时器	计时器	Timer
+答案之书	答案之书	Book of Answers
 答案之书&塔罗牌	答案之书&塔罗牌	Book & Tarot
-= 答案之书 =	= 答案之书 =	= Book of Answers =
+======\n答案之书\n======	======\n答案之书\n======	======\nAnswers\n======
 过去	过去	Past
 审判	审判	Judgement
 正位	正位	Upright
@@ -200,7 +201,7 @@ The Book of	The Book of	The Book of
 curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'
 ftp://123.456.789.222等待连接\nWifi为案松手的撒网数大	ftp://123.456.789.222等待连接\nWifi为案松手的撒网数大	ftp://123.456.789.222 waiting\nWi-Fi file transfer
 https://v1.hitokoto.cn/?c=f&encode=text	https://v1.hitokoto.cn/?c=f&encode=text	https://v1.hitokoto.cn/?c=f&encode=text
-string_wifi_connect_tip	string_wifi_connect_tip	string_wifi_connect_tip
+string_wifi_connect_tip	正在连接 Wi-Fi，请勿断电	Connecting to Wi-Fi, please wait
 xxx.mid	xxx.mid	xxx.mid
 丙午年六月大 初八 · 大暑	丙午年六月大 初八 · 大暑	Bingwu Year, 6th Lunar Month, Day 8 · Major Heat
 主选单\n时钟\n小钢琴\nAI导师\n禅模式	主选单\n时钟\n小钢琴\nAI导师\n禅模式	Main Menu\nClock\nTiny Piano\nAI Mentor\nZen Mode
@@ -220,6 +221,8 @@ xxx.mid	xxx.mid	xxx.mid
 局域网FTP文件管理：	局域网FTP文件管理：	LAN FTP file manager:
 已过500天	已过500天	500 days passed
 弹珠\n雨滴	弹珠\n雨滴	Pinball\nRaindrop
+00-大钢琴\n09-钟琴\n10-八音盒\n77-尺八	00-大钢琴\n09-钟琴\n10-八音盒\n77-尺八	00-Grand Piano\n09-Glockenspiel\n10-Music Box\n77-Shakuhachi
+1\n2\n3\n4\n5	1\n2\n3\n4\n5	1\n2\n3\n4\n5
 录音文件播放	录音文件播放	Recording Playback
 我们可以正式开启音乐旅途啦	我们可以正式开启音乐旅途啦	Let's officially start the music journey!
 按键矩阵\n模拟钢琴	按键矩阵\n模拟钢琴	Pad Matrix\nPiano Keys

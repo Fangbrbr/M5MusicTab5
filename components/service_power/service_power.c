@@ -226,12 +226,23 @@ static void __attribute__((constructor(101))) service_power_c6_early_enable(void
     gpio_set_pull_mode(C6_IOEXP_SCL_GPIO, GPIO_PULLUP_ONLY);
     gpio_set_level(C6_IOEXP_SCL_GPIO, 1);
 
+    /* Why: C6 独立供电独立运行，任何 P4 复位（看门狗/软复位/烧录/深睡唤醒）
+     * 都不会重启它；一旦楔死在 hosted 半开会话（2026-08 开机卡 70% 事故），
+     * 链路永久不可用。每次启动无条件断电 200ms 再上电，强制 C6 与 esp_hosted
+     * 从零同步；代价仅 200ms，换来所有复位路径行为一致（不猜复位源）。
+     * 上电复位时轨本来就没电，此操作等效于延长放电稳定时间，无害。 */
+    c6_ioexp_write_reg(C6_IOEXP_REG_IO_DIR, 0xFE);   /* P0 = output */
+    c6_ioexp_write_reg(C6_IOEXP_REG_OUT_HZ, 0xFE);   /* P0 = push-pull */
+    c6_ioexp_write_reg(C6_IOEXP_REG_OUT, 0x00);      /* P0 = 0 断电 */
+    esp_rom_delay_us(200 * 1000);
+
+
     /* 先写输出寄存器，避免方向切换为输出时产生低电平毛刺 */
     bool ok = c6_ioexp_write_reg(C6_IOEXP_REG_OUT, 0x01);   /* P0 = 1 */
     ok &= c6_ioexp_write_reg(C6_IOEXP_REG_IO_DIR, 0xFE);    /* P0 = output */
     ok &= c6_ioexp_write_reg(C6_IOEXP_REG_OUT_HZ, 0xFE);    /* P0 = push-pull */
 
-    ESP_EARLY_LOGI(TAG, "C6 Wi-Fi power early enable: %s", ok ? "ok" : "failed");
+    ESP_EARLY_LOGI(TAG, "C6 Wi-Fi power early enable (with reset): %s", ok ? "ok" : "failed");
 }
 #endif /* CONFIG_BOARD_HAS_POWER_MGMT */
 

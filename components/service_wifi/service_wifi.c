@@ -108,6 +108,11 @@ esp_err_t service_wifi_init(void)
         return ESP_OK;
     }
 
+    /* Trap: hosted 链路（GPIO15 复位 C6 + SDIO 卡初始化 + 等待从机就绪）
+     * 只在 esp_wifi_init 内部发起，此前任何探测都必然报 link not yet up——
+     * 禁止用探测结果门控 esp_wifi_init（2026-08 曾因此彻底断网）。
+     * esp_wifi_init 有界（最长约 30s 后返回 ESP_FAIL），内部已处理降级。 */
+
     esp_err_t ret = nvs_flash_init();
     if (ret != ESP_OK && ret != ESP_ERR_NVS_NO_FREE_PAGES &&
         ret != ESP_ERR_NVS_NEW_VERSION_FOUND) {

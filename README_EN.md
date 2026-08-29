@@ -27,7 +27,7 @@
 - **SF2 sample synthesizer** — real instrument sampling based on SoundFont 2; load custom soundfonts from the SD card (one-tap switching in Settings, last selection restored at boot), with polyphony optimizations for large soundfonts
 - **MP3 playback** — the Player app plays .mp3 files straight from the SD card (ID3 title display, auto-advance), full support for non-ASCII filenames
 - **Global MIDI bus** — USB Host, Bluetooth, and UART MIDI inputs with a decoupled producer/consumer architecture
-- **Performance recording & playback** — apps that support recording start/stop with a single tap; performances are saved to the SD card as .hmr (MIDI event streams) and replayed in the Player app
+- **Performance recording & playback** — apps that support recording start/stop with a single tap; performances are saved to the SD card as standard .mid (SMF) files, replayed in the Player app, and import directly into any DAW
 - **FTP wireless file management** — one-tap enable in Settings; manage the entire SD card over LAN with FileZilla / your OS file manager (transfer MIDI songs, pull performance recordings, upload/replace soundfonts)
 - **EEZ Studio visual UI** — fully isolated frontend/backend, WYSIWYG interface design
 - **Xiaozhi AI voice + MCP device control** — voice chat + device control (query device/firmware info, control brightness/volume/theme, launch apps)
@@ -154,13 +154,13 @@ Virtual drum kit + drum-pad matrix layouts, up to 5-finger multi-touch.
 
 ### 7. Player
 
-Three-mode player: SD music (.mp3) / MIDI files (.mid) / performance recordings (.hmr).
+Three-mode player: SD music (.mp3) / MIDI files (.mid) / performance recordings (.mid).
 
 **Usage:**
 - Three mutually exclusive mode buttons:
   - **Music**: scans `/sdcard/music` for .mp3 (falls back to SD root if missing)
   - **MIDI files**: scans `/sdcard/midi` for .mid (falls back to SD root if missing)
-  - **Recordings**: scans `/sdcard/record` for .hmr files
+  - **Recordings**: scans `/sdcard/record` for .mid recordings
 - Tap a file in the left list
 - Right side controls: previous / play-stop / next
 - Seekable progress bar
@@ -288,7 +288,7 @@ The firmware ships with a built-in GM soundfont (Florestan Basic GM GS) that wor
 
 ## FTP Wireless File Management
 
-A built-in FTP server exposes the entire SD card over LAN: push songs to the player, pull performance recordings (.hmr), upload/replace soundfonts — no card removal, no cables.
+A built-in FTP server exposes the entire SD card over LAN: push songs to the player, pull performance recordings (.mid), upload/replace soundfonts — no card removal, no cables.
 
 **Usage:**
 1. Make sure the device is on Wi-Fi (📶 in the status bar)
@@ -315,7 +315,7 @@ Each feature uses conventional directories on the SD card. **They are not auto-c
 |:---|:---|:---|
 | `/midi/` | Preferred scan dir for .mid files in "MIDI files" mode; falls back to SD root if missing | Manually (FTP), optional |
 | `/music/` | Preferred scan dir for .mp3 files in "Music" mode; falls back to SD root if missing | Manually (FTP), optional |
-| `/record/` | Performance recordings (.hmr) | Created by the recorder service on init |
+| `/record/` | Performance recordings (.mid, standard SMF) | Created by the recorder service on init |
 | `/soundfonts/` | Custom SF2 soundfonts (read by Settings → Soundfont) | Manually (FTP) |
 | `/ai_chat.txt` | AI chat log (appended when "chat logging" is enabled) | On first enable |
 | `/sys/src/` | Overrides firmware-embedded UI assets (fonts/images; same-named files on SD take priority) | Manually (FTP) |

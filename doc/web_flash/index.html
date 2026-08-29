@@ -204,13 +204,17 @@
         /* ---------- 语言切换器（右上角浮动按钮 + 下拉） ---------- */
         .lang-switch { position: fixed; top: 16px; right: 16px; z-index: 99; }
         .lang-btn {
-            background: var(--c-card); border: 1px solid var(--c-border); border-radius: 20px;
-            padding: 6px 12px; font-size: 18px; cursor: pointer;
-            box-shadow: 0 2px 8px rgba(120, 90, 40, 0.10); line-height: 1;
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--c-primary); border: 1px solid var(--c-primary-dark); border-radius: 22px;
+            padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+            color: #fff; line-height: 1;
+            box-shadow: 0 2px 10px rgba(200, 120, 30, 0.35);
         }
-        .lang-btn:hover { background: var(--c-tint); }
+        .lang-btn .globe { width: 18px; height: 18px; }
+        .lang-btn:hover { background: var(--c-primary-dark); }
+        .lang-btn:active { background: var(--c-primary-darker); }
         .lang-menu {
-            display: none; position: absolute; top: 42px; right: 0;
+            display: none; position: absolute; top: 48px; right: 0;
             background: var(--c-card); border: 1px solid var(--c-border); border-radius: 10px;
             box-shadow: 0 4px 16px rgba(120, 90, 40, 0.14); overflow: hidden; min-width: 120px;
         }
@@ -236,7 +240,7 @@
 <body>
 <!-- 语言切换器：右上角浮动按钮 + 下拉菜单（选项由 JS 按 I18N 字典构建） -->
 <div class="lang-switch">
-    <button class="lang-btn" id="langBtn" title="Language / 语言">🌐</button>
+    <button class="lang-btn" id="langBtn" title="Language / 语言"><svg class="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.4 4 5.7 4 9.5s-1.4 7.1-4 9.5c-2.6-2.4-4-5.7-4-9.5s1.4-7.1 4-9.5z"/></svg><span id="langBtnLabel">中文</span></button>
     <div class="lang-menu" id="langMenu"></div>
 </div>
 <div class="page">
@@ -401,7 +405,8 @@
 
     <div class="footer">
         <a href="https://github.com/Fangbrbr/M5MusicTab5" target="_blank" data-i18n="footer.repo">GitHub 仓库</a>
-        · <a href="https://github.com/Fangbrbr/M5MusicTab5/releases" target="_blank" data-i18n="footer.manual">下载固件手动烧录</a><br>
+        · <a href="https://github.com/Fangbrbr/M5MusicTab5/releases" target="_blank" data-i18n="footer.manual">下载固件手动烧录</a>
+        · <a href="mailto:fmil123@qq.com" data-i18n="footer.contact">联系作者：fmil123@qq.com</a><br>
         <span data-i18n="footer.brand">M5MusicTab5 在线烧录工具 · Powered by esptool-js 0.6.1</span>
     </div>
 </div>
@@ -487,6 +492,7 @@
             "log.count": "{0} 条",
             "footer.repo": "GitHub 仓库",
             "footer.manual": "下载固件手动烧录",
+            "footer.contact": "联系作者：fmil123@qq.com",
             "footer.brand": "M5MusicTab5 在线烧录工具 · Powered by esptool-js 0.6.1",
             "log.offset.invalid": "偏移地址格式无效：{0}",
             "cell.repick.title": "点击重新选择文件",
@@ -545,6 +551,7 @@
             "log.erase.fail": "擦除失败：{0}",
             "log.advanced.on": "高级模式：固件区已解锁，可自定义文件与偏移地址",
             "log.ready": "就绪：请选择串口并连接芯片；固件在点击「开始烧录」后自动从最新 Release 下载",
+            "log.lang.switched": "界面语言已切换为：{0}",
         },
         "en": {
             "page.title": "M5MusicTab5 Web Flasher",
@@ -598,6 +605,7 @@
             "log.count": (n) => `${n} ${n === 1 ? "entry" : "entries"}`,
             "footer.repo": "GitHub Repository",
             "footer.manual": "Download firmware for manual flashing",
+            "footer.contact": "Contact: fmil123@qq.com",
             "footer.brand": "M5MusicTab5 Web Flasher · Powered by esptool-js 0.6.1",
             "log.offset.invalid": "Invalid offset format: {0}",
             "cell.repick.title": "Click to choose a different file",
@@ -656,6 +664,7 @@
             "log.erase.fail": "Erase failed: {0}",
             "log.advanced.on": "Advanced mode: firmware area unlocked — custom files and offsets allowed",
             "log.ready": "Ready: select a serial port and connect. Firmware downloads automatically from the latest Release when you click Flash.",
+            "log.lang.switched": "UI language switched to {0}",
         },
     };
     /* 语言 ID -> 菜单显示（emoji 旗帜 + 语言名） */
@@ -694,6 +703,8 @@
         document.querySelectorAll("[data-i18n-title]").forEach((el) => {
             el.title = t(el.dataset.i18nTitle);
         });
+        /* 按钮上同步当前语言名，让入口常驻可辨 */
+        $("langBtnLabel").textContent = (LANG_META[curLang] || {}).name || curLang;
         /* 动态维护的控件文本随语言即时刷新（历史日志不追溯） */
         setConnUI(!!state.esploader);
         els.monitorBtn.querySelector("span").textContent = state.monitoring ? t("btn.monitor.stop") : t("btn.monitor");
@@ -714,9 +725,12 @@
             item.className = "lang-menu-item" + (id === curLang ? " active" : "");
             item.innerHTML = `<span class="flag">${meta.flag}</span><span>${meta.name}</span>`;
             item.onclick = () => {
-                applyLang(id);
-                buildLangMenu();
                 menu.classList.remove("show");
+                if (id === curLang) return;
+                applyLang(id);
+                /* 切换即追加一条新语言提示；历史日志保留不清空（切语言是自然行为，不应抹掉记录） */
+                log(t("log.lang.switched", (LANG_META[id] || {}).name || id), "dim");
+                buildLangMenu();
             };
             menu.appendChild(item);
         }

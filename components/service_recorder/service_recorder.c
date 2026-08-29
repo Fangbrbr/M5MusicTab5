@@ -1,11 +1,11 @@
 /**
  * @file service_recorder.c
- * @brief MIDI 总线录音服务实现
+ * @brief MIDI 总线录音服务实现（直录标准 SMF .mid）
  */
 
 #include "service_recorder.h"
 #include "engine_midi.h"
-#include "engine_midi_rec.h"
+#include "engine_midi_smf_write.h"
 #include "service_rtc.h"
 #include "service_sd.h"
 #include "esp_heap_caps.h"
@@ -25,7 +25,6 @@ static const char *TAG = "service_recorder";
 #define RECORDER_QUEUE_LEN              256
 #define RECORDER_MAX_EVENTS_PER_CYCLE   32
 #define RECORDER_PATH_MAX               512
-#define RECORDER_TAG_MAX                16
 
 /**
  * @brief 内部状态机
@@ -38,6 +37,13 @@ typedef enum {
 
 #define RECORDER_MIN_DURATION_MS        5000
 
+/* 只录通道消息：总线上的内部 SysEx 帧（触摸/App 控制）不是音乐内容，
+ * 且触摸流速率极高，订阅即过滤可显著降低队列压力 */
+#define RECORDER_SUBSCRIBE_MASK  (ENGINE_MIDI_MASK_NOTE_OFF | ENGINE_MIDI_MASK_NOTE_ON | \
+                                  ENGINE_MIDI_MASK_POLY_PRESSURE | ENGINE_MIDI_MASK_CONTROL_CHANGE | \
+                                  ENGINE_MIDI_MASK_PROGRAM_CHANGE | ENGINE_MIDI_MASK_CHANNEL_PRESSURE | \
+                                  ENGINE_MIDI_MASK_PITCH_BEND)
+
 static uint8_t s_shadow_bank_msb[16];
 static uint8_t s_shadow_bank_lsb[16];
 static uint8_t s_shadow_pc[16];
@@ -47,27 +53,18 @@ static struct {
     SemaphoreHandle_t mutex;
     QueueHandle_t queue;
     FILE *file;
+    engine_midi_smf_writer_t writer;
     TickType_t start_tick;
-    uint32_t start_time_epoch;
     uint32_t event_count;
     uint32_t duration_ms;
     uint32_t channels_used;
-    uint32_t data_crc;
-    char source_tag[RECORDER_TAG_MAX];
     char last_path[RECORDER_PATH_MAX];
-    uint8_t channel_init[16][4];
 } s_rec = { 0 };
 
 static void recorder_midi_cb(const engine_midi_event_t *evt, void *user_data);
-static void recorder_pack_header(uint8_t *out, uint32_t start_time_epoch, uint32_t duration_ms,
-                                 uint32_t event_count, uint32_t channels_used,
-                                 uint32_t data_crc, const char *source_tag,
-                                 const uint8_t channel_init[16][4]);
-static size_t recorder_pack_event(uint8_t *out, const engine_midi_event_t *evt, uint32_t rel_ms);
 static service_recorder_result_t recorder_write_events(int max_events);
 static service_recorder_result_t recorder_finalize(void);
-static void write_u32_le(uint8_t *p, uint32_t v);
-static void write_u16_le(uint8_t *p, uint16_t v);
+static bool recorder_write_snapshot(void);
 
 service_recorder_result_t service_recorder_init(void)
 {
@@ -95,7 +92,7 @@ service_recorder_result_t service_recorder_init(void)
         return RECORDER_ERR_NO_MEM;
     }
 
-    esp_err_t sub = engine_midi_subscribe(ENGINE_MIDI_MASK_ALL, 0xFFFF, recorder_midi_cb, NULL);
+    esp_err_t sub = engine_midi_subscribe(RECORDER_SUBSCRIBE_MASK, 0xFFFF, recorder_midi_cb, NULL);
     if (sub != ESP_OK) {
         vQueueDelete(s_rec.queue);
         s_rec.queue = NULL;
@@ -154,13 +151,10 @@ service_recorder_result_t service_recorder_start(const char *source_tag)
             } else {
                 memset(&tm_now, 0, sizeof(tm_now));
             }
-        } else {
-            now = mktime(&tm_now);
         }
-        s_rec.start_time_epoch = (uint32_t)now;
 
         char fname[64];
-        snprintf(fname, sizeof(fname), "%s_%04d%02d%02d%02d%02d%02d.hmr",
+        snprintf(fname, sizeof(fname), "%s_%04d%02d%02d%02d%02d%02d.mid",
                  source_tag,
                  tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday,
                  tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec);
@@ -184,19 +178,11 @@ service_recorder_result_t service_recorder_start(const char *source_tag)
             break;
         }
 
-        for (int ch = 0; ch < 16; ch++) {
-            s_rec.channel_init[ch][ENGINE_MIDI_REC_CH_INIT_BANK_MSB] = s_shadow_bank_msb[ch];
-            s_rec.channel_init[ch][ENGINE_MIDI_REC_CH_INIT_BANK_LSB] = s_shadow_bank_lsb[ch];
-            s_rec.channel_init[ch][ENGINE_MIDI_REC_CH_INIT_PROGRAM]  = s_shadow_pc[ch];
-            s_rec.channel_init[ch][ENGINE_MIDI_REC_CH_INIT_RESERVED] = ENGINE_MIDI_REC_CH_INIT_NONE;
-        }
-
-        uint8_t hdr[ENGINE_MIDI_REC_HEADER_SIZE];
-        memset(hdr, 0, sizeof(hdr));
-        recorder_pack_header(hdr, s_rec.start_time_epoch, 0, 0, 0, 0, source_tag, s_rec.channel_init);
-        if (fwrite(hdr, 1, sizeof(hdr), s_rec.file) != sizeof(hdr)) {
+        if (engine_midi_smf_writer_begin(&s_rec.writer, s_rec.file, source_tag) != ESP_OK ||
+            !recorder_write_snapshot()) {
             fclose(s_rec.file);
             s_rec.file = NULL;
+            remove(s_rec.last_path);
             ret = RECORDER_ERR_WRITE;
             break;
         }
@@ -204,9 +190,6 @@ service_recorder_result_t service_recorder_start(const char *source_tag)
         s_rec.event_count = 0;
         s_rec.duration_ms = 0;
         s_rec.channels_used = 0;
-        s_rec.data_crc = ENGINE_MIDI_REC_CRC32_INIT;
-        strncpy(s_rec.source_tag, source_tag, sizeof(s_rec.source_tag) - 1);
-        s_rec.source_tag[sizeof(s_rec.source_tag) - 1] = '\0';
         s_rec.start_tick = xTaskGetTickCount();
         s_rec.state = RECORDER_STATE_RECORDING;
     } while (0);
@@ -348,7 +331,6 @@ static service_recorder_result_t recorder_write_events(int max_events)
         return RECORDER_OK;
     }
 
-    uint8_t ev_buf[12 + ENGINE_MIDI_SYSEX_BUF_SIZE];
     int written = 0;
 
     while (written < max_events) {
@@ -367,19 +349,14 @@ static service_recorder_result_t recorder_write_events(int max_events)
             s_rec.duration_ms = rel_ms;
         }
 
-        size_t ev_size = recorder_pack_event(ev_buf, &evt, rel_ms);
-        if (fwrite(ev_buf, 1, ev_size, s_rec.file) != ev_size) {
+        if (engine_midi_smf_writer_event(&s_rec.writer, rel_ms, evt.type, evt.channel,
+                                         evt.data1, evt.data2, evt.value) != ESP_OK) {
             ESP_LOGE(TAG, "write event failed");
             return RECORDER_ERR_WRITE;
         }
 
-        s_rec.data_crc = engine_midi_rec_crc32_update(s_rec.data_crc, ev_buf, ev_size);
         s_rec.event_count++;
-
-        if (evt.type < 0xF0) {
-            s_rec.channels_used |= (1U << (evt.channel & 0x0F));
-        }
-
+        s_rec.channels_used |= (1U << (evt.channel & 0x0F));
         written++;
     }
 
@@ -406,28 +383,9 @@ static service_recorder_result_t recorder_finalize(void)
         return RECORDER_ERR_TOO_SHORT;
     }
 
-    if (fseek(s_rec.file, 0, SEEK_SET) != 0) {
-        return RECORDER_ERR_WRITE;
-    }
-
-    uint8_t hdr[ENGINE_MIDI_REC_HEADER_SIZE];
-    memset(hdr, 0, sizeof(hdr));
-    recorder_pack_header(hdr, s_rec.start_time_epoch, s_rec.duration_ms,
-                         s_rec.event_count, s_rec.channels_used,
-                         engine_midi_rec_crc32_final(s_rec.data_crc),
-                         s_rec.source_tag, s_rec.channel_init);
-    if (fwrite(hdr, 1, sizeof(hdr), s_rec.file) != sizeof(hdr)) {
-        return RECORDER_ERR_WRITE;
-    }
-
-    /* 头部覆盖后文件指针位于 header 末尾，必须跳到文件末尾再追加 footer，
-     * 否则 footer 会覆盖前 4 字节事件数据导致解析失败。 */
-    if (fseek(s_rec.file, 0, SEEK_END) != 0) {
-        return RECORDER_ERR_WRITE;
-    }
-
-    uint8_t footer[4] = { 'E', 'N', 'D', 'R' };
-    if (fwrite(footer, 1, 4, s_rec.file) != 4) {
+    if (engine_midi_smf_writer_end(&s_rec.writer) != ESP_OK) {
+        fclose(s_rec.file);
+        s_rec.file = NULL;
         return RECORDER_ERR_WRITE;
     }
 
@@ -442,65 +400,26 @@ static service_recorder_result_t recorder_finalize(void)
     return RECORDER_OK;
 }
 
-static void recorder_pack_header(uint8_t *out, uint32_t start_time_epoch, uint32_t duration_ms,
-                                 uint32_t event_count, uint32_t channels_used,
-                                 uint32_t data_crc, const char *source_tag,
-                                 const uint8_t channel_init[16][4])
+/* 初始音色快照落成 tick 0 的真实 CC/PC 事件：SMF 没有 hmr 式的头快照位，
+ * 任何标准播放器（含本机 engine_midi_smf）都能自然恢复录制时音色 */
+static bool recorder_write_snapshot(void)
 {
-    memcpy(out, ENGINE_MIDI_REC_MAGIC, 4);
-    out[4] = ENGINE_MIDI_REC_VERSION;
-    out[5] = 0;
-    out[6] = 0;
-    out[7] = 0;
-    write_u32_le(&out[8], ENGINE_MIDI_REC_HEADER_SIZE);
-    write_u32_le(&out[12], start_time_epoch);
-    write_u32_le(&out[16], duration_ms);
-    write_u32_le(&out[20], event_count);
-    write_u32_le(&out[24], channels_used);
-    write_u32_le(&out[28], data_crc);
-    write_u32_le(&out[32], 0);
-    memset(&out[36], 0, 16);
-    if (source_tag != NULL) {
-        size_t tag_len = strnlen(source_tag, 15);
-        memcpy(&out[36], source_tag, tag_len);
+    for (int ch = 0; ch < 16; ch++) {
+        if (s_shadow_bank_msb[ch] != 0xFF &&
+            engine_midi_smf_writer_event(&s_rec.writer, 0, ENGINE_MIDI_MSG_CONTROL_CHANGE,
+                                         (uint8_t)ch, 0, s_shadow_bank_msb[ch], 0) != ESP_OK) {
+            return false;
+        }
+        if (s_shadow_bank_lsb[ch] != 0xFF &&
+            engine_midi_smf_writer_event(&s_rec.writer, 0, ENGINE_MIDI_MSG_CONTROL_CHANGE,
+                                         (uint8_t)ch, 32, s_shadow_bank_lsb[ch], 0) != ESP_OK) {
+            return false;
+        }
+        if (s_shadow_pc[ch] != 0xFF &&
+            engine_midi_smf_writer_event(&s_rec.writer, 0, ENGINE_MIDI_MSG_PROGRAM_CHANGE,
+                                         (uint8_t)ch, s_shadow_pc[ch], 0, 0) != ESP_OK) {
+            return false;
+        }
     }
-    memset(&out[52], 0, 12);
-    if (channel_init != NULL) {
-        memcpy(&out[64], channel_init, 16 * 4);
-    } else {
-        memset(&out[64], 0xFF, 16 * 4);
-    }
-
-    uint32_t crc = engine_midi_rec_crc32(out, ENGINE_MIDI_REC_HEADER_SIZE);
-    write_u32_le(&out[32], crc);
-}
-
-static size_t recorder_pack_event(uint8_t *out, const engine_midi_event_t *evt, uint32_t rel_ms)
-{
-    write_u32_le(&out[0], rel_ms);
-    out[4] = evt->type;
-    out[5] = evt->channel;
-    out[6] = evt->data1;
-    out[7] = evt->data2;
-    write_u16_le(&out[8], evt->value);
-    out[10] = evt->sysex_len;
-    out[11] = 0;
-    if (evt->sysex_len > 0) {
-        memcpy(&out[12], evt->sysex_data, evt->sysex_len);
-    }
-    return 12 + evt->sysex_len;
-}
-
-static void write_u32_le(uint8_t *p, uint32_t v)
-{
-    p[0] = (uint8_t)(v & 0xFF);
-    p[1] = (uint8_t)((v >> 8) & 0xFF);
-    p[2] = (uint8_t)((v >> 16) & 0xFF);
-    p[3] = (uint8_t)((v >> 24) & 0xFF);
-}
-
-static void write_u16_le(uint8_t *p, uint16_t v)
-{
-    p[0] = (uint8_t)(v & 0xFF);
-    p[1] = (uint8_t)((v >> 8) & 0xFF);
+    return true;
 }

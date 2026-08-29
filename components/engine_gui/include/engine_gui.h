@@ -281,6 +281,13 @@ void engine_gui_sync_volume(int32_t value);
  */
 bool engine_gui_get_touch_event(app_input_event_t *out);
 
+/**
+ * @brief 鏌ヨ鎸囧畾 finger 褰撳墠鐨勮Е鎽稿姏搴︼紙MIDI velocity 0-127锛? *
+ * 渚涚粫杩?engine_gui 瑙︽懜闃熷垪鐨勮皟鐢ㄨ矾寰勪娇鐢紙濡?LVGL 鎸夐挳鍥炶皟锛夈€? * 鐢?multi_touch_read_cb 鍦?DOWN/MOVE 鏃舵洿鏂般€乁P 鏃舵竻闆躲€? *
+ * @param[in] finger_id 瑙︽懜鎵嬫寚绱㈠紩锛?~MULTI_TOUCH_MAX_POINTS-1锛? * @return 褰撳墠 pressure锛沠inger_id 瓒婄晫鎴栨棤瑙︽懜杩斿洖 0
+ */
+uint8_t engine_gui_get_finger_pressure(uint8_t finger_id);
+
 #ifdef __cplusplus
 }
 #endif

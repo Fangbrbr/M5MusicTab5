@@ -1,8 +1,9 @@
 /**
  * @file app_drum_pad.c
- * @brief 鼓垫 App：虚拟鼓组（canvas 圆形鼓垫）与鼓垫矩阵（panel+button）双布局
+ * @brief 鼓垫 App：虚拟鼓组（普通 LVGL 圆形对象，父容器整体开关）与鼓垫矩阵（panel+button）双布局
  *
- * 虚拟鼓组改为 drum_panel_v canvas 绘制圆形鼓垫，触摸直接按坐标命中；
+ * 虚拟鼓组以普通圆形 lv_obj 绘制，不再使用常驻像素缓冲的 canvas（省 ~1.3MB PSRAM）；
+ * 背景 + 8 个圆挂在同一个父容器下，隐藏父容器即整体切换回矩阵布局。触摸仍按坐标圆心命中。
  * 鼓垫矩阵保持原有 drum_panel_m + LVGL 按钮事件链路不变。
  * 所有鼓键按下即按固定 GM 映射发声（10 通道），sound_type 预留未接入。
  */
@@ -11,7 +12,6 @@
 #include "app_manager.h"
 #include "engine_gui.h"
 #include "engine_midi.h"
-#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_lvgl_port.h"
@@ -42,18 +42,25 @@ static const char *TAG = "app_drum_pad";
 #define DRUM_CHANNEL            9
 
 /* 布局模式 */
-#define DRUM_LAYOUT_VKIT        0   /* 虚拟鼓组：canvas 圆形鼓垫 */
+#define DRUM_LAYOUT_VKIT        0   /* 虚拟鼓组：EEZ 静态圆形 panel，后端仅坐标命中 */
 #define DRUM_LAYOUT_MATRIX      1   /* 鼓垫矩阵：保留原 panel+button */
 
-/* 主题配色与固定色（金色不在 EEZ 主题表，直接写死） */
-#define DRUM_C_BG               COLOR_BG_PRIMARY
-#define DRUM_C_LABEL            COLOR_TEXT_PRIMARY
-#define DRUM_C_GOLD             0xFFD700U
-#define DRUM_C_GOLD_GRAD        0xA56D41U
-#define DRUM_C_WHITE            0xF7F7F7U
-#define DRUM_C_SNARE_BG         0xE9E9ECU
-#define DRUM_C_SNARE_BORDER     0x9C9999U
-#define DRUM_C_FT_BORDER        0x000000U
+/* 虚拟鼓组命中表：圆心/半径从 EEZ 绑定的圆形 panel 运行时取坐标构建，EEZ 排版即真值。
+ * 顺序按视觉自上而下（EEZ 中后创建的圆绘制在上层），重叠区优先命中上层圆 */
+#define DRUM_VKIT_PAD_COUNT 8
+typedef struct {
+    int16_t cx;
+    int16_t cy;
+    int16_t r;
+    uint8_t note;
+} drum_hit_t;
+
+static const uint8_t s_vkit_notes[DRUM_VKIT_PAD_COUNT] = {
+    DRUM_NOTE_CRASH, DRUM_NOTE_CLOSEDHH, DRUM_NOTE_RIDE, DRUM_NOTE_FLOORTOM,
+    DRUM_NOTE_MIDTOM, DRUM_NOTE_SNARE, DRUM_NOTE_HIGHTOM, DRUM_NOTE_KICK,
+};
+static drum_hit_t s_vkit_hit[DRUM_VKIT_PAD_COUNT];
+static int s_vkit_hit_count = 0;
 
 typedef struct {
     uint8_t note;
@@ -61,33 +68,15 @@ typedef struct {
 } drum_active_note_t;
 
 typedef struct {
-    const char *label;
-    uint8_t note;
-    int16_t x;              /* 圆外接矩形左上角 canvas 坐标 */
-    int16_t y;
-    int16_t w;
-    int16_t h;
-    uint32_t bg_color;      /* lv_color_hex 输入值，运行期转换 */
-    uint32_t bg_grad_color;
-    bool use_grad;          /* true 时使用 bg_color -> bg_grad_color 纵向渐变 */
-    uint32_t border_color;
-    int16_t border_width;
-} drum_pad_def_t;
-
-/* 虚拟鼓组布局（8 垫）——坐标/尺寸/颜色来自 EEZ 原设计 */
-static const drum_pad_def_t s_pads_vkit[] = {
-    { "Crash",    DRUM_NOTE_CRASH,    148,    0, 240, 240, DRUM_C_GOLD,     DRUM_C_GOLD_GRAD, true,  DRUM_C_GOLD,        0 },
-    { "HiHat",    DRUM_NOTE_CLOSEDHH,   3,  163, 220, 220, DRUM_C_GOLD,     DRUM_C_GOLD_GRAD, true,  DRUM_C_GOLD,        0 },
-    { "Ride",     DRUM_NOTE_RIDE,     879,   26, 300, 300, DRUM_C_GOLD,     DRUM_C_GOLD_GRAD, true,  DRUM_C_GOLD,        0 },
-    { "Kick",     DRUM_NOTE_KICK,     408,  241, 360, 360, DRUM_C_WHITE,    DRUM_C_WHITE,      false, DRUM_C_WHITE,      10 },
-    { "HiTom",    DRUM_NOTE_HIGHTOM,  405,   86, 166, 166, DRUM_C_WHITE,    DRUM_C_WHITE,      false, DRUM_C_WHITE,       0 },
-    { "MidTom",   DRUM_NOTE_MIDTOM,   605,   86, 166, 166, DRUM_C_WHITE,    DRUM_C_WHITE,      false, DRUM_C_WHITE,       0 },
-    { "Snare",    DRUM_NOTE_SNARE,    176,  320, 240, 240, DRUM_C_SNARE_BG, DRUM_C_SNARE_BG,  false, DRUM_C_SNARE_BORDER, 6 },
-    { "FloorTom", DRUM_NOTE_FLOORTOM, 763,  297, 260, 260, DRUM_C_WHITE,    DRUM_C_WHITE,      false, DRUM_C_FT_BORDER,   8 },
-};
-
-typedef struct {
-    lv_obj_t *panel_v;
+    lv_obj_t *vkit_wrap;        /* 虚拟鼓组背景容器，隐藏即整体切回矩阵 */
+    lv_obj_t *vkit_crash;
+    lv_obj_t *vkit_hihat;
+    lv_obj_t *vkit_ride;
+    lv_obj_t *vkit_kick;        /* EEZ 导入对象名为 drum_vkit_ */
+    lv_obj_t *vkit_hitom;
+    lv_obj_t *vkit_midtom;
+    lv_obj_t *vkit_snare;
+    lv_obj_t *vkit_floortom;
     lv_obj_t *panel_m;
     lv_obj_t *crash_m;
     lv_obj_t *clap_m;
@@ -109,8 +98,16 @@ typedef struct {
 static ui_screen_drum_t s_drum_ui = {0};
 
 static const widget_binding_t s_drum_bindings[] = {
-    WIDGET_BIND(ui_screen_drum_t, panel_v,     "drum_panel_v",      WIDGET_KIND_CANVAS),
-    WIDGET_BIND(ui_screen_drum_t, panel_m,     "drum_panel_m",      WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_wrap,    "drum_panel_vkit",   WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_crash,   "drum_vkit_crash",   WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_hihat,   "drum_vkit_hihat",   WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_ride,    "drum_vkit_ride",    WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_kick,    "drum_vkit_",        WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_hitom,   "drum_vkit_hitom",   WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_midtom,  "drum_vkit_midtom",  WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_snare,   "drum_vkit_snare",   WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, vkit_floortom, "drum_vkit_floortom", WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_drum_t, panel_m,      "drum_panel_m",      WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_drum_t, crash_m,     "drum_crash_m",      WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_drum_t, clap_m,      "drum_clap_m",       WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_drum_t, openhht_m,   "drum_openhht_m",    WIDGET_KIND_ANY),
@@ -135,20 +132,11 @@ typedef struct {
     drum_active_note_t active[DRUM_ACTIVE_MAX];
     int active_count;
     int8_t finger_pad[DRUM_TOUCH_MAX_FINGERS]; /* -1 表示未按下 */
-    void *canvas_buf;
-    int canvas_w;
-    int canvas_h;
-    int canvas_x;
-    int canvas_y;
-    bool canvas_attempted;      /* 虚拟鼓组 canvas 已尝试分配（失败不再重试，降级回矩阵布局） */
     bool recording_self;        /* 本 App 发起的录制 */
     bool recording_stop_pending;  /* 录制已停止，等待 finalize 后提示 */
 } drum_state_t;
 
 static drum_state_t s_drum = {0};
-
-/* 1x1 占位 buffer，用于释放真实 canvas buffer 后避免对象悬空指向已释放内存 */
-static uint16_t s_canvas_dummy_buf[1] = {0};
 
 /* GM 鼓组 program 映射：与 EEZ drum_sound_type 下拉项一一对应
  * （000-标准/008-Room/016-Power/024-Electronic/025-TR-808/032-Jazz/040-Brush/048-Orchestra/056-SFX） */
@@ -247,146 +235,52 @@ static void drum_process_notes(void)
     s_drum.active_count = write;
 }
 
-/* -------------------- canvas 绘制（仅虚拟鼓组模式） -------------------- */
+/* -------------------- 虚拟鼓组命中表（仅虚拟鼓组模式） -------------------- */
 
-static void drum_draw_canvas(lv_obj_t *canvas)
+/* 读取 EEZ 绑定的 8 个圆形 panel 实时坐标，构建圆心命中表。
+ * EEZ 排版即真值：改布局无需同步 C 端静态常量。
+ * lv_obj_get_coords 返回屏幕逻辑绝对坐标，命中检测直接与触摸事件绝对坐标比对。 */
+static bool drum_build_hit_table(void)
 {
-    int w = s_drum.canvas_w;
-    int h = s_drum.canvas_h;
-    if (w <= 0 || h <= 0) {
-        return;
+    if (s_drum_ui.vkit_wrap == NULL) {
+        return false;
     }
-
-    lv_canvas_fill_bg(canvas, engine_gui_theme_color(DRUM_C_BG), LV_OPA_COVER);
-
-    lv_layer_t layer;
-    lv_canvas_init_layer(canvas, &layer);
-
-    int count = (int)(sizeof(s_pads_vkit) / sizeof(s_pads_vkit[0]));
-
-    lv_draw_label_dsc_t label_dsc;
-    lv_draw_label_dsc_init(&label_dsc);
-    label_dsc.font = &lv_font_montserrat_14;
-    label_dsc.color = engine_gui_theme_color(DRUM_C_LABEL);
-    label_dsc.align = LV_TEXT_ALIGN_CENTER;
-
-    for (int i = 0; i < count; i++) {
-        const drum_pad_def_t *pad = &s_pads_vkit[i];
-        int32_t cx = (int32_t)pad->x + pad->w / 2;
-        int32_t cy = (int32_t)pad->y + pad->h / 2;
-        int32_t r = (pad->w < pad->h ? pad->w : pad->h) / 2;
-
-        lv_draw_rect_dsc_t rect_dsc;
-        lv_draw_rect_dsc_init(&rect_dsc);
-        rect_dsc.bg_color = lv_color_hex(pad->bg_color);
-        rect_dsc.bg_opa = LV_OPA_COVER;
-
-        if (pad->use_grad) {
-            rect_dsc.bg_grad.stops[0].color = lv_color_hex(pad->bg_color);
-            rect_dsc.bg_grad.stops[0].opa = LV_OPA_COVER;
-            rect_dsc.bg_grad.stops[0].frac = 0;
-            rect_dsc.bg_grad.stops[1].color = lv_color_hex(pad->bg_grad_color);
-            rect_dsc.bg_grad.stops[1].opa = LV_OPA_COVER;
-            rect_dsc.bg_grad.stops[1].frac = 255;
-            rect_dsc.bg_grad.stops_count = 2;
-            rect_dsc.bg_grad.dir = LV_GRAD_DIR_VER;
+    /* 顺序与 s_vkit_notes 一致：视觉自上而下（EEZ 中后创建者在上层） */
+    lv_obj_t *objs[DRUM_VKIT_PAD_COUNT] = {
+        s_drum_ui.vkit_crash, s_drum_ui.vkit_hihat, s_drum_ui.vkit_ride,
+        s_drum_ui.vkit_floortom, s_drum_ui.vkit_midtom, s_drum_ui.vkit_snare,
+        s_drum_ui.vkit_hitom, s_drum_ui.vkit_kick,
+    };
+    for (int i = 0; i < DRUM_VKIT_PAD_COUNT; i++) {
+        if (objs[i] == NULL) {
+            return false;
         }
-
-        rect_dsc.border_color = lv_color_hex(pad->border_color);
-        rect_dsc.border_width = pad->border_width;
-        rect_dsc.border_opa = LV_OPA_COVER;
-        rect_dsc.radius = LV_RADIUS_CIRCLE;
-
-        lv_area_t area = {
-            cx - r, cy - r,
-            cx + r, cy + r
-        };
-        lv_draw_rect(&layer, &rect_dsc, &area);
-
-        label_dsc.text = pad->label;
-        lv_area_t text_area = {
-            cx - r, cy - 10,
-            cx + r, cy + 10
-        };
-        lv_draw_label(&layer, &label_dsc, &text_area);
     }
 
-    lv_canvas_finish_layer(canvas, &layer);
-}
+    /* 首帧布局可能尚未解析（容器为百分比尺寸），强制完成布局后再取坐标 */
+    lv_obj_update_layout(s_drum_ui.vkit_wrap);
 
-static void drum_canvas_redraw(void)
-{
-    if (s_drum_ui.panel_v == NULL || s_drum.canvas_buf == NULL) {
-        return;
+    for (int i = 0; i < DRUM_VKIT_PAD_COUNT; i++) {
+        lv_area_t a;
+        lv_obj_get_coords(objs[i], &a);
+        int w = (int)lv_area_get_width(&a);
+        int h = (int)lv_area_get_height(&a);
+        s_vkit_hit[i].r = (int16_t)((w < h ? w : h) / 2);
+        s_vkit_hit[i].cx = (int16_t)(a.x1 + s_vkit_hit[i].r);
+        s_vkit_hit[i].cy = (int16_t)(a.y1 + s_vkit_hit[i].r);
+        s_vkit_hit[i].note = s_vkit_notes[i];
     }
-    lvgl_port_lock(portMAX_DELAY);
-    drum_draw_canvas(s_drum_ui.panel_v);
-    lv_obj_clear_flag(s_drum_ui.panel_v, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_invalidate(s_drum_ui.panel_v);
-    lvgl_port_unlock();
-}
-
-static bool drum_canvas_ensure_buffer(void)
-{
-    if (s_drum.canvas_buf != NULL || s_drum_ui.panel_v == NULL) {
-        return s_drum.canvas_buf != NULL;
-    }
-
-    /* 分配失败不再重试（大音源挤占 PSRAM 时每周期刷屏告警）；
-     * 降级为鼓垫矩阵布局继续可用 */
-    if (s_drum.canvas_attempted) {
-        return false;
-    }
-    s_drum.canvas_attempted = true;
-
-    lv_area_t coords;
-    lvgl_port_lock(portMAX_DELAY);
-    lv_obj_get_coords(s_drum_ui.panel_v, &coords);
-    lvgl_port_unlock();
-
-    int w = (int)lv_area_get_width(&coords);
-    int h = (int)lv_area_get_height(&coords);
-    if (w <= 0 || h <= 0) {
-        return false;
-    }
-
-    void *buf = heap_caps_calloc(1, (size_t)w * h * 2, MALLOC_CAP_SPIRAM);
-    if (buf == NULL) {
-        ESP_LOGW(TAG, "canvas buf alloc failed, fallback to matrix layout");
-        return false;
-    }
-
-    /* 分配、挂 buffer、首次绘制必须在同一个 lvgl lock 内完成，
-     * 防止 unlock 后 task_gui 先刷新一帧脏数据。 */
-    lvgl_port_lock(portMAX_DELAY);
-    lv_canvas_set_buffer(s_drum_ui.panel_v, buf, (uint16_t)w, (uint16_t)h,
-                         LV_COLOR_FORMAT_RGB565);
-    s_drum.canvas_buf = buf;
-    s_drum.canvas_w = w;
-    s_drum.canvas_h = h;
-    s_drum.canvas_x = coords.x1;
-    s_drum.canvas_y = coords.y1;
-    drum_draw_canvas(s_drum_ui.panel_v);
-    lv_obj_invalidate(s_drum_ui.panel_v);
-    lvgl_port_unlock();
-
-    ESP_LOGI(TAG, "canvas buffer set %dx%d at %d,%d", w, h, s_drum.canvas_x, s_drum.canvas_y);
+    s_vkit_hit_count = DRUM_VKIT_PAD_COUNT;
     return true;
 }
 
-/* 命中检测，返回 pad 索引或 -1 */
+/* 命中检测，返回命中表索引或 -1 */
 static int drum_hit_pad(int16_t x, int16_t y)
 {
-    int count = (int)(sizeof(s_pads_vkit) / sizeof(s_pads_vkit[0]));
-
-    for (int i = 0; i < count; i++) {
-        const drum_pad_def_t *pad = &s_pads_vkit[i];
-        int32_t cx = (int32_t)pad->x + pad->w / 2;
-        int32_t cy = (int32_t)pad->y + pad->h / 2;
-        int32_t r = (pad->w < pad->h ? pad->w : pad->h) / 2;
-        int32_t dx = x - cx;
-        int32_t dy = y - cy;
-        if (dx * dx + dy * dy <= r * r) {
+    for (int i = 0; i < s_vkit_hit_count; i++) {
+        int32_t dx = x - s_vkit_hit[i].cx;
+        int32_t dy = y - s_vkit_hit[i].cy;
+        if (dx * dx + dy * dy <= (int32_t)s_vkit_hit[i].r * s_vkit_hit[i].r) {
             return i;
         }
     }
@@ -399,15 +293,15 @@ static void drum_apply_display(void)
 {
     lvgl_port_lock(portMAX_DELAY);
     if (s_drum.display == DRUM_LAYOUT_VKIT) {
-        if (s_drum_ui.panel_v != NULL) {
-            lv_obj_clear_flag(s_drum_ui.panel_v, LV_OBJ_FLAG_HIDDEN);
+        if (s_drum_ui.vkit_wrap != NULL) {
+            lv_obj_clear_flag(s_drum_ui.vkit_wrap, LV_OBJ_FLAG_HIDDEN);
         }
         if (s_drum_ui.panel_m != NULL) {
             lv_obj_add_flag(s_drum_ui.panel_m, LV_OBJ_FLAG_HIDDEN);
         }
     } else {
-        if (s_drum_ui.panel_v != NULL) {
-            lv_obj_add_flag(s_drum_ui.panel_v, LV_OBJ_FLAG_HIDDEN);
+        if (s_drum_ui.vkit_wrap != NULL) {
+            lv_obj_add_flag(s_drum_ui.vkit_wrap, LV_OBJ_FLAG_HIDDEN);
         }
         if (s_drum_ui.panel_m != NULL) {
             lv_obj_clear_flag(s_drum_ui.panel_m, LV_OBJ_FLAG_HIDDEN);
@@ -462,11 +356,6 @@ static void drum_unregister_matrix_events(void)
     }
 }
 
-/* 首帧拆分倒计时（on_update 周期数）：VKIT canvas 分配/绘制推迟 ~30ms，
- * 让全屏背景先上屏（防 DPI underrun 闪屏）。切屏时 canvas 已被 engine_gui
- * 统一隐藏，推迟期间不会显示未初始化缓冲。 */
-static uint8_t s_canvas_defer = 0;
-
 static bool app_drum_pad_on_init(app_base_t *self, void *screen_ctx)
 {
     (void)self;
@@ -506,11 +395,8 @@ static bool app_drum_pad_on_init(app_base_t *self, void *screen_ctx)
         lv_obj_add_event_cb(s_drum_ui.set_btn_return, app_drum_pad_set_close_cb, LV_EVENT_CLICKED, NULL);
     }
     drum_register_matrix_events(self);
+    drum_build_hit_table();
     lvgl_port_unlock();
-
-    /* 虚拟鼓组模式的 canvas 分配/绘制推迟到 on_update 倒计时结束（首帧拆分，
-     * 见 s_canvas_defer）；切屏时 canvas 已被 engine_gui 统一隐藏 */
-    s_canvas_defer = 3;
 
     drum_apply_display();
     return true;
@@ -526,7 +412,7 @@ static void app_drum_pad_on_input(app_base_t *self, const app_input_event_t *evt
     }
 
     /* 矩阵模式保持 LVGL 按钮事件，不处理坐标命中 */
-    if (s_drum.display != DRUM_LAYOUT_VKIT || s_drum.canvas_buf == NULL) {
+    if (s_drum.display != DRUM_LAYOUT_VKIT || s_drum_ui.vkit_wrap == NULL) {
         return;
     }
 
@@ -540,9 +426,8 @@ static void app_drum_pad_on_input(app_base_t *self, const app_input_event_t *evt
         return;
     }
 
-    int16_t local_x = evt->x - s_drum.canvas_x;
-    int16_t local_y = evt->y - s_drum.canvas_y;
-    int new_pad = drum_hit_pad(local_x, local_y);
+    /* 命中表与触摸事件同为屏幕逻辑绝对坐标，直接比对 */
+    int new_pad = drum_hit_pad(evt->x, evt->y);
     int old_pad = s_drum.finger_pad[evt->finger_id];
 
     if (evt->type == APP_INPUT_TOUCH_UP) {
@@ -555,7 +440,7 @@ static void app_drum_pad_on_input(app_base_t *self, const app_input_event_t *evt
     }
 
     if (new_pad >= 0) {
-        drum_hit(s_pads_vkit[new_pad].note, drum_velocity(evt->pressure));
+        drum_hit(s_vkit_hit[new_pad].note, drum_velocity(evt->pressure));
     }
     s_drum.finger_pad[evt->finger_id] = new_pad;
 }
@@ -571,22 +456,33 @@ static void app_drum_pad_on_ui_event(app_base_t *self, lv_event_t *e)
     lv_obj_t *target = lv_event_get_target_obj(e);
     ui_screen_drum_t *ui = &s_drum_ui;
 
+    /* 浠庤Е鍙戜簨浠剁殑 indev 鎷?finger_id锛屾煡 engine_gui 鐨?pressure 缂撳瓨 */
+    lv_indev_t *indev = lv_event_get_indev(e);
+    uint8_t vel = DRUM_DEFAULT_VELOCITY;
+    if (indev != NULL) {
+        int finger_id = (int)(intptr_t)lv_indev_get_driver_data(indev);
+        uint8_t press = engine_gui_get_finger_pressure((uint8_t)finger_id);
+        if (press > 0) {
+            vel = press;
+        }
+    }
+
     if (target == ui->crash_m) {
-        drum_hit(DRUM_NOTE_CRASH, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_CRASH, vel);
     } else if (target == ui->closedhh_m) {
-        drum_hit(DRUM_NOTE_CLOSEDHH, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_CLOSEDHH, vel);
     } else if (target == ui->ride_m) {
-        drum_hit(DRUM_NOTE_RIDE, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_RIDE, vel);
     } else if (target == ui->kick_m) {
-        drum_hit(DRUM_NOTE_KICK, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_KICK, vel);
     } else if (target == ui->snare_n) {
-        drum_hit(DRUM_NOTE_SNARE, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_SNARE, vel);
     } else if (target == ui->floortom_m) {
-        drum_hit(DRUM_NOTE_FLOORTOM, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_FLOORTOM, vel);
     } else if (target == ui->clap_m) {
-        drum_hit(DRUM_NOTE_CLAP, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_CLAP, vel);
     } else if (target == ui->openhht_m) {
-        drum_hit(DRUM_NOTE_OPENHH, DRUM_DEFAULT_VELOCITY);
+        drum_hit(DRUM_NOTE_OPENHH, vel);
     }
 }
 
@@ -669,17 +565,6 @@ static void app_drum_pad_on_update(app_base_t *self)
 
     drum_process_notes();
 
-    /* 仅在虚拟鼓组模式且尚未分配 canvas 时完成 buffer 分配与首次绘制。
-     * drum_canvas_ensure_buffer() 内部已在同一 lvgl lock 内完成绘制。
-     * 首帧拆分：倒计时期间不分配，让背景先上屏 */
-    if (s_drum.display == DRUM_LAYOUT_VKIT && s_drum.canvas_buf == NULL) {
-        if (s_canvas_defer > 0) {
-            s_canvas_defer--;
-        } else {
-            drum_canvas_ensure_buffer();
-        }
-    }
-
     /* 下拉事件前端按 PRESSED 透传，选中值以轮询收敛 */
     lvgl_port_lock(portMAX_DELAY);
     uint32_t disp = lv_dropdown_get_selected(s_drum_ui.display_type);
@@ -714,9 +599,6 @@ static void app_drum_pad_on_update(app_base_t *self)
         s_drum.display = (uint8_t)disp;
         ESP_LOGI(TAG, "display=%d", s_drum.display);
         drum_apply_display();
-        if (s_drum.display == DRUM_LAYOUT_VKIT) {
-            drum_canvas_redraw();
-        }
         changed = true;
     }
     if (snd != s_drum.sound && snd < DRUM_KIT_COUNT) {
@@ -750,9 +632,6 @@ static void app_drum_pad_on_resume(app_base_t *self)
 {
     (void)self;
     ESP_LOGI(TAG, "resume");
-    if (s_drum.display == DRUM_LAYOUT_VKIT && s_drum.canvas_buf != NULL) {
-        drum_canvas_redraw();
-    }
 }
 
 static void app_drum_pad_on_destroy(app_base_t *self)
@@ -781,18 +660,6 @@ static void app_drum_pad_on_destroy(app_base_t *self)
         app_manager_record_stop();
         s_drum.recording_self = false;
         s_drum.recording_stop_pending = false;
-    }
-
-    if (s_drum.canvas_buf != NULL) {
-        if (s_drum_ui.panel_v != NULL) {
-            lvgl_port_lock(portMAX_DELAY);
-            /* 释放前先设置 1x1 占位 buffer，防止 EEZ 复用对象时显示已释放内存 */
-            lv_canvas_set_buffer(s_drum_ui.panel_v, s_canvas_dummy_buf, 1, 1,
-                                 LV_COLOR_FORMAT_RGB565);
-            lvgl_port_unlock();
-        }
-        heap_caps_free(s_drum.canvas_buf);
-        s_drum.canvas_buf = NULL;
     }
 }
 

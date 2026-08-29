@@ -43,6 +43,7 @@ static const char *TAG = "service_nvs";
 #define SERVICE_NVS_KEY_BOOT_SCREEN     "boot_screen"
 #define SERVICE_NVS_KEY_PIANO           "piano"
 #define SERVICE_NVS_KEY_DRUM            "drum_pad"
+#define SERVICE_NVS_KEY_ZEN             "zen"
 #define SERVICE_NVS_KEY_SF2_SOURCE      "sf2_src"
 
 #define SERVICE_NVS_DIRTY_INIT      (1U << 0)
@@ -73,6 +74,7 @@ static const char *TAG = "service_nvs";
 #define SERVICE_NVS_DIRTY_EAR_MODE      (1U << 27)
 #define SERVICE_NVS_DIRTY_EAR_DIFF      (1U << 28)
 #define SERVICE_NVS_DIRTY_EAR_PRAC      (1U << 29)
+#define SERVICE_NVS_DIRTY_ZEN           (1U << 30)
 
 static nvs_handle_t s_handle = 0;
 static SemaphoreHandle_t s_mutex = NULL;
@@ -124,6 +126,8 @@ static void service_nvs_set_defaults(void)
     system_parameters.boot_screen_index = 0;   /* 默认 launcher */
     memset(&system_parameters.piano, 0, sizeof(system_parameters.piano));
     memset(&system_parameters.drum, 0, sizeof(system_parameters.drum));
+    memset(&system_parameters.zen, 0, sizeof(system_parameters.zen));
+    system_parameters.zen.speed_sel = 2;  /* 默认 3 档，与旧版禅模式默认一致 */
     system_parameters.clock_12h = false;
     system_parameters.clock_timer_s = 0;
     memset(&system_parameters.app_fun_mana, 0, sizeof(system_parameters.app_fun_mana));
@@ -412,6 +416,13 @@ static esp_err_t service_nvs_load_internal(void)
     }
 
     s_dirty = 0;
+    /* zen 参数为后加 key，缺失时保持默认值（read_blob 对 NOT_FOUND 返回 OK） */
+    ret = service_nvs_read_blob(SERVICE_NVS_KEY_ZEN, &system_parameters.zen,
+                                sizeof(system_parameters.zen));
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "read zen failed: %d, use defaults", ret);
+    }
+
     s_loaded = true;
 
     ESP_LOGI(TAG, "loaded: init=%d, boot=%lu, bri=%u, vol=%d, flags=0x%08lx, theme=%s",
@@ -645,6 +656,14 @@ esp_err_t service_nvs_commit(void)
         }
     }
 
+    if (s_dirty & SERVICE_NVS_DIRTY_ZEN) {
+        ret = service_nvs_write_blob(SERVICE_NVS_KEY_ZEN, &system_parameters.zen,
+                                     sizeof(system_parameters.zen));
+        if (ret != ESP_OK) {
+            goto commit_exit;
+        }
+    }
+
     if (s_dirty & SERVICE_NVS_DIRTY_DRUM) {
         ret = service_nvs_write_blob(SERVICE_NVS_KEY_DRUM, &system_parameters.drum,
                                      sizeof(system_parameters.drum));
@@ -726,7 +745,8 @@ esp_err_t service_nvs_reset_to_defaults(void)
               SERVICE_NVS_DIRTY_AUTO_SLEEP |
               SERVICE_NVS_DIRTY_BOOT_SCREEN |
               SERVICE_NVS_DIRTY_PIANO |
-              SERVICE_NVS_DIRTY_DRUM;
+              SERVICE_NVS_DIRTY_DRUM |
+              SERVICE_NVS_DIRTY_ZEN;
 
     esp_err_t ret = service_nvs_commit();
 
@@ -1722,6 +1742,38 @@ esp_err_t service_nvs_set_drum(const service_nvs_drum_t *params)
 
     memcpy(&system_parameters.drum, params, sizeof(service_nvs_drum_t));
     s_dirty |= SERVICE_NVS_DIRTY_DRUM;
+
+    service_nvs_give();
+    return ESP_OK;
+}
+
+void service_nvs_get_zen(service_nvs_zen_t *out)
+{
+    if (out == NULL) {
+        return;
+    }
+
+    if (!service_nvs_take()) {
+        memset(out, 0, sizeof(service_nvs_zen_t));
+        return;
+    }
+
+    memcpy(out, &system_parameters.zen, sizeof(service_nvs_zen_t));
+    service_nvs_give();
+}
+
+esp_err_t service_nvs_set_zen(const service_nvs_zen_t *params)
+{
+    if (params == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (!service_nvs_take()) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    memcpy(&system_parameters.zen, params, sizeof(service_nvs_zen_t));
+    s_dirty |= SERVICE_NVS_DIRTY_ZEN;
 
     service_nvs_give();
     return ESP_OK;

@@ -70,7 +70,7 @@ typedef struct {
 #define SERVICE_NVS_MIDI_PLAYER_FILENAME_MAX_LEN 96
 
 typedef struct {
-    uint8_t play_type;                                     /*!< 0=MIDI, 1=HMR */
+    uint8_t play_type;                                     /*!< 0=MIDI, 1=录音(.mid) */
     char filename[SERVICE_NVS_MIDI_PLAYER_FILENAME_MAX_LEN]; /*!< 当前曲目文件名（含后缀） */
     uint8_t reserved[3];
 } service_nvs_midi_player_t;
@@ -100,6 +100,14 @@ typedef struct {
     uint8_t sound;            /*!< GM 鼓组下拉索引 0~8（对应 program 0/8/16/24/25/32/40/48/56） */
     uint8_t reserved[2];
 } service_nvs_drum_t;
+
+/** @brief 禅模式 App 参数 */
+typedef struct {
+    uint8_t mode;             /*!< 0=弹珠，1=雨滴 */
+    uint8_t key_sel;          /*!< 调式索引 0~5（大调/小调/中国五声/埃及调式/多利亚/日本调式） */
+    uint8_t speed_sel;        /*!< 速度档 0~4（弹珠：球速档；雨滴：同时下落个数-1） */
+    uint8_t sound_sel;        /*!< 音色索引 0~3（GM program 0/9/10/77） */
+} service_nvs_zen_t;
 
 /** @brief 系统级参数分组（sys） */
 typedef struct {
@@ -182,6 +190,7 @@ struct s_system_parameters {
     service_nvs_metronome_t metronome;                   /*!< 节拍器参数 */
     service_nvs_piano_t piano;                           /*!< 小钢琴音色选择参数 */
     service_nvs_drum_t drum;                             /*!< 鼓垫 App 参数 */
+    service_nvs_zen_t zen;                               /*!< 禅模式 App 参数 */
     bool     clock_12h;                                  /*!< 时钟 App 12h 制式 */
     uint32_t clock_timer_s;                              /*!< 时钟 App 定时器目标时长（秒） */
     service_nvs_app_fun_mana_t app_fun_mana;             /*!< 娱乐 App 蓝量 */
@@ -397,6 +406,12 @@ void service_nvs_get_drum(service_nvs_drum_t *out);
 
 /** @brief 写入鼓垫 App 参数（标记脏，由 service_nvs_commit 统一落盘） */
 esp_err_t service_nvs_set_drum(const service_nvs_drum_t *params);
+
+/** @brief 读取禅模式 App 参数；未初始化或参数为 NULL 时输出默认值 */
+void service_nvs_get_zen(service_nvs_zen_t *out);
+
+/** @brief 写入禅模式 App 参数（标记脏，由 service_nvs_commit 统一落盘） */
+esp_err_t service_nvs_set_zen(const service_nvs_zen_t *params);
 
 /** @brief SF2 音源文件名最大长度（与 engine_sf2 扫描缓存一致） */
 #define SERVICE_NVS_SF2_SOURCE_MAX_LEN 96
