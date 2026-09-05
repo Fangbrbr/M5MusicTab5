@@ -55,14 +55,16 @@ Three or more notes of different pitches stacked in specific interval relationsh
 - **Tap the canvas to toggle block / arpeggiated playback**
 - Shows chord name and interval-stack definition
 - **Two-octave roll display** — very handy for designing chord inversions
+- Tap the "Circle of Fifths" button to open the circle panel (see next section)
 
 ---
 
 ### 4. Circle of Fifths
 
-A music-theory visualization: keys, chords, and modulation relationships at a glance.
+A music-theory visualization: keys, chords, and modulation relationships at a glance. Integrated into Chord Trainer as a panel.
 
 **Usage:**
+- Entry: tap the "Circle of Fifths" button in Chord Trainer
 - Tap a sector on the circle canvas to switch between the 12 key signatures
 - Clockwise = sharp keys (one more sharp per step), counter-clockwise = flat keys
 - Shows: key name, signature (e.g. 1# / 3b), relative minor, parallel minor, scale spelling
@@ -86,17 +88,19 @@ A music-theory visualization: keys, chords, and modulation relationships at a gl
 
 ---
 
-### 6. Drum Pad
+### 6. Sequencer
 
-Virtual drum kit + drum-pad matrix layouts, up to 5-finger multi-touch.
+An 8-track drum step sequencer with a 16/32-step grid, one-tap Euclidean rhythm generation, and pattern file management.
 
 **Usage:**
-- Tap pads to play; everything goes through MIDI channel 10 GM drum mapping
-- Settings (top right):
-  - **Layout**: virtual kit (canvas-drawn 8 circular pads) / pad matrix (2×4 buttons)
-  - **Kit**: 9 GM drum kits
-- Supports recording
-- Kick, snare, hi-hat (closed/open), toms (high/mid/low), ride — all included
+- **Grid editing**: short-press a cell to toggle the step; long-press a cell to open per-step settings (velocity / trigger probability / CC lock)
+- **Tracks**: tap one of the 8 track rows on the left to select it; the parameter panel offers 23 GM percussion sounds, mute / solo, velocity, trigger probability, and timing randomization (humanize)
+- **Steps & pages**: long-press the page button to switch 16/32-step mode; short-press flips between pages A/B in 32-step mode; the clear button clears the current page
+- **Playback**: BPM slider (20~300), play/stop button, live playhead cursor in the grid
+- **Randomize**: one-tap rhythm generation (Euclidean algorithm) styled per each track's selected sound
+- **Pattern slots (A~F)**: 6 in-RAM slots; tap to select the file target, long-press to switch the playing pattern (quantized to the beat while playing; the pending slot blinks)
+- **Save / Load**: save the current pattern as a `.m5p` file under `/sdcard/sequencer/` (auto-named by date & time); loading opens the file list — pick a file to write into the target slot, files can be deleted in the list
+- Recording supported: the record button captures the sequencer output as standard .mid (`/sdcard/record/`)
 
 ---
 
@@ -109,14 +113,14 @@ Three-mode player: SD music (.mp3) / MIDI files (.mid) / performance recordings 
   - **Music**: scans `/sdcard/music` for .mp3 (falls back to SD root if missing)
   - **MIDI files**: scans `/sdcard/midi` for .mid (falls back to SD root if missing)
   - **Recordings**: scans `/sdcard/record` for .mid recordings
-- Tap a file in the left list
+- Tap a file in the left list; MIDI/recording lists support **long-press a file for delete confirmation**
 - Right side controls: previous / play-stop / next
 - Seekable progress bar
 - Shows title and path; MIDI/recording modes also show channel count and BPM
 - Non-ASCII filenames supported; MP3 titles prefer ID3v2 tags (UTF-8 / UTF-16 auto-detected), falling back to filename
 - MP3 auto-advances to the next track, looping from the end back to the first
 - During MP3 playback the synth chain is muted and the voice assistant pauses; both resume when playback stops or you leave the app
-- All recordings from record-capable apps (Tiny Piano, Drum Pad, XY Pad, Zen Mode, Ear Trainer) appear in recording mode and can be played back
+- All recordings from record-capable apps (Tiny Piano, Sequencer, XY Pad, Zen Mode, Ear Trainer) appear in recording mode and can be played back
 
 ---
 
@@ -219,6 +223,16 @@ Book of Answers and Tarot, triggered by flipping the device via the IMU, with a 
 
 ---
 
-### 13. Recorder — Work in progress
+### 13. Recorder
 
-The app shell is being built on top of the new engine_midi_smf_write recording engine, which already supports standard SMF with multi-track append.
+A WAV recorder with three scene modes; files are saved to `/sdcard/wav/`.
+
+**Usage:**
+- **Scene mode** dropdown (locked while recording):
+  - **Voice**: mono 16 kHz, compact size, for speech notes
+  - **Instrument**: stereo 44.1 kHz, high quality, for instrument pickup (the voice assistant auto-pauses during recording and resumes afterwards)
+  - **Ambient**: dual-mic AEC (acoustic echo cancellation) enabled
+- Big round button to start/stop recording; elapsed time and a live level meter are shown while recording
+- Live SD-card storage usage indicator
+- File list: tap to audition (tap again to stop); long-press a file for delete confirmation
+- Files are auto-named by date & time (.wav); same-second collisions get a numeric suffix

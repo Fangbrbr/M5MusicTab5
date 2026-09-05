@@ -1,4 +1,4 @@
-﻿# M5MusicTab5 — Music Exploration Terminal
+# M5MusicTab5 — Music Exploration Terminal
 
 **[简体中文](README.md) | English**
 
@@ -23,7 +23,7 @@ A music exploration terminal built from scratch on the M5Stack Tab5 (ESP32-P4).
 ## Features
 
 - **🇨🇳 Bilingual UI (中文 / English)** — one-tap switching in Settings, persisted across reboots
-- **13 built-in apps** — Zen Mode / Ear Trainer / Chord Trainer / Circle of Fifths / Tiny Piano / Drum Pad / Player / XY Pad / Metronome / AI Voice Assistant / Clock & Calendar / Fun (Book of Answers + Tarot) / Recorder (WIP)
+- **12 built-in apps** — Zen Mode / Ear Trainer / Chord Trainer (with Circle of Fifths) / Tiny Piano / Sequencer / Player / XY Pad / Metronome / AI Voice Assistant / Clock & Calendar / Fun (Book of Answers + Tarot) / Recorder
 - **SF2 sample synthesizer** — real instrument sampling based on SoundFont 2; load custom soundfonts from the SD card
 - **MP3 playback** — .mp3 files straight from SD card, ID3 title display, non-ASCII filename support
 - **Standard MIDI recording & playback** — records output directly as .mid / SMF; copy to any DAW
@@ -101,6 +101,8 @@ Each feature uses conventional directories on the SD card. **They are not auto-c
 | `/midi/` | Preferred scan dir for .mid files in "MIDI files" mode; falls back to SD root if missing | Manually (FTP), optional |
 | `/music/` | Preferred scan dir for .mp3 files in "Music" mode; falls back to SD root if missing | Manually (FTP), optional |
 | `/record/` | Performance recordings (.mid, standard SMF) | Created by the recorder service on init |
+| `/wav/` | Voice/instrument recordings (.wav) from the Recorder app | On first recording |
+| `/sequencer/` | Sequencer pattern files (.m5p) | On first pattern save |
 | `/soundfonts/` | Custom SF2 soundfonts (read by Settings → Soundfont) | Manually (FTP) |
 | `/ai_chat.txt` | AI chat log (appended when "chat logging" is enabled) | On first enable |
 | `/sys/src/` | Overrides firmware-embedded UI assets (fonts/images; same-named files on SD take priority) | Manually (FTP) |
