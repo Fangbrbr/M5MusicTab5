@@ -99,6 +99,14 @@ int engine_sf2_sd_rescan(void);
 const char *engine_sf2_sd_name_at(int index);
 
 /**
+ * @brief 原子校验当前生效音源是否仍在 SD 列表（锁内 rescan+比对）
+ * @return true=存在或当前为内部预设；false=当前 SD 音源已被移除
+ * @note 替代 rescan+name_at 循环的分步调用——分步在 task_gui/task_app 并发
+ *       rescan 时会读到被对端覆写的名字表，误判"已移除"而误回退内部预设
+ */
+bool engine_sf2_sd_source_exists(void);
+
+/**
  * @brief 当前生效音源
  * @return SD 文件名（不含路径）；内部预设返回空字符串 ""
  */

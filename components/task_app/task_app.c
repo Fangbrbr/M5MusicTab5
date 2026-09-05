@@ -11,6 +11,7 @@
 #include "service_nvs.h"
 #include "service_http_client.h"
 #include "service_recorder.h"
+#include "service_wavrec.h"
 #include "service_xiaozhi.h"
 #include "service_audio.h"
 #include "service_page_onboard.h"
@@ -194,6 +195,7 @@ static void task_app_entry(void *arg)
         service_wifi_process();
         service_rtc_process();
         service_recorder_process();
+        service_wavrec_process();
         service_http_client_process();
         service_page_onboard_process();
         /* SF2 音源切换等设置页挂起请求（秒级加载在此消化，不堵 task_gui） */

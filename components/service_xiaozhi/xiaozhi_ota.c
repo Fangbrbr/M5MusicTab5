@@ -267,7 +267,9 @@ static void xiaozhi_ota_build_body(char *out, size_t len)
 
     cJSON *application = cJSON_CreateObject();
     cJSON_AddStringToObject(application, "name", app->project_name);
-    cJSON_AddStringToObject(application, "version", app->version);
+    /* 版本号统一走 FIRMWARE_VERSION（与关于页/启动日志同源）；app->version 是
+     * project() VERSION，非 tag 构建恒为 0.0.0，不能用 */
+    cJSON_AddStringToObject(application, "version", FIRMWARE_VERSION);
     cJSON_AddItemToObject(root, "application", application);
 
     char *printed = cJSON_PrintUnformatted(root);

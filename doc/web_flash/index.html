@@ -227,6 +227,84 @@
         .lang-menu-item.active { color: var(--c-primary-darker); font-weight: 600; }
         .lang-menu-item .flag { font-size: 16px; }
 
+        /* ---------- 简易向导（默认视图，小白三步引导） ---------- */
+        .wizard { max-width: 680px; }
+        .wiz-head { text-align: center; margin: 26px 0 30px; }
+        .wiz-head h1 { font-size: 25px; }
+        .wiz-head .sub { display: block; font-size: 13.5px; color: var(--c-muted); margin-top: 6px; }
+
+        .wiz-btn {
+            display: flex; align-items: center; gap: 18px; width: 100%;
+            padding: 22px 26px; border-radius: 16px; text-align: left;
+            border: 2px solid var(--c-primary); background: var(--c-card);
+            box-shadow: 0 2px 10px rgba(200, 120, 30, 0.12);
+            transition: transform 0.12s, box-shadow 0.12s, border-color 0.15s;
+        }
+        .wiz-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(200, 120, 30, 0.2); }
+        .wiz-btn:disabled { cursor: not-allowed; }
+        .wiz-btn.locked { border-color: var(--c-border); background: #FAF7F1; box-shadow: none; opacity: 0.65; }
+        .wiz-btn.done { border-color: #4A9E70; background: #F2F9F5; box-shadow: none; }
+        .wiz-num {
+            flex: none; width: 46px; height: 46px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--c-primary); color: #fff; font-size: 21px; font-weight: 700;
+        }
+        .wiz-btn.locked .wiz-num { background: var(--c-input-border); }
+        .wiz-btn.done .wiz-num { background: #4A9E70; }
+        .wiz-txt { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .wiz-title { font-size: 19px; font-weight: 700; color: var(--c-text); }
+        .wiz-btn.done .wiz-title { color: #35804F; }
+        .wiz-desc { font-size: 13px; color: var(--c-muted); }
+        .wiz-btn.done .wiz-desc { color: #4A9E70; font-weight: 600; }
+
+        .wiz-connector { display: flex; flex-direction: column; align-items: center; height: 46px; }
+        .wiz-connector::before { content: ""; flex: 1; border-left: 2.5px dashed var(--c-input-border); }
+        .wiz-connector::after { content: ""; border: 7px solid transparent; border-top: 9px solid var(--c-input-border); margin-top: -1px; }
+        .wiz-connector.lit::before { border-left-color: var(--c-primary); }
+        .wiz-connector.lit::after { border-top-color: var(--c-primary); }
+
+        .wiz-log { margin-top: 26px; border: 1px solid var(--c-border); border-radius: 14px; overflow: hidden; background: var(--c-card); }
+        .wiz-log.off { display: none; }
+        .wiz-log-handle {
+            width: 100%; display: flex; align-items: center; gap: 8px;
+            padding: 13px 18px; border: none; background: var(--c-tint);
+            font-size: 14px; font-weight: 600; color: var(--c-primary-darker);
+        }
+        .wiz-log-handle .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #4A9E70; }
+        .wiz-log-handle .chev { margin-left: auto; font-size: 12px; color: var(--c-muted); transition: transform 0.15s; }
+        .wiz-log.collapsed .chev { transform: rotate(-90deg); }
+        .wiz-log-area {
+            background: var(--c-log-bg); color: var(--c-log-text);
+            height: min(340px, 42vh); overflow-y: auto; padding: 12px 14px;
+            font-family: ui-monospace, Consolas, "Courier New", monospace;
+            font-size: 12px; line-height: 1.75;
+            white-space: pre-wrap; word-break: break-all;
+        }
+        .wiz-log.collapsed .wiz-log-area { display: none; }
+        .wiz-log-area .empty { color: var(--c-log-dim); text-align: center; padding-top: 130px; font-family: inherit; }
+        .wiz-log-area .log-line.err { color: #F0A89F; }
+        .wiz-log-area .log-line.ok { color: #F3C384; }
+        .wiz-log-area .log-line.dim { color: var(--c-log-dim); }
+
+        .wiz-block {
+            margin: 6px 0 28px; padding: 34px 24px 30px;
+            border: 1.5px solid var(--c-danger-border); border-radius: 16px;
+            background: var(--c-danger-tint); text-align: center;
+        }
+        .wiz-block .block-icon { font-size: 42px; line-height: 1; }
+        .wiz-block h2 { font-size: 20px; margin: 12px 0 8px; color: var(--c-danger); }
+        .wiz-block .block-reason { font-size: 14.5px; line-height: 1.7; margin: 0 auto 14px; max-width: 480px; }
+        .wiz-block .block-steps { font-size: 15px; font-weight: 600; line-height: 1.7; margin: 0 auto; max-width: 480px; }
+        .wizard.blocked .wiz-step, .wizard.blocked .wiz-connector,
+        .wizard.blocked .wiz-log, .wizard.blocked .wiz-foot { display: none; }
+
+        .wiz-foot { text-align: center; margin: 30px 0 10px; }
+        .wiz-adv-btn {
+            background: none; border: none; color: var(--c-muted); font-size: 13.5px;
+            text-decoration: underline; padding: 10px 18px;
+        }
+        .wiz-adv-btn:hover { color: var(--c-primary-darker); }
+
         @media (max-width: 1080px) {
             .layout { grid-template-columns: 1fr; }
             .log-card { position: static; }
@@ -243,7 +321,70 @@
     <button class="lang-btn" id="langBtn" title="Language / 语言"><svg class="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.4 4 5.7 4 9.5s-1.4 7.1-4 9.5c-2.6-2.4-4-5.7-4-9.5s1.4-7.1 4-9.5z"/></svg><span id="langBtnLabel">中文</span></button>
     <div class="lang-menu" id="langMenu"></div>
 </div>
-<div class="page">
+<!-- 简易向导视图（默认落地）：三步大按钮 + 自动日志抽屉 + 底部专业面板入口 -->
+<div id="wizardView" class="page wizard">
+    <div class="wiz-head">
+        <h1 data-i18n="wiz.title">🐹 M5MusicTab5 简易安装</h1>
+        <span class="sub" data-i18n="wiz.subtitle">跟着三步走：连接 → 烧录 → 玩耍</span>
+    </div>
+
+    <!-- 拦截卡：无 WebSerial 时整体替换三步区，不区分具体环境（微信/QQ/TRAE 等一律同一句话） -->
+    <div id="wizUnsupported" class="wiz-block hidden">
+        <div class="block-icon">⚠️</div>
+        <h2 data-i18n="wiz.block.title">当前浏览器无法烧录固件</h2>
+        <p class="block-reason" data-i18n="wiz.block.reason">当前环境不支持 Web Serial，无法连接设备</p>
+        <p class="block-steps" data-i18n="wiz.block.how">复制本页链接，在电脑版 Chrome 或 Edge 浏览器打开即可烧录</p>
+    </div>
+    <div id="wizErrBanner" class="banner error hidden"><span id="wizErrText"></span></div>
+
+    <div class="wiz-step">
+        <button id="wizBtn1" class="wiz-btn">
+            <span class="wiz-num">1</span>
+            <span class="wiz-txt">
+                <span class="wiz-title" id="wizTitle1" data-i18n="wiz.step1">连接设备</span>
+                <span class="wiz-desc" id="wizDesc1" data-i18n="wiz.step1.desc">USB 数据线连接电脑与 TAB5，点这里选择串口</span>
+            </span>
+        </button>
+    </div>
+    <div class="wiz-connector" id="wizConn1"></div>
+
+    <div class="wiz-step">
+        <button id="wizBtn2" class="wiz-btn locked" disabled>
+            <span class="wiz-num">2</span>
+            <span class="wiz-txt">
+                <span class="wiz-title" id="wizTitle2" data-i18n="wiz.step2">一键烧录</span>
+                <span class="wiz-desc" id="wizDesc2" data-i18n="wiz.step2.desc">自动下载并写入最新固件，约 1-2 分钟</span>
+            </span>
+        </button>
+    </div>
+    <div class="wiz-connector" id="wizConn2"></div>
+
+    <div class="wiz-step">
+        <button id="wizBtn3" class="wiz-btn locked" disabled>
+            <span class="wiz-num">3</span>
+            <span class="wiz-txt">
+                <span class="wiz-title" id="wizTitle3" data-i18n="wiz.step3">开始玩耍</span>
+                <span class="wiz-desc" id="wizDesc3" data-i18n="wiz.step3.desc">设备运行中，下方查看实时日志</span>
+            </span>
+        </button>
+    </div>
+
+    <div id="wizLog" class="wiz-log off">
+        <button id="wizLogHandle" class="wiz-log-handle">
+            <span class="dot-live"></span>
+            <span data-i18n="wiz.log.title">运行日志</span>
+            <span class="chev">▾</span>
+        </button>
+        <div id="wizLogArea" class="wiz-log-area"><div class="empty" data-i18n="wiz.log.empty">等待日志…</div></div>
+    </div>
+
+    <div class="wiz-foot">
+        <button id="wizAdvBtn" class="wiz-adv-btn" data-i18n="wiz.advanced">专业面板</button>
+    </div>
+</div>
+
+<!-- 高级视图：原完整烧录面板（专业面板入口进入，连接/监控状态与向导共享） -->
+<div class="page hidden" id="advancedView">
     <div class="page-header">
         <h1 data-i18n="header.title">🐹 M5MusicTab5 在线烧录</h1>
         <span class="sub" data-i18n="header.sub">金丝熊橙版 · 基于 esptool-js · 官方固件自动取自最新 Release</span>
@@ -261,6 +402,10 @@
         <div class="main-col">
             <!-- 顶部工具栏 -->
             <div class="card toolbar">
+                <button id="returnWizardBtn" class="btn btn-ghost">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5 5 8l4.5 4.5"/></svg>
+                    <span data-i18n="wiz.return">简易向导</span>
+                </button>
                 <button id="connectBtn" class="btn btn-primary">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M6.5 1.5V4M9.5 1.5V4M6.5 12v2.5M9.5 12v2.5M1.5 6.5H4M1.5 9.5H4M12 6.5h2.5M12 9.5h2.5"/></svg>
                     <span data-i18n="btn.connect">连接芯片</span>
@@ -436,6 +581,15 @@
         eraseBtn: $("eraseBtn"), flashBtn: $("flashBtn"), progressBar: $("progressBar"),
         logArea: $("logArea"), logCount: $("logCount"), clearLogBtn: $("clearLogBtn"),
         noSerialBanner: $("noSerialBanner"),
+        wizardView: $("wizardView"), advancedView: $("advancedView"),
+        wizBtn1: $("wizBtn1"), wizBtn2: $("wizBtn2"), wizBtn3: $("wizBtn3"),
+        wizTitle1: $("wizTitle1"), wizTitle2: $("wizTitle2"), wizTitle3: $("wizTitle3"),
+        wizDesc1: $("wizDesc1"), wizDesc2: $("wizDesc2"), wizDesc3: $("wizDesc3"),
+        wizConn1: $("wizConn1"), wizConn2: $("wizConn2"),
+        wizLog: $("wizLog"), wizLogHandle: $("wizLogHandle"), wizLogArea: $("wizLogArea"),
+        wizUnsupported: $("wizUnsupported"),
+        wizErrBanner: $("wizErrBanner"), wizErrText: $("wizErrText"),
+        wizAdvBtn: $("wizAdvBtn"), returnWizardBtn: $("returnWizardBtn"),
     };
 
     /* ---------------- Web i18n（与 service_wifi_ap.c 配网页同款字典模式） ---------------- */
@@ -522,6 +676,7 @@
             "reset.no": "不复位",
             "reset.auto": "自动复位",
             "log.connecting": "正在连接（{0}，{1} baud）…",
+            "log.port.picking": "正在打开串口选择器…",
             "log.connect.ok": "连接成功：{0}",
             "log.connect.fail": "连接失败：{0}",
             "log.disconnected": "已断开连接",
@@ -552,6 +707,35 @@
             "log.advanced.on": "高级模式：固件区已解锁，可自定义文件与偏移地址",
             "log.ready": "就绪：请选择串口并连接芯片；固件在点击「开始烧录」后自动从最新 Release 下载",
             "log.lang.switched": "界面语言已切换为：{0}",
+            "wiz.title": "🐹 M5MusicTab5 简易安装",
+            "wiz.subtitle": "跟着三步走：连接 → 烧录 → 玩耍",
+            "wiz.step1": "连接设备",
+            "wiz.step1.desc": "USB 数据线连接电脑与 TAB5，点这里选择串口",
+            "wiz.step1.done": "已连接 ✓",
+            "wiz.step2": "一键烧录",
+            "wiz.step2.desc": "自动下载并写入最新固件，约 1-2 分钟",
+            "wiz.step2.done": "烧录完成 ✓",
+            "wiz.step3": "开始玩耍",
+            "wiz.step3.desc": "设备运行中，下方查看实时日志",
+            "wiz.step3.done": "玩耍中 🎉 点这里展开日志",
+            "wiz.locked.desc": "先完成上一步",
+            "wiz.phase.prep": "准备中…",
+            "wiz.phase.dl": "下载固件 {0}%",
+            "wiz.phase.flash": "烧录中 {0}%",
+            "wiz.auto.monitor": "烧录完成，串口日志已自动开启，设备正在启动",
+            "wiz.reset.pulse": "设备已复位，正在启动…",
+            "wiz.reset.manual": "自动复位未生效：请按一下设备 RESET 键（或重新插拔 USB 线）让设备启动",
+            "wiz.reset.manual.err": "自动复位未生效：请按一下设备 RESET 键（或重新插拔 USB 线）让设备启动（{0}）",
+            "wiz.block.title": "当前浏览器无法烧录固件",
+            "wiz.block.reason": "当前环境不支持 Web Serial，无法连接设备",
+            "wiz.block.how": "复制本页链接，在电脑版 Chrome 或 Edge 浏览器打开即可烧录",
+            "wiz.advanced": "专业面板",
+            "wiz.return": "简易向导",
+            "wiz.log.title": "运行日志",
+            "wiz.log.empty": "等待日志…",
+            "wiz.err.cable": "连接失败：再次点击「连接设备」可重新选择端口。请确认 USB 线是数据线（不是纯充电线）、选中的串口属于 TAB5；仍失败请按住 BOOT 键后重试",
+            "wiz.err.picker": "点击连接没有反应：当前环境无法弹出串口选择窗口，请换电脑版 Chrome 或 Edge 打开本页。若串口选择窗口已经弹出，可忽略此提示，选好端口后会自动消失",
+            "wiz.err.flash": "烧录失败：请重新点击「一键烧录」重试；多次失败请更换一条数据线",
         },
         "en": {
             "page.title": "M5MusicTab5 Web Flasher",
@@ -635,6 +819,7 @@
             "reset.no": "no reset",
             "reset.auto": "auto reset",
             "log.connecting": "Connecting ({0}, {1} baud)…",
+            "log.port.picking": "Opening the serial port picker…",
             "log.connect.ok": "Connected: {0}",
             "log.connect.fail": "Connection failed: {0}",
             "log.disconnected": "Disconnected",
@@ -665,6 +850,35 @@
             "log.advanced.on": "Advanced mode: firmware area unlocked — custom files and offsets allowed",
             "log.ready": "Ready: select a serial port and connect. Firmware downloads automatically from the latest Release when you click Flash.",
             "log.lang.switched": "UI language switched to {0}",
+            "wiz.title": "🐹 M5MusicTab5 Easy Setup",
+            "wiz.subtitle": "Three steps: Connect → Flash → Play",
+            "wiz.step1": "Connect the Device",
+            "wiz.step1.desc": "Plug TAB5 into your computer with a USB data cable, then click here",
+            "wiz.step1.done": "Connected ✓",
+            "wiz.step2": "One-Click Flash",
+            "wiz.step2.desc": "Downloads and writes the latest firmware automatically (1-2 min)",
+            "wiz.step2.done": "Flashed ✓",
+            "wiz.step3": "Start Playing",
+            "wiz.step3.desc": "Device is running — live log below",
+            "wiz.step3.done": "Playing 🎉 Click to show the log",
+            "wiz.locked.desc": "Finish the previous step first",
+            "wiz.phase.prep": "Preparing…",
+            "wiz.phase.dl": "Downloading firmware {0}%",
+            "wiz.phase.flash": "Flashing {0}%",
+            "wiz.auto.monitor": "Flashing complete — serial log auto-started, device is booting",
+            "wiz.reset.pulse": "Device reset, booting…",
+            "wiz.reset.manual": "Auto reset didn't take effect — press RESET on the device (or replug USB) to start it",
+            "wiz.reset.manual.err": "Auto reset didn't take effect — press RESET on the device (or replug USB) to start it ({0})",
+            "wiz.block.title": "This browser can't flash the firmware",
+            "wiz.block.reason": "This environment doesn't support Web Serial, so the device can't be connected",
+            "wiz.block.how": "Copy this page's link and open it in desktop Chrome or Edge to flash",
+            "wiz.advanced": "Pro Panel",
+            "wiz.return": "Easy Wizard",
+            "wiz.log.title": "Device Log",
+            "wiz.log.empty": "Waiting for log…",
+            "wiz.err.cable": "Connection failed: click \"Connect the Device\" again to re-pick the port. Make sure the USB cable is a data cable (not charge-only) and the serial port you picked belongs to TAB5; if it still fails, hold the BOOT button and retry",
+            "wiz.err.picker": "Nothing happened after clicking connect: this environment can't show the serial port picker. Please open this page in desktop Chrome or Edge. If a picker has already popped up, ignore this message — it disappears once you select a port",
+            "wiz.err.flash": "Flashing failed: click \"One-Click Flash\" to retry; if it keeps failing, try another cable",
         },
     };
     /* 语言 ID -> 菜单显示（emoji 旗帜 + 语言名） */
@@ -712,6 +926,10 @@
         els.logCount.textContent = t("log.count", state.logLines);
         const empty = els.logArea.querySelector(".empty");
         if (empty) empty.textContent = t("log.empty");
+        /* 向导动态文本随语言刷新（步骤按钮文案由 syncWizard 重导） */
+        const wizEmpty = els.wizLogArea.querySelector(".empty");
+        if (wizEmpty) wizEmpty.textContent = t("wiz.log.empty");
+        syncWizard();
         renderRows();
     }
 
@@ -740,11 +958,104 @@
         port: null, transport: null, esploader: null, chipName: null,
         monitoring: false, monitorReader: null, monitorDone: null,
         busy: false,           // 烧录/擦除进行中
+        picking: false,        // 串口选择器等待中（requestPort 未决，防重复点击堆叠）
         rows: [],              // {tag, offset, fileName, data, status, progress}
         nextRowId: 1,
         fetchGen: 0,           // 下载代际令牌：切预设时作废旧下载
         logLines: 0,
     };
+
+    /* ---------------- 简易向导（与高级视图共享 state，切换视图不断连、不丢日志） ---------------- */
+
+    let viewMode = "wizard";       // "wizard" | "advanced"
+    let wizFlashed = false;        // 本页面会话内已成功烧录过（解锁步骤③）
+    let wizPhaseText = "";         // 烧录阶段文案（busy 期间显示在步骤②描述行）
+    const serialOK = "serial" in navigator;
+
+    function setView(mode) {
+        viewMode = mode;
+        els.wizardView.classList.toggle("hidden", mode !== "wizard");
+        els.advancedView.classList.toggle("hidden", mode !== "advanced");
+    }
+
+    /* 向导三步全部由共享 state 推导：链路 = 烧录连接或监视会话任一存在 */
+    function syncWizard() {
+        const busy = state.busy;
+        const linked = !!state.esploader || state.monitoring;
+        /* 步骤① 连接：链路存在即完成 */
+        els.wizBtn1.classList.toggle("done", linked);
+        els.wizBtn1.disabled = busy || !serialOK;
+        els.wizTitle1.textContent = linked ? t("wiz.step1.done") : t("wiz.step1");
+        els.wizDesc1.textContent = t("wiz.step1.desc");
+        /* 步骤② 烧录：需链路（监视中点击会自动切回烧录连接） */
+        els.wizBtn2.classList.toggle("locked", !linked && !wizFlashed);
+        els.wizBtn2.classList.toggle("done", wizFlashed && !busy);
+        els.wizBtn2.disabled = busy || !serialOK || !linked;
+        els.wizTitle2.textContent = (wizFlashed && !busy) ? t("wiz.step2.done") : t("wiz.step2");
+        els.wizDesc2.textContent = busy ? (wizPhaseText || t("wiz.phase.prep")) : t("wiz.step2.desc");
+        /* 步骤③ 玩耍：烧录完成解锁；监视会话在跑即"玩耍中" */
+        els.wizBtn3.classList.toggle("locked", !wizFlashed);
+        els.wizBtn3.classList.toggle("done", wizFlashed && !busy && state.monitoring);
+        els.wizBtn3.disabled = busy || !serialOK || !wizFlashed;
+        els.wizTitle3.textContent = (wizFlashed && !busy) ? t("wiz.step3.done") : t("wiz.step3");
+        els.wizDesc3.textContent = t("wiz.step3.desc");
+        /* 虚线箭头点亮 = 上一步完成 */
+        els.wizConn1.classList.toggle("lit", linked);
+        els.wizConn2.classList.toggle("lit", wizFlashed);
+    }
+
+    function setWizPhase(text) {
+        wizPhaseText = text;
+        els.wizDesc2.textContent = text;
+    }
+
+    function showWizErr(text) {
+        els.wizErrText.textContent = text;
+        els.wizErrBanner.classList.remove("hidden");
+    }
+    function clearWizErr() {
+        els.wizErrBanner.classList.add("hidden");
+    }
+
+    function wizLogShow(show) {
+        els.wizLog.classList.remove("off");
+        els.wizLog.classList.toggle("collapsed", !show);
+    }
+
+    /* 浏览器拦截：无 WebSerial 时整体替换三步区。
+     * 覆盖 Electron 内嵌（TRAE/VS Code 预览等 serial 存在但 requestPort 挂起）
+     * 与微信/QQ 等内嵌浏览器（serial 不存在）两类场景，统一一句话指引 */
+    function blockWizard() {
+        els.wizUnsupported.classList.remove("hidden");
+        els.wizardView.classList.add("blocked");
+    }
+
+    /* 烧录收尾：自动开日志 + RTS 脉冲复位。
+     * Trap: no_reset 烧完芯片停在 flasher stub；after("hard_reset") 对非 USB-OTG
+     * 仅 setRTS(false) 是空操作（RTS 本来就是 false），必须主动拉高再放低产生 EN 脉冲，
+     * 且 DTR 全程释放，防止芯片采样 IO0=0 误入下载模式。
+     * startMonitor 内部会断开端口再以 115200 重开，脉冲必须在重开后经 port.setSignals 打。 */
+    async function wizardAfterFlash() {
+        log(t("wiz.auto.monitor"), "ok");
+        try {
+            if (!state.monitoring) await startMonitor();
+        } catch (e) {
+            log(t("log.monitor.fail", e && e.message ? e.message : e), "err");
+        }
+        try {
+            if (state.monitoring && state.port) {
+                await state.port.setSignals({ dataTerminalReady: false, requestToSend: true });
+                await new Promise((r) => setTimeout(r, 120));
+                await state.port.setSignals({ dataTerminalReady: false, requestToSend: false });
+                log(t("wiz.reset.pulse"), "dim");
+            } else {
+                log(t("wiz.reset.manual"), "dim");
+            }
+        } catch (e) {
+            log(t("wiz.reset.manual.err", e && e.message ? e.message : e), "dim");
+        }
+        syncWizard();
+    }
 
     /* ---------------- 日志 ---------------- */
 
@@ -754,18 +1065,23 @@
         appendLogLine(logBuf, "");
         logBuf = "";
     }
-    function appendLogLine(text, cls) {
-        const empty = els.logArea.querySelector(".empty");
+    function appendLogTo(area, text, cls) {
+        const empty = area.querySelector(".empty");
         if (empty) empty.remove();
         const div = document.createElement("div");
         div.className = "log-line" + (cls ? " " + cls : "");
         div.textContent = text;
-        els.logArea.appendChild(div);
+        area.appendChild(div);
+        /* 上限裁剪，防止长烧录撑爆 DOM */
+        while (area.childElementCount > 3000) area.firstElementChild.remove();
+        area.scrollTop = area.scrollHeight;
+    }
+    function appendLogLine(text, cls) {
+        /* 双视图各自一份 DOM、同一日志流：切视图不丢历史 */
+        appendLogTo(els.logArea, text, cls);
+        appendLogTo(els.wizLogArea, text, cls);
         state.logLines++;
         els.logCount.textContent = t("log.count", state.logLines);
-        /* 上限裁剪，防止长烧录撑爆 DOM */
-        while (els.logArea.childElementCount > 3000) els.logArea.firstElementChild.remove();
-        els.logArea.scrollTop = els.logArea.scrollHeight;
     }
     function log(msg, cls) { logFlush(); appendLogLine(msg, cls || ""); }
     /* esptool-js terminal 接口：write 可能是半行，缓冲到 \n 再落行 */
@@ -969,6 +1285,7 @@
                             if (pct !== row.progress) {
                                 row.progress = pct;
                                 row.progressText = t("progress.dl.pct", pct, humanSize(got), humanSize(total));
+                                if (viewMode === "wizard") setWizPhase(t("wiz.phase.dl", pct));
                                 /* 下载进度每 10% 进一次日志 */
                                 if (Math.floor(pct / 10) > Math.floor(row._loggedPct / 10)) {
                                     row._loggedPct = pct;
@@ -1044,14 +1361,21 @@
         els.connectBtn.querySelector("span").textContent = connected ? t("btn.disconnect") : t("btn.connect");
         els.connStatus.textContent = connected ? t("status.connected", state.chipName) : t("status.disconnected");
         els.connStatus.classList.toggle("connected", connected);
+        syncWizard();
     }
 
     async function requestPort() {
         if (state.port) return state.port;
+        if (state.picking) throw new Error(t("err.no.port"));
+        state.picking = true;
+        /* 先落一行日志再等选择器：内嵌环境 requestPort 永久挂起时，日志末行能定位卡点 */
+        log(t("log.port.picking"), "dim");
         try {
             state.port = await navigator.serial.requestPort();
         } catch (e) {
             throw new Error(t("err.no.port"));
+        } finally {
+            state.picking = false;
         }
         return state.port;
     }
@@ -1061,6 +1385,7 @@
         state.monitoring = false;
         els.monitorBtn.classList.remove("active");
         els.monitorBtn.querySelector("span").textContent = t("btn.monitor");
+        syncWizard();
         try { if (state.monitorReader) await state.monitorReader.cancel(); } catch (e) {}
         /* 等待 read 循环退出并关闭端口，避免紧接着重连时端口仍被占用 */
         try { if (state.monitorDone) await state.monitorDone; } catch (e) {}
@@ -1097,7 +1422,16 @@
             terminal: espTerminal,
             debugLogging: els.debugChk.checked,
         });
-        const chip = await esploader.main(els.resetSelect.value);
+        let chip;
+        try {
+            chip = await esploader.main(els.resetSelect.value);
+        } catch (e) {
+            /* 失败即作废已选端口：选错端口/端口异常时不能让坏端口黏死
+             * state.port，否则重试永远复用同一端口、不再弹选择器（真机踩坑） */
+            try { await transport.disconnect(); } catch (e2) {}
+            state.port = null;
+            throw e;
+        }
         state.transport = transport;
         state.esploader = esploader;
         state.chipName = chip;
@@ -1120,6 +1454,7 @@
         state.monitorReader = null;
         els.monitorBtn.classList.add("active");
         els.monitorBtn.querySelector("span").textContent = t("btn.monitor.stop");
+        syncWizard();
         log(t("log.monitor.started"), "dim");
         const reader = port.readable.getReader();
         state.monitorReader = reader;
@@ -1140,6 +1475,7 @@
                 state.monitorReader = null;
                 els.monitorBtn.classList.remove("active");
                 els.monitorBtn.querySelector("span").textContent = t("btn.monitor");
+                syncWizard();
             }
         })();
     }
@@ -1157,11 +1493,17 @@
         els.advancedChk.disabled = b;
         els.addRowBtn.disabled = b;
         els.flashBtn.querySelector("span").textContent = text || t("btn.flash");
-        if (!b) els.progressBar.classList.remove("show");
+        if (!b) {
+            els.progressBar.classList.remove("show");
+            wizPhaseText = "";
+        }
+        /* 向导三步按钮的禁用态统一由 syncWizard 按 busy 推导 */
+        syncWizard();
     }
     function setProgress(frac) {
         els.progressBar.classList.add("show");
         els.progressBar.firstElementChild.style.width = Math.round(frac * 100) + "%";
+        if (viewMode === "wizard") setWizPhase(t("wiz.phase.flash", Math.round(frac * 100)));
     }
 
     function md5Of(image) {
@@ -1176,6 +1518,12 @@
         if (state.rows.length === 0) { log(t("err.no.rows"), "err"); return; }
         setBusy(true, t("btn.flashing"));
         logFlush();
+        /* 向导视图：烧录开始即展开日志抽屉，步骤②按钮改显阶段进度 */
+        if (viewMode === "wizard") {
+            clearWizErr();
+            wizLogShow(true);
+            setWizPhase(t("wiz.phase.prep"));
+        }
         try {
             /* 按需下载：预设固件在点击烧录后才拉取，避免进页面就白下 16MB */
             for (const r of state.rows) {
@@ -1234,21 +1582,30 @@
             await state.esploader.writeFlash(options);
             setProgress(1);
             log(t("log.flash.done"), "ok");
+            /* 任一视图烧录成功都解锁向导步骤③（设备已写入固件，可查看日志玩耍） */
+            wizFlashed = true;
             /* Trap: esptool-js softReset 仅支持 ESP8266，P4 上直接抛错；
              * hard_reset 对 USB Serial/JTAG 是空操作（仅 setRTS(false) 无脉冲）。
              * 默认 no_reset 由用户手动复位；复位失败不得冒泡成“烧录失败” */
-            try {
-                await state.esploader.after(els.afterSelect.value);
-                if (els.afterSelect.value !== "no_reset") log(t("log.reset.done"), "dim");
-            } catch (e) {
-                log(t("log.reset.skip", e && e.message ? e.message : e));
-            }
             if (els.releaseChk.checked) {
                 await disconnectDevice();
                 log(t("log.port.released"), "dim");
             }
+            if (viewMode === "wizard") {
+                /* 向导不走 after()：no_reset 分支在 stub 上必抛 ESP8266-only 错误，
+                 * 向导有自己的复位路径（wizardAfterFlash 内 RTS 脉冲） */
+                await wizardAfterFlash();
+            } else {
+                try {
+                    await state.esploader.after(els.afterSelect.value);
+                    if (els.afterSelect.value !== "no_reset") log(t("log.reset.done"), "dim");
+                } catch (e) {
+                    log(t("log.reset.skip", e && e.message ? e.message : e));
+                }
+            }
         } catch (e) {
             log(t("log.flash.fail", e && e.message ? e.message : e), "err");
+            if (viewMode === "wizard") showWizErr(t("wiz.err.flash"));
         } finally {
             logFlush();
             setBusy(false);
@@ -1314,10 +1671,51 @@
     els.eraseBtn.onclick = eraseAllFlash;
     els.clearLogBtn.onclick = () => {
         els.logArea.innerHTML = '<div class="empty">' + t("log.empty") + '</div>';
+        els.wizLogArea.innerHTML = '<div class="empty">' + t("wiz.log.empty") + '</div>';
         state.logLines = 0;
         els.logCount.textContent = t("log.count", 0);
         logBuf = "";
     };
+
+    /* 向导视图事件：三步按钮 / 视图切换 / 日志抽屉 */
+    els.wizBtn1.onclick = async () => {
+        if (state.busy || !serialOK || state.picking) return;
+        clearWizErr();
+        /* 兜底：serial 对象存在但 requestPort 永久挂起的内嵌环境（TRAE 预览等
+         * UA 拦不住的漏网场景），8 秒无果给引导横幅；用户迟选端口则连上后撤横幅 */
+        let settled = false;
+        const timer = setTimeout(() => { if (!settled) showWizErr(t("wiz.err.picker")); }, 8000);
+        try {
+            /* 已连接或监视中同样走 connectDevice：复用已选端口，监视先停再进烧录连接 */
+            await connectDevice();
+            settled = true;
+            clearTimeout(timer);
+            clearWizErr();
+        } catch (e) {
+            settled = true;
+            clearTimeout(timer);
+            await disconnectDevice();
+            log(t("log.connect.fail", e && e.message ? e.message : e), "err");
+            /* 用户取消串口选择器不算失败，不弹横幅 */
+            if (e && e.message !== t("err.no.port")) showWizErr(t("wiz.err.cable"));
+        }
+    };
+    els.wizBtn2.onclick = () => {
+        if (state.busy || !serialOK) return;
+        if (!state.esploader && !state.monitoring) return;
+        startFlash();
+    };
+    els.wizBtn3.onclick = async () => {
+        if (state.busy || !serialOK || !wizFlashed) return;
+        wizLogShow(true);
+        /* 日志被手动停过则补开，保证"玩耍"总有实时日志 */
+        if (!state.monitoring) {
+            try { await startMonitor(); } catch (e) { log(t("log.monitor.fail", e && e.message ? e.message : e), "err"); }
+        }
+    };
+    els.wizLogHandle.onclick = () => els.wizLog.classList.toggle("collapsed");
+    els.wizAdvBtn.onclick = () => setView("advanced");
+    els.returnWizardBtn.onclick = () => setView("wizard");
 
     /* 语言切换：🌐 按钮展开下拉，点击外部收起 */
     $("langBtn").onclick = (e) => {
@@ -1335,9 +1733,13 @@
 
     applyLang(curLang);
     buildLangMenu();
+    setView("wizard");
 
-    if (!("serial" in navigator)) {
+    if (!serialOK || /Electron\//i.test(navigator.userAgent)) {
+        /* serial 缺失（微信/QQ 内嵌、手机、Safari、Firefox）或 Electron 内嵌
+         * （TRAE/VS Code 预览，serial 存在但 requestPort 挂起）统一拦截 */
         els.noSerialBanner.classList.remove("hidden");
+        blockWizard();
         els.connectBtn.disabled = true;
         els.monitorBtn.disabled = true;
         els.flashBtn.disabled = true;
@@ -1346,6 +1748,7 @@
         log(t("log.ready"), "dim");
         loadPreset("full");
     }
+    syncWizard();
 </script>
 </body>
 </html>

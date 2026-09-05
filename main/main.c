@@ -9,6 +9,7 @@
 #include "engine_midi.h"
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_heap_caps.h"
 #include "esp_task_wdt.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -24,8 +25,10 @@
 #include "service_recorder.h"
 #include "service_ftp.h"
 #include "service_sd.h"
+#include "service_timer.h"
 #include "service_usb_host.h"
 #include "service_voice.h"
+#include "service_wavrec.h"
 #include "service_wifi.h"
 #include "service_ws.h"
 #include "task_app.h"
@@ -86,6 +89,8 @@ void app_main(void)
 
     service_i18n_init();
     service_recorder_init();
+    service_wavrec_init();
+    service_timer_init();
     /* FTP 仅初始化状态，socket/缓冲等进入 FTP 页才分配；失败降级不影响开机 */
     if (service_ftp_init() != ESP_OK) {
         ESP_LOGW(TAG, "service_ftp_init failed, ftp disabled");
@@ -121,6 +126,12 @@ void app_main(void)
     /* 末尾内部打开 AFE；AFE 不可用时退化 manual 按住说话，不阻断开机 */
     ESP_ERROR_CHECK_WITHOUT_ABORT(service_voice_init());
 
+    /* 网络为可选增值功能，离线音乐必须可用，失败降级。
+     * 位置：SF2 大音源加载之前——SDIO DMA buffer 需内部 RAM，SF2 元数据会耗尽它。
+     * hosted 链路由 esp_wifi_init 内部自行建立（reconfigure→card init→等有界超时），
+     * 调用前链路必然未就绪，属正常；探测式跳过曾致 WiFi 全灭（2026-08，已拆）。 */
+    ESP_ERROR_CHECK_WITHOUT_ABORT(service_wifi_boot());
+
     /* 音色加载失败时“开机但静默”优于重启循环（存储损坏时 abort 死循环）。
      * Trap: 无卡时 SPIFFS 加载 10s+，main 独占 CPU0 饿死 IDLE0 触发 task_wdt；
      * 进度回调内的让出不足以救回 IDLE0，用 WDT relax 临时把超时提到 30s */
@@ -136,14 +147,17 @@ void app_main(void)
     ESP_ERROR_CHECK_WITHOUT_ABORT(service_audio_activate_sf2());
     engine_gui_wdt_restore();
 
+    /* 诊断：SF2 大音源加载后的内部/DMA RAM 余量——定位 SD 读卡 DMA buffer 是否够用 */
+    ESP_LOGI(TAG, "heap_diag sf2_loaded internal=%u psram=%u dma=%u",
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_DMA));
+
     main_boot_progress(BOOT_PROGRESS_60);
 
     /* RTC 失败仅影响时钟类 App，降级 */
     ESP_ERROR_CHECK_WITHOUT_ABORT(service_rtc_init());
     main_boot_progress(BOOT_PROGRESS_70);
-
-    /* 网络为可选增值功能，离线音乐必须可用，失败降级 */
-    ESP_ERROR_CHECK_WITHOUT_ABORT(service_wifi_boot());
 
     ESP_ERROR_CHECK_WITHOUT_ABORT(service_http_client_init());
 

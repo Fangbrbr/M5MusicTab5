@@ -56,6 +56,9 @@ void service_input_late_probe_ble(void)
     if (s_ble_probe_done) {
         return;
     }
+    /* 探测一次性定死：无论成功/失败都置位终止，task_app 周期调用只跑一次。
+     * Trap: 曾改为"失败可重试"以等 C6 握手，但本机 C6 固件旧、BLE MIDI 本就
+     * 不可用，探测永远失败导致每 10ms 重试刷屏（2026-08）。 */
     s_ble_probe_done = true;
 
     ESP_LOGI(TAG, "BLE MIDI probe: starting (background)");
@@ -67,6 +70,7 @@ void service_input_late_probe_ble(void)
             ESP_LOGI(TAG, "BLE MIDI ready");
         }
     } else {
+        /* C6 固件旧/链路未就绪：跳过 BLE MIDI（本机从不用 BLE MIDI） */
         ESP_LOGI(TAG, "C6 firmware outdated/unsupported, BLE MIDI skipped");
     }
 }

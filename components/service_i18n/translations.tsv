@@ -7,9 +7,11 @@ X-Y	X-Y	X-Y
 音感挑战	音感挑战	Ear Trainer
 五度圈	五度圈	Circle of Fifths
 和弦练习	和弦练习	Chord Trainer
+录音机	录音机	Recorder
 鼓垫	鼓垫	Drum Pad
+音序器	音序器	Sequencer
 小钢琴	小钢琴	Tiny Piano
-AI 导师	AI 导师	AI Mentor
+AI 助手	AI 助手	AI Assistant
 时钟日历	时钟日历	Clock
 MIDI 播放器	MIDI 播放器	MIDI Player
 节拍器	节拍器	Metronome
@@ -34,6 +36,7 @@ TAB5 音乐盒	TAB5 音乐盒	TAB5 Music Box
 喵喵需要知道正确的时间才能准确指导你的练习哦...	喵喵需要知道正确的时间才能准确指导你的练习哦...	Meow meow needs the right time to guide your practice...
 小时	小时	Hour
 分钟	分钟	Minute
+时区	时区	Timezone
 当前选择：	当前选择：	Selected:
 秒	秒	Second
 保存	保存	Save
@@ -60,8 +63,8 @@ Wifi总开关：	Wifi总开关：	Wi-Fi:
 喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	喵喵会在5秒内自动完成重启，然后就可以正式开启音乐旅途啦	Meow meow will reboot in 5 seconds, then your music journey begins
 练耳	练耳	Ear Trainer
 组鼓	组鼓	Drum Kit
-AI导师	AI导师	AI Mentor
-占卜	占卜	Divination
+AI助手	AI助手	AI Assistant
+答案之书	答案之书	Book of Answers
 语言/Language：	语言/Language：	Language:
 网络设置：	网络设置：	Network:
 全局重置：	全局重置：	Factory reset:
@@ -129,9 +132,8 @@ Hi，喵喵。	Hi，喵喵。	Hi, Miao Miao.
 时钟	时钟	Clock
 万年历	万年历	Calendar
 计时器	计时器	Timer
-答案之书	答案之书	Book of Answers
 答案之书&塔罗牌	答案之书&塔罗牌	Book & Tarot
-======\n答案之书\n======	======\n答案之书\n======	======\nAnswers\n======
+=====\n答案之书\n=====	=====\n答案之书\n=====	=====\nAnswers\n=====
 过去	过去	Past
 审判	审判	Judgement
 正位	正位	Upright
@@ -201,7 +203,7 @@ The Book of	The Book of	The Book of
 curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api/v1/misc/'
 ftp://123.456.789.222等待连接\nWifi为案松手的撒网数大	ftp://123.456.789.222等待连接\nWifi为案松手的撒网数大	ftp://123.456.789.222 waiting\nWi-Fi file transfer
 https://v1.hitokoto.cn/?c=f&encode=text	https://v1.hitokoto.cn/?c=f&encode=text	https://v1.hitokoto.cn/?c=f&encode=text
-string_wifi_connect_tip	正在连接 Wi-Fi，请勿断电	Connecting to Wi-Fi, please wait
+string_wifi_connect_tip	string_wifi_connect_tip	string_wifi_connect_tip
 xxx.mid	xxx.mid	xxx.mid
 丙午年六月大 初八 · 大暑	丙午年六月大 初八 · 大暑	Bingwu Year, 6th Lunar Month, Day 8 · Major Heat
 主选单\n时钟\n小钢琴\nAI导师\n禅模式	主选单\n时钟\n小钢琴\nAI导师\n禅模式	Main Menu\nClock\nTiny Piano\nAI Mentor\nZen Mode
@@ -387,3 +389,70 @@ AP 过载拒绝关联	AP 过载拒绝关联	AP overloaded, association rejected
 纯四度+大二度+小三度	纯四度+大二度+小三度	P4+M2+m3
 大三度+小三度+大二度	大三度+小三度+大二度	M3+m3+M2
 大三度+小三度+小三度+大二度	大三度+小三度+小三度+大二度	M3+m3+m3+M2
+占卜	占卜	Prophecy
+Pattern	预设视图	Pattern
+Pattern is empty	预设为空	Pattern is empty
+Randomized	更新随机序列...	Randomized...
+Select a slot first	请先选择槽位	Select a slot first
+No SD card	未检测到 SD 卡	No SD card
+Save failed	保存失败	Save failed
+Select a file first	请先选择文件	Select a file first
+Load failed	加载失败	Load failed
+Invalid file	文件无效	Invalid file
+Delete failed	删除失败	Delete failed
+No patterns	暂无 预设	No patterns
+Saved: %s	已保存: %s	Saved: %s
+Loaded: %s	已加载: %s	Loaded: %s
+Deleted: %s	已删除: %s	Deleted: %s
+Grid cleared	网格已清空	Grid cleared
+Page cleared	当前页已清空	Page cleared
+Pattern is empty	预设是空的	Pattern is empty
+Load	载入	Load
+播放	播放	Play
+停止	停止	Stop
+Kick	Kick	Kick
+CHH	CHH	CHH
+OHH	OHH	OHH
+Tom	Tom	Tom
+PREC	PREC	PREC
+FX	FX	FX
+Kick (CH10, Note36)	Kick (CH10, Note36)	Kick (CH10, Note36)
+Grid Set	单步设置	Grid Set
+None\n35-Acoustic Bass Drum 2\n36-Bass Drum 1\n37-Side Stick\n38-Acoustic Snare\n39-Hand Clap\n40-Electric Snare\n41-Low Floor Tom\n42-Closed Hi-Hat\n43-High Floor Tom\n44-Pedal Hi-Hat\n45-Low Tom\n46-Open Hi-Hat\n47-Low-Mid Tom\n48-Hi-Mid Tom\n49-Crash Cymbal 1\n50-High Tom\n51-Ride Cymbal 1\n52-Chinese Cymbal\n53-Ride Bell\n55-Splash Cymbal\n56-Cowbell\n57-Crash Cymbal 2	None\n35-Acoustic Bass Drum 2\n36-Bass Drum 1\n37-Side Stick\n38-Acoustic Snare\n39-Hand Clap\n40-Electric Snare\n41-Low Floor Tom\n42-Closed Hi-Hat\n43-High Floor Tom\n44-Pedal Hi-Hat\n45-Low Tom\n46-Open Hi-Hat\n47-Low-Mid Tom\n48-Hi-Mid Tom\n49-Crash Cymbal 1\n50-High Tom\n51-Ride Cymbal 1\n52-Chinese Cymbal\n53-Ride Bell\n55-Splash Cymbal\n56-Cowbell\n57-Crash Cymbal 2	None\n35-Acoustic Bass Drum 2\n36-Bass Drum 1\n37-Side Stick\n38-Acoustic Snare\n39-Hand Clap\n40-Electric Snare\n41-Low Floor Tom\n42-Closed Hi-Hat\n43-High Floor Tom\n44-Pedal Hi-Hat\n45-Low Tom\n46-Open Hi-Hat\n47-Low-Mid Tom\n48-Hi-Mid Tom\n49-Crash Cymbal 1\n50-High Tom\n51-Ride Cymbal 1\n52-Chinese Cymbal\n53-Ride Bell\n55-Splash Cymbal\n56-Cowbell\n57-Crash Cymbal 2
+Velocity	音量	Velocity
+Probability	概率	Probability
+Rand	随机	Rand
+Vol	音量	Vol
+Prob	概率	Prob
+CC：	CC：	CC：
+Value：	值：	Value：
+None\n74\n71\n10\n7\n91	无\n74-滤波截止\n71-共振\n10-声像\n7-通道音量\n91-混响发送	None\n74-Cutoff\n71-Resonance\n10-Pan\n7-Volume\n91-Reverb
+120	120	120
+时区：	时区：	Timezone:
+场景：	场景：	Scene:
+存储空间	存储空间	Storage
+已用: 1.2GB / 剩余: 28.9GB	已用: 1.2GB / 剩余: 28.9GB	Used: 1.2GB / Free: 28.9GB
+信息：	信息：	Info:
+00:55	00:55	00:55
+录制	录制	Record
+录制中	录制中	Recording
+"语音，单声道，省空间
+乐器，立体声，高码率
+环境，双麦 AEC 开启"	"语音，单声道，省空间
+乐器，立体声，高码率
+环境，双麦 AEC 开启"	"Voice, mono, compact
+Instrument, stereo, high quality
+Ambient, dual-mic AEC"
+待机	待机	Idle
+准备中	准备中	Preparing
+播放中	播放中	Playing
+确认删除该录音？	确认删除该录音？	Delete this recording?
+确认删除该文件？	确认删除该文件？	Delete this file?
+SD 卡不可用	SD 卡不可用	SD card unavailable
+语音前端不可用	语音前端不可用	Voice frontend unavailable
+录音启动失败	录音启动失败	Failed to start recording
+录音写盘失败	录音写盘失败	Recording write failed
+文件打开失败	文件打开失败	Failed to open file
+不支持的 WAV 格式	不支持的 WAV 格式	Unsupported WAV format
+暂无录音文件	暂无录音文件	No recordings yet
+已用: %lu.%luGB / 剩余: %lu.%luGB	已用: %lu.%luGB / 剩余: %lu.%luGB	Used: %lu.%luGB / Free: %lu.%luGB

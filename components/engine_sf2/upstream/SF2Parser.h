@@ -28,6 +28,42 @@
 #include <FS.h>
 #include <vector>
 #include <map>
+#include <new>
+#include <stdlib.h>
+#include "esp_heap_caps.h"
+#include "esp_log.h"
+
+/* PATCH(P23): 解析/预设结构的 STL 分配收口到 PSRAM。
+ * Why: sdkconfig SPIRAM_MALLOC_ALWAYSINTERNAL=4096 使 ≤4KB 的 STL 小块全落内部
+ * RAM；全 GM 音源有上千 zone/generator 小 vector + 每采样两个 map 节点，常驻吃掉
+ * ~100KB+ 内部 RAM（随当前音源保持，非泄漏），ws 任务建栈失败、AI 无法连接
+ * （2026-09 真机：Merlin_Silver 加载后 internal free=3.8KB）。
+ * 解析与 zone 查询不在音频热路径（渲染只读采样数据，本就在 PSRAM），无感。 */
+template <typename T>
+struct Sf2PsramAllocator {
+    using value_type = T;
+    Sf2PsramAllocator() = default;
+    template <typename U>
+    Sf2PsramAllocator(const Sf2PsramAllocator<U>&) {}
+    T* allocate(std::size_t n) {
+        void* p = heap_caps_malloc(n * sizeof(T), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (p == nullptr) {
+            /* 工程 -fno-exceptions 禁 throw；PSRAM 耗尽属致命，打日志后 abort */
+            ESP_LOGE("SF2Parser", "PSRAM alloc failed: %u bytes", (unsigned)(n * sizeof(T)));
+            abort();
+        }
+        return static_cast<T*>(p);
+    }
+    void deallocate(T* p, std::size_t) { heap_caps_free(p); }
+    /* 无状态分配器：恒等（C++17 起 is_always_equal 亦可由空类型推导） */
+    template <typename U>
+    bool operator==(const Sf2PsramAllocator<U>&) const { return true; }
+    template <typename U>
+    bool operator!=(const Sf2PsramAllocator<U>&) const { return false; }
+};
+template <typename T> using sf2_vector = std::vector<T, Sf2PsramAllocator<T>>;
+template <typename K, typename V> using sf2_map =
+    std::map<K, V, std::less<K>, Sf2PsramAllocator<std::pair<const K, V>>>;
 
 #include <LittleFS.h>
 
@@ -118,21 +154,21 @@ struct Zone {    // --- Обязательные параметры ---
 };
 
 struct SF2Zone {
-    std::vector<Generator> generators;
+    sf2_vector<Generator> generators;
 };
 
 struct SF2Instrument {
     String name;
-    std::vector<SF2Zone> zones;
-    std::vector<Generator> globalGenerators;
+    sf2_vector<SF2Zone> zones;
+    sf2_vector<Generator> globalGenerators;
 };
 
 struct SF2Preset {
     String name;
     uint16_t bank;
     uint16_t program;
-    std::vector<SF2Zone> zones;
-    std::vector<Generator> globalGenerators;
+    sf2_vector<SF2Zone> zones;
+    sf2_vector<Generator> globalGenerators;
 };
 
 
@@ -140,10 +176,10 @@ class SF2Parser {
 public:
     SF2Parser(const char* path, fs::FS* fs = &LittleFS);
     bool parse();
-    std::vector<SampleHeader>& getSamples();
-    std::vector<Zone> getZonesForNote(uint8_t note, uint8_t velocity, uint16_t bank, uint16_t program);
-    std::vector<SF2Preset> & getPresets() { return presets; } 
-    const std::vector<SF2Preset>& getPresets() const { return presets; } 
+    sf2_vector<SampleHeader>& getSamples();
+    sf2_vector<Zone> getZonesForNote(uint8_t note, uint8_t velocity, uint16_t bank, uint16_t program);
+    sf2_vector<SF2Preset> & getPresets() { return presets; }
+    const sf2_vector<SF2Preset>& getPresets() const { return presets; } 
     void dumpPresetStructure() ;
     bool hasPreset(uint16_t bank, uint16_t program) const ;
     void clear();
@@ -165,7 +201,7 @@ private:
     SampleHeader* resolveSample(uint32_t sampleID);
     uint32_t hashSampleName(const char* name) ;
     bool loadSampleDataToMemory();
-    void applyGenerators(const std::vector<Generator>& gens, Zone& zone) ;
+    void applyGenerators(const sf2_vector<Generator>& gens, Zone& zone) ;
 
     File file;
     String filepath;
@@ -175,12 +211,12 @@ private:
     void *m_progress_user = nullptr;
 
     fs::FS* filesystem;
-    std::vector<SampleHeader> samples;
-    std::vector<Zone> zones; 
-    std::vector<SF2Preset> presets;
-    std::vector<SF2Instrument> instruments;
-    std::map<int, SampleHeader*> sampleMap;
-    std::map<uint32_t, SampleHeader*> startPosMap;
+    sf2_vector<SampleHeader> samples;
+    sf2_vector<Zone> zones;
+    sf2_vector<SF2Preset> presets;
+    sf2_vector<SF2Instrument> instruments;
+    sf2_map<int, SampleHeader*> sampleMap;
+    sf2_map<uint32_t, SampleHeader*> startPosMap;
 
     uint32_t sdtaOffset = 0;
     uint32_t sdtaSize = 0;

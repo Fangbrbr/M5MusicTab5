@@ -39,6 +39,7 @@
 | P19 | `synth.cpp` | `findWorstVoice()` / `findWeakestVoiceOnNote()` | 复音耗尽诊断日志：所有 voice 活跃仍分配 → 打 WARN「polyphony exhausted」；同 note 超 `MAX_VOICES_PER_NOTE` 复用 → 打 WARN「voice reuse same-note」。用于确认大型音源连击轻音是否复音池耗尽导致 |
 | P20 | `SF2Parser.cpp` | `loadSampleDataToMemory()` / `clear()` | 采样分配失败时绑定共享静音缓冲（静态 4 字节零样本），而非上游 fallback 别名让大量 zone 共享同一波形 → 复音相位重叠产生刺耳噪音。静音绑定后该 zone 静音发声、2 帧即止 |
 | P21 | `synth.cpp` | `noteOn()` poly 分支 | 同音 re-trigger 清理：同 channel 同 note 且已松开（noteHeld==false、release 余音）的旧 voice 先 kill 再启动新声。**必须 kill()（END_NOW+active=false）而非 die()**：die() 只进快释放、active 仍 true，尾音 voice 持续占槽位；大型音源一个键映射多个 zone（力度分层），快速连击时余音 voice 不释放会把 64 复音池塞满，新 noteOn 被迫 steal score=0 的 voice 而被掐音（只剩尾音）。kill 立即释放槽位根治。配合 R1 声部数回退 64 |
+| P23 | `SF2Parser.h` / `SF2Parser.cpp` | 全部 STL 容器声明（samples/zones/presets/instruments/嵌套 generators、sampleMap/startPosMap、parsePDTA 局部表、getZonesForNote 返回） | 新增 `Sf2PsramAllocator`（`sf2_vector`/`sf2_map` 别名）把解析/预设结构从内部 RAM 迁到 PSRAM。Why：sdkconfig `SPIRAM_MALLOC_ALWAYSINTERNAL=4096` 使 ≤4KB STL 小块全落内部；全 GM 音源上千小 vector+map 节点常驻 ~100KB+ 内部 RAM（随当前音源保持，非泄漏），ws 任务建栈失败、AI 断连（2026-09 真机 internal free=3.8KB）。解析/zone 查询不在音频热路径（渲染只读采样数据，本就在 PSRAM）。Arduino `String`（preset/instrument 名）不支持分配器，未迁（量小） |
 
 ## 性能优化补丁
 

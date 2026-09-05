@@ -11,9 +11,9 @@
 
 #include "app_ai_agent.h"
 #include "app_chord_trainer.h"
-#include "app_circle_of_fifths.h"
+#include "app_recorder.h"
 #include "app_clock_calendar.h"
-#include "app_drum_pad.h"
+#include "app_sequencer.h"
 #include "app_ear_trainer.h"
 #include "app_midi_player.h"
 #include "app_metronome.h"
@@ -935,10 +935,10 @@ esp_err_t app_manager_register_all(void)
 {
     app_zen_register();
     app_ear_trainer_register();
-    app_circle_of_fifths_register();
+    app_recorder_register();
     app_chord_trainer_register();
     app_xy_pad_register();
-    app_drum_pad_register();
+    app_sequencer_register();
     app_tiny_piano_register();
     app_clock_calendar_register();
     app_ai_agent_register();

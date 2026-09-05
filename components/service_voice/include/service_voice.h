@@ -139,6 +139,31 @@ uint32_t service_voice_get_frame_samples(void);
  */
 const char *service_voice_get_wake_word(void);
 
+/**
+ * @brief mic 录音 tap 回调（16kHz mono int16）
+ *
+ * Contract: 回调运行在 task_audio（Core 1 最高优先级）上下文，必须零阻塞、
+ * 零分配，只允许 memcpy 级操作（如写 SPSC 环形缓冲）。
+ */
+typedef void (*service_voice_mic_tap_cb_t)(const int16_t *pcm, uint32_t samples, void *ctx);
+
+/**
+ * @brief 注册/注销 mic 录音 tap
+ *
+ * @param cb             回调；NULL = 注销
+ * @param ctx            回调上下文
+ * @param aec_processed  false=tap 原始 mic（重采样后、AFE 前，含扬声器串音）；
+ *                       true=tap AFE 输出（AEC 后，抑制扬声器串音）
+ * Why: AFE 常驻持有 mic 且配置锁死 44100/1ch，录音机语音/环境模式只能
+ * 从 AFE 管线旁路取 16k mono；两种 tap 点共用同一注册，同一时刻仅一路。
+ */
+void service_voice_set_mic_tap(service_voice_mic_tap_cb_t cb, void *ctx, bool aec_processed);
+
+/**
+ * @brief AFE 是否已激活（tap 数据仅在激活后持续产出）
+ */
+bool service_voice_is_afe_active(void);
+
 #ifdef __cplusplus
 }
 #endif

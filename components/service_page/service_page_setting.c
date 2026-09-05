@@ -474,20 +474,13 @@ void service_page_setting_process(void)
     if (s_sf2_need_validate) {
         s_sf2_need_validate = false;
         const char *cur = engine_sf2_current_source();
-        if (cur[0] != '\0') {
-            bool exists = false;
-            int count = engine_sf2_sd_rescan();
-            for (int i = 0; i < count; i++) {
-                if (strcmp(engine_sf2_sd_name_at(i), cur) == 0) {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists && s_sf2_pending < 0) {
-                ESP_LOGW(TAG, "current sf2 %s removed, fallback to internal", cur);
-                app_manager_show_notification_timeout(_("音源文件已被移除，回退内部预设"), 3000);
-                s_sf2_pending = 0;
-            }
+        /* Trap: rescan+name_at 分步调用会被并发重扫撕裂（task_gui rebuild vs
+         * 本 task_app 校验，2026-09 rescan 14→28→14），误判已移除而误回退；
+         * 改用锁内原子校验 */
+        if (cur[0] != '\0' && !engine_sf2_sd_source_exists() && s_sf2_pending < 0) {
+            ESP_LOGW(TAG, "current sf2 %s removed, fallback to internal", cur);
+            app_manager_show_notification_timeout(_("音源文件已被移除，回退内部预设"), 3000);
+            s_sf2_pending = 0;
         }
         lvgl_port_lock(portMAX_DELAY);
         setting_sf2_rebuild_options();

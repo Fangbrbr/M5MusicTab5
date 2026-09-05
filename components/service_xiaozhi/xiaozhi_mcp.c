@@ -215,7 +215,9 @@ static bool xz_mcp_get_system_info(const cJSON *args, char *out, size_t out_len)
     cJSON_AddStringToObject(root, "chip_model_name", CONFIG_IDF_TARGET);
     cJSON *application = cJSON_CreateObject();
     cJSON_AddStringToObject(application, "name", app->project_name);
-    cJSON_AddStringToObject(application, "version", app->version);
+    /* 版本号统一走 FIRMWARE_VERSION（与关于页/启动日志同源）；app->version 是
+     * project() VERSION，非 tag 构建恒为 0.0.0，不能用 */
+    cJSON_AddStringToObject(application, "version", FIRMWARE_VERSION);
     cJSON_AddItemToObject(root, "application", application);
 
     char *printed = cJSON_PrintUnformatted(root);
@@ -288,11 +290,11 @@ static const xz_mcp_tool_t s_tools[] = {
                        "Available apps (use the exact English `name` parameter): "
                        "`Zen Mode` (禅模式/冥想/白噪音/放松助眠), "
                        "`Metronome` (节拍器), "
-                       "`Drum Pad` (组鼓/鼓垫/架子鼓/打鼓), "
+                       "`Sequencer` (音序器/鼓机/节奏编辑/编曲), "
+                       "`Recorder` (录音机/录音/录制声音/语音备忘录), "
                        "`Tiny Piano` (小钢琴/钢琴), "
                        "`Ear Trainer` (练耳/视唱练耳), "
-                       "`Circle Of Fifths` (五度圈), "
-                       "`Chord Trainer` (和弦练习), "
+                       "`Chord Trainer` (和弦练习/五度圈), "
                        "`XY Pad` (XY模式), "
                        "`Clock Calendar` (时钟日历/时钟/日历/天气/闹钟), "
                        "`Fun` (趣味/答案之书/塔罗牌/抽卡/占卜/翻书/运势), "
@@ -419,8 +421,6 @@ static void xz_mcp_reply_error(int id, const char *message, const char *session_
  */
 static void xz_mcp_on_initialize(int id, const char *session_id)
 {
-    const esp_app_desc_t *app = esp_app_get_description();
-
     cJSON *result = cJSON_CreateObject();
     cJSON_AddStringToObject(result, "protocolVersion", "2024-11-05");
     cJSON *caps = cJSON_CreateObject();
@@ -428,7 +428,8 @@ static void xz_mcp_on_initialize(int id, const char *session_id)
     cJSON_AddItemToObject(result, "capabilities", caps);
     cJSON *info = cJSON_CreateObject();
     cJSON_AddStringToObject(info, "name", "TAB5_Music_Pad");
-    cJSON_AddStringToObject(info, "version", (app != NULL) ? app->version : "unknown");
+    /* 版本号统一走 FIRMWARE_VERSION（与关于页/启动日志同源） */
+    cJSON_AddStringToObject(info, "version", FIRMWARE_VERSION);
     cJSON_AddItemToObject(result, "serverInfo", info);
     xz_mcp_reply_result(id, result, session_id);
 }

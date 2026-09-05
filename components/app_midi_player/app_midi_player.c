@@ -20,6 +20,7 @@
 #include "service_i18n.h"
 #include "service_player.h"
 #include "service_nvs.h"
+#include "service_timer.h"
 #include "service_xiaozhi.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -55,6 +56,7 @@ typedef struct {
     lv_obj_t *file_example;
     lv_obj_t *panel_record_list;
     lv_obj_t *list_rec;
+    lv_obj_t *del_msgbox;
     lv_obj_t *name_label;
     lv_obj_t *path_label;
     lv_obj_t *track_count;
@@ -85,6 +87,7 @@ static const widget_binding_t s_midi_bindings[] = {
     WIDGET_BIND(ui_screen_midi_t, file_example,    "midi_file_example",      WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_midi_t, panel_record_list,  "midi_panel_record_list",    WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_midi_t, list_rec,        "midi_list_record_file",  WIDGET_KIND_ANY),
+    WIDGET_BIND(ui_screen_midi_t, del_msgbox,      "midi_del_msgbox",        WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_midi_t, name_label,      "midi_music_name_label",  WIDGET_KIND_LABEL),
     WIDGET_BIND(ui_screen_midi_t, path_label,      "midi_music_path_label",  WIDGET_KIND_LABEL),
     WIDGET_BIND(ui_screen_midi_t, track_count,     "midi_music_track_count", WIDGET_KIND_LABEL),
@@ -153,6 +156,8 @@ typedef struct {
     int64_t play_time_us;
     int64_t last_pump_us;
     uint32_t last_ui_ms;
+    service_timer_handle_t midi_timer;   /* MIDI 时基周期 hook（C6） */
+    bool play_finished_flag;             /* hook 置位，on_update 消费（跨任务） */
 } midi_player_state_t;
 
 static midi_player_state_t s_mp = {0};
@@ -189,6 +194,64 @@ static void midi_all_notes_off(void)
 {
     for (int ch = 0; ch < 16; ch++) {
         midi_send(ENGINE_MIDI_MSG_CONTROL_CHANGE, (uint8_t)ch, 123, 0);
+    }
+}
+
+/* -------------------- MIDI 时基（C6：service_timer hook） -------------------- */
+
+#define MIDI_TICK_US  2000   /* 2ms 周期：SMF 事件时基为 us 级，500Hz 足够精确 */
+
+/* MIDI/录音 时基 hook：只推进解析与发事件（非阻塞，不碰 LVGL）。
+ * Trap: 运行在 esp_timer 任务；加载/停止/换曲期间先注销本 hook（状态切换
+ * 均在 task_app），数组 smf.events 在 load 后不再变化，此处只读+推进 play_idx。 */
+static void midi_tick_hook(void *arg)
+{
+    (void)arg;
+    if (s_mp.is_music) {
+        return;   /* MP3 解码泵留 on_update（2 秒 aux 缓冲天然抗卡） */
+    }
+    if (s_mp.state != PLAYER_STATE_PLAYING || s_mp.smf.events == NULL ||
+        s_mp.smf.event_count == 0) {
+        return;
+    }
+
+    int64_t now = esp_timer_get_time();
+    s_mp.play_time_us += now - s_mp.last_pump_us;
+    s_mp.last_pump_us = now;
+
+    while (s_mp.play_idx < s_mp.smf.event_count &&
+           s_mp.smf.events[s_mp.play_idx].time_us <= s_mp.play_time_us) {
+        engine_midi_smf_event_t *ev = &s_mp.smf.events[s_mp.play_idx];
+        if (ev->type == 0xE0) {
+            midi_send_bend(ev->channel, (uint16_t)(ev->data1 | ((uint16_t)ev->data2 << 7)));
+        } else {
+            midi_send(ev->type, ev->channel, ev->data1, ev->data2);
+        }
+        s_mp.play_idx++;
+    }
+
+    if (s_mp.play_idx >= s_mp.smf.event_count) {
+        /* 完播：置标志，由 on_update（task_app）消费改状态，防跨任务竞态 */
+        s_mp.last_pump_us = now;
+        __sync_synchronize();
+        s_mp.play_finished_flag = true;
+    }
+}
+
+static void midi_timer_start(void)
+{
+    if (s_mp.midi_timer != NULL || s_mp.is_music) {
+        return;
+    }
+    service_timer_periodic_register(MIDI_TICK_US, midi_tick_hook, NULL, &s_mp.midi_timer);
+    s_mp.last_pump_us = esp_timer_get_time();
+}
+
+static void midi_timer_stop(void)
+{
+    if (s_mp.midi_timer != NULL) {
+        service_timer_unregister(s_mp.midi_timer);
+        s_mp.midi_timer = NULL;
     }
 }
 
@@ -252,8 +315,11 @@ static void player_enter_state(player_state_t prev_state)
                 /* MP3 进入播放：启动解码（幂等），并隔离 MIDI 链路 */
                 service_player_play();
                 music_suspend_midi();
+                midi_timer_stop();   /* 防残留 MIDI hook */
             } else {
                 s_mp.last_pump_us = esp_timer_get_time();
+                s_mp.play_finished_flag = false;
+                midi_timer_start();   /* MIDI/录音时基挪入周期 hook（C6） */
             }
             player_ui_set_icon(true);
             break;
@@ -271,7 +337,9 @@ static void player_leave_state(player_state_t prev_state)
     switch (prev_state) {
         case PLAYER_STATE_PLAYING:
             if (!s_mp.is_music) {
-                /* 离开 MIDI/录音 播放态前强制静音，避免暂停/跳转/切出时音符悬挂 */
+                /* 离开 MIDI/录音 播放态前强制静音 + 注销时基 hook，避免暂停/跳转/切出时
+                 * 音符悬挂或 hook 继续推进解析 */
+                midi_timer_stop();
                 midi_all_notes_off();
             }
             break;
@@ -861,6 +929,9 @@ typedef enum {
     MP_REQ_PLAY_STEP,   /* player_play_step(value=delta) */
     MP_REQ_SEEK,        /* player_seek_percent(value=percent) */
     MP_REQ_SWITCH_TYPE, /* 切换显示类型 */
+    MP_REQ_DEL_ASK,     /* 长按条目：弹删除确认 */
+    MP_REQ_DEL_CONFIRM, /* 确认删除 */
+    MP_REQ_DEL_CANCEL,  /* 取消删除 */
 } mp_req_action_t;
 
 typedef struct {
@@ -869,6 +940,11 @@ typedef struct {
     int index;
     int value;
 } mp_req_t;
+
+static void app_midi_player_del_ask_cb(lv_event_t *e);
+static void midi_del_ask(play_type_t type, int index);
+static void midi_del_confirm(void);
+static void midi_del_msgbox_hide(void);
 
 #define MP_REQ_RING_CAP 8
 static mp_req_t s_req_ring[MP_REQ_RING_CAP];
@@ -914,6 +990,15 @@ static void player_drain_requests(void)
             break;
         case MP_REQ_SWITCH_TYPE:
             midi_switch_type(req.type);
+            break;
+        case MP_REQ_DEL_ASK:
+            midi_del_ask(req.type, req.index);
+            break;
+        case MP_REQ_DEL_CONFIRM:
+            midi_del_confirm();
+            break;
+        case MP_REQ_DEL_CANCEL:
+            midi_del_msgbox_hide();
             break;
         default:
             break;
@@ -1148,6 +1233,12 @@ static void midi_populate_list(lv_obj_t *list)
         lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
         lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, (void *)(intptr_t)i);
+        /* .mid 类列表（MIDI/录音）长按弹删除确认；type 编码进高 16 位 */
+        if (list == s_midi_ui.list_mid || list == s_midi_ui.list_rec) {
+            play_type_t del_type = (list == s_midi_ui.list_mid) ? PLAY_TYPE_MIDI : PLAY_TYPE_REC;
+            lv_obj_add_event_cb(btn, app_midi_player_del_ask_cb, LV_EVENT_LONG_PRESSED,
+                                (void *)(intptr_t)(i | ((int)del_type << 16)));
+        }
     }
     lvgl_port_unlock();
 }
@@ -1157,6 +1248,142 @@ static void midi_populate_all_lists(void)
     midi_populate_list(s_midi_ui.list_music);
     midi_populate_list(s_midi_ui.list_mid);
     midi_populate_list(s_midi_ui.list_rec);
+}
+
+/* -------------------- 长按删除确认（midi_del_msgbox） -------------------- */
+
+static struct {
+    play_type_t type;
+    int index;
+} s_del = { PLAY_TYPE_MIDI, -1 };
+
+static void app_midi_player_del_ok_cb(lv_event_t *e)
+{
+    (void)e;
+    player_post_request(MP_REQ_DEL_CONFIRM, PLAY_TYPE_MIDI, 0, 0);
+}
+
+static void app_midi_player_del_cancel_cb(lv_event_t *e)
+{
+    (void)e;
+    player_post_request(MP_REQ_DEL_CANCEL, PLAY_TYPE_MIDI, 0, 0);
+}
+
+static void app_midi_player_del_ask_cb(lv_event_t *e)
+{
+    int v = (int)(intptr_t)lv_event_get_user_data(e);
+    player_post_request(MP_REQ_DEL_ASK, (play_type_t)((v >> 16) & 0xFF),
+                        v & 0xFFFF, 0);
+}
+
+static void midi_del_msgbox_hide(void)
+{
+    lvgl_port_lock(portMAX_DELAY);
+    if (s_midi_ui.del_msgbox != NULL) {
+        lv_obj_add_flag(s_midi_ui.del_msgbox, LV_OBJ_FLAG_HIDDEN);
+    }
+    lvgl_port_unlock();
+    s_del.index = -1;
+}
+
+static void midi_del_ask(play_type_t type, int index)
+{
+    if (type != PLAY_TYPE_MIDI && type != PLAY_TYPE_REC) {
+        return;  /* 仅 .mid 类文件开放删除 */
+    }
+    midi_file_item_t *files = (type == PLAY_TYPE_MIDI) ? s_mp.midi_files : s_mp.rec_files;
+    int count = (type == PLAY_TYPE_MIDI) ? s_mp.midi_file_count : s_mp.rec_file_count;
+    if (index < 0 || index >= count || s_midi_ui.del_msgbox == NULL) {
+        return;
+    }
+    s_del.type = type;
+    s_del.index = index;
+
+    lvgl_port_lock(portMAX_DELAY);
+    lv_obj_t *box = s_midi_ui.del_msgbox;
+    /* 重建内容：msgbox add_* 为追加式，重弹前清 content/footer。
+     * Trap: footer 惰性创建（首个 add_footer_button 才建），新弹窗
+     * get_footer==NULL，lv_obj_clean(NULL) 触发 LV_ASSERT_NULL 死循环
+     * （LV_ASSERT_HANDLER=while(1)，真机 WDT 重启）——必须判空 */
+    lv_obj_clean(lv_msgbox_get_content(box));
+    lv_obj_t *footer = lv_msgbox_get_footer(box);
+    if (footer != NULL) {
+        lv_obj_clean(footer);
+    }
+    /* EEZ 固定高 256 装不下 100px 按钮的 footer（底部截断），高度改按内容自适应 */
+    lv_obj_set_height(box, LV_SIZE_CONTENT);
+
+    lv_obj_t *name_lbl = lv_msgbox_add_text(box, files[index].name);
+    lv_obj_set_style_text_align(name_lbl, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_t *ask_lbl = lv_msgbox_add_text(box, _("确认删除该文件？"));
+    lv_obj_set_style_text_align(ask_lbl, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+
+    /* EEZ 未暴露按钮配色/尺寸/圆角接口，显式按主题上色并固定 100x60(宽x高)、圆角 20
+     *（项目按钮惯例值，msgbox 内部按钮不吃 EEZ 逐控件样式）：OK=删除（错误色），LEFT=返回 */
+    lv_obj_t *btn_ok = lv_msgbox_add_footer_button(box, LV_SYMBOL_OK);
+    lv_obj_set_size(btn_ok, 100, 60);
+    lv_obj_set_style_radius(btn_ok, 20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(btn_ok, engine_gui_theme_color(COLOR_ERROR),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(btn_ok, engine_gui_theme_color(COLOR_TEXT_PRIMARY),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(btn_ok, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_event_cb(btn_ok, app_midi_player_del_ok_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *btn_back = lv_msgbox_add_footer_button(box, LV_SYMBOL_LEFT);
+    lv_obj_set_size(btn_back, 100, 60);
+    lv_obj_set_style_radius(btn_back, 20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(btn_back, engine_gui_theme_color(COLOR_PRIMARY),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(btn_back, engine_gui_theme_color(COLOR_TEXT_PRIMARY),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(btn_back, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_event_cb(btn_back, app_midi_player_del_cancel_cb, LV_EVENT_CLICKED, NULL);
+
+    /* Trap: footer class 默认高度固定 LV_DPI_DEF/3(~43px)，100px 按钮被上下裁切
+     *（圆角恰在裁剪区外，可见部分就是直角矩形横带）；footer 高度改内容自适应 */
+    footer = lv_msgbox_get_footer(box);
+    if (footer != NULL) {
+        lv_obj_set_height(footer, LV_SIZE_CONTENT);
+    }
+
+    lv_obj_add_flag(box, LV_OBJ_FLAG_CLICKABLE);  /* 吸收点击防穿透列表 */
+    lv_obj_clear_flag(box, LV_OBJ_FLAG_HIDDEN);
+    lvgl_port_unlock();
+}
+
+static void midi_del_confirm(void)
+{
+    play_type_t type = s_del.type;
+    int index = s_del.index;
+    midi_del_msgbox_hide();
+    if (type != PLAY_TYPE_MIDI && type != PLAY_TYPE_REC) {
+        return;
+    }
+    midi_file_item_t *files = (type == PLAY_TYPE_MIDI) ? s_mp.midi_files : s_mp.rec_files;
+    int count = (type == PLAY_TYPE_MIDI) ? s_mp.midi_file_count : s_mp.rec_file_count;
+    int cur = (type == PLAY_TYPE_MIDI) ? s_mp.cur_midi_index : s_mp.cur_rec_index;
+    if (index < 0 || index >= count) {
+        return;
+    }
+
+    char name[96];
+    snprintf(name, sizeof(name), "%s", files[index].name);
+
+    /* 删除当前加载曲目：先卸载释放 SMF/复位状态机（FATFS 下删打开文件有风险） */
+    if (s_mp.play_type == type && cur == index && s_mp.state != PLAYER_STATE_IDLE) {
+        player_prepare_load();
+    }
+
+    if (remove(files[index].path) == 0) {
+        app_manager_show_notificationf_timeout(2000, _("Deleted: %s"), name);
+    } else {
+        app_manager_show_notification_timeout(_("Delete failed"), 2000);
+    }
+    midi_scan_files();
+    midi_populate_all_lists();
+    /* 被删曲目可能正是 NVS 保存的曲目：重写一次状态（restore 侧本就有回退） */
+    player_midi_save_state();
 }
 
 /* -------------------- 生命周期 -------------------- */
@@ -1170,6 +1397,7 @@ static bool app_midi_player_on_init(app_base_t *self, void *screen_ctx)
      * 无生产者，直接复位指针 */
     s_req_head = 0;
     s_req_tail = 0;
+    s_del.index = -1;
 
     /* 每次进入重新扫描：录音随时可能在其他 App 产生，缓存扫描结果会导致
      * 新录音不显示（目录列表开销小，仅遍历文件名）；当前曲目索引保留 */
@@ -1180,6 +1408,7 @@ static bool app_midi_player_on_init(app_base_t *self, void *screen_ctx)
     s_mp.play_time_us = 0;
     s_mp.last_ui_ms = 0;
     s_mp.is_music = false;
+    s_mp.play_finished_flag = false;
     player_set_state(PLAYER_STATE_IDLE);
 
     midi_scan_files();
@@ -1282,30 +1511,16 @@ static void app_midi_player_on_update(app_base_t *self)
     }
 
     int64_t now = esp_timer_get_time();
-    s_mp.play_time_us += now - s_mp.last_pump_us;
-    s_mp.last_pump_us = now;
 
-    if (s_mp.smf.events == NULL || s_mp.smf.event_count == 0) {
-        return;
-    }
-
-    while (s_mp.play_idx < s_mp.smf.event_count &&
-           s_mp.smf.events[s_mp.play_idx].time_us <= s_mp.play_time_us) {
-        engine_midi_smf_event_t *ev = &s_mp.smf.events[s_mp.play_idx];
-        if (ev->type == 0xE0) {
-            midi_send_bend(ev->channel, (uint16_t)(ev->data1 | ((uint16_t)ev->data2 << 7)));
-        } else {
-            midi_send(ev->type, ev->channel, ev->data1, ev->data2);
-        }
-        s_mp.play_idx++;
-    }
-
-    if (s_mp.play_idx >= s_mp.smf.event_count) {
+    /* 完播标志由时基 hook 置位，此处（task_app）消费改状态，防跨任务竞态 */
+    if (s_mp.play_finished_flag) {
+        s_mp.play_finished_flag = false;
         player_set_state(PLAYER_STATE_FINISHED);
         ESP_LOGI(TAG, "playback finished");
         return;
     }
 
+    /* MIDI 事件派发已移入 service_timer hook；此处仅刷新进度 UI */
     uint32_t now_ms = (uint32_t)(now / 1000);
     if (now_ms - s_mp.last_ui_ms >= MIDI_UI_REFRESH_MS) {
         s_mp.last_ui_ms = now_ms;
@@ -1337,6 +1552,7 @@ static void app_midi_player_on_resume(app_base_t *self)
 static void app_midi_player_on_destroy(app_base_t *self)
 {
     (void)self;
+    midi_timer_stop();   /* 注销时基 hook：防 destroy 后 hook 触碰已释放 smf */
     player_set_state(PLAYER_STATE_IDLE);
     midi_all_notes_off();
 

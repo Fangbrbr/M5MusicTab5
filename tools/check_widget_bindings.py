@@ -24,6 +24,11 @@ WIDGET_BIND_RE = re.compile(
 # 生成代码中屏幕结构体的控件字段：lv_obj_t *widget_name;
 WIDGET_FIELD_RE = re.compile(r'^\s*lv_obj_t\s*\*\s*([A-Za-z_][A-Za-z0-9_]*)\s*;', re.M)
 
+# engine_gui.c 的 AI LED 映射表（按名字符串经 EEZ flow 查找控件）
+ENGINE_GUI_C = PROJECT_ROOT / "components" / "engine_gui" / "engine_gui.c"
+AI_LED_MAP_RE = re.compile(r's_ai_led_map\[\]\s*=\s*\{(.*?)\};', re.S)
+AI_LED_NAME_RE = re.compile(r'"([^"]+)"')
+
 
 def collect_generated_widgets():
     """从 screens.h 提取全部控件字段名。"""
@@ -42,6 +47,22 @@ def collect_app_bindings():
     return bindings
 
 
+def collect_ai_led_names():
+    """提取 engine_gui.c 的 s_ai_led_map 控件名。
+
+    Why: 该表经 EEZ flow 按名查找控件；生成代码把 sizeof(objects)（字节数）
+    误作对象个数，名字 miss 会越界扫表直至 strcmp 空指针崩溃（真机教训），
+    因此映射名必须在构建期硬校验，不允许运行时 miss。
+    """
+    if not ENGINE_GUI_C.exists():
+        return []
+    text = ENGINE_GUI_C.read_text(encoding="utf-8")
+    m = AI_LED_MAP_RE.search(text)
+    if not m:
+        return []
+    return AI_LED_NAME_RE.findall(m.group(1))
+
+
 def main():
     if not SCREENS_H.exists():
         print(f"check_widget_bindings: generated screens.h not found: {SCREENS_H}",
@@ -56,6 +77,9 @@ def main():
         for name in names:
             if name not in valid_ids:
                 missing.append((path, name))
+    for name in collect_ai_led_names():
+        if name not in valid_ids:
+            missing.append(("components/engine_gui/engine_gui.c (s_ai_led_map)", name))
 
     if missing:
         print("check_widget_bindings: widget binding mismatch detected",

@@ -301,13 +301,19 @@ static bool imu_get_acce(float *x, float *y, float *z)
 #else
     if (!s_imu.sensor || !s_imu.initialized)
         return false;
-    /* 临时监测：I2C 读取耗时异常会拖死 task_app（on_update 在其上下文），
-     * 超时告警定位“进去就卡死”是否由 IMU 总线挂起引起 */
+    /* 读耗时监测：真·总线挂起才告警。20-40ms 级延时多为 task_gui 长帧渲染期间
+     * task_app(prio4) 排队等 CPU（阻塞式 I2C 完成信号随任务切换才返回），非总线
+     * 故障；阈值 100ms + 1s 限流，防刷屏 */
     int64_t t0 = esp_timer_get_time();
     esp_err_t ret = bmi270_get_acce_data(s_imu.sensor, x, y, z);
     int64_t dt = esp_timer_get_time() - t0;
-    if (dt > 20000) {
-        ESP_LOGW(TAG, "IMU i2c slow: %lld us ret=%s", dt, esp_err_to_name(ret));
+    if (dt > 100000) {
+        static uint32_t s_slow_log_ms = 0;
+        uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000);
+        if (now_ms - s_slow_log_ms >= 1000) {
+            s_slow_log_ms = now_ms;
+            ESP_LOGW(TAG, "IMU i2c slow: %lld us ret=%s", dt, esp_err_to_name(ret));
+        }
     }
     if (ret != ESP_OK) {
         static uint32_t s_imu_fail_cnt = 0;
@@ -1109,6 +1115,16 @@ static void app_fun_on_update(app_base_t *self)
 
     if (s_app_state == FUN_APP_STATE_DRAWING)
         return;
+
+    /* IMU 轮询节流：100Hz(on_update 每拍) → 40Hz。翻转手势持续数百 ms，40Hz
+     * 足够；降载减少与 task_gui 长帧渲染撞车的概率（长帧期间 task_app prio4
+     * 拿不到 CPU，阻塞式 I2C 等待被拉长到 20-30ms，曾刷爆 IMU i2c slow 告警） */
+    static int64_t s_imu_last_poll_us = 0;
+    int64_t now_us = esp_timer_get_time();
+    if (now_us - s_imu_last_poll_us < 25000) {
+        return;
+    }
+    s_imu_last_poll_us = now_us;
 
     /* 翻转检测（I2C+状态机）在 LVGL 锁外执行，仅状态迁移对应的 UI 动作
      * 进锁，最大限度缩短持锁时间；锁失败丢弃本次动作并 dump 任务状态。 */

@@ -18,9 +18,8 @@ dependencies:
   espp/rx8130ce: ^1.1.1
   espressif/esp_tinyusb: ^2.0.0
   espressif/usb_host_hid: ^1.0.1
+  espressif/esp_hosted: ^2.12.9
   espressif/esp_wifi_remote: '*'
-  # esp_hosted: 由 esp_wifi_remote 间接依赖；显式钉版本避免拉 3.0.x（不兼容 IDF v5.5.5）
-  espressif/esp_hosted: ~2.12.12
   # xiaozhi AI 语音助手：唤醒词（AFE+WakeNet9）、实时语音通道、Opus 编解码
   espressif/esp_websocket_client: ~1.5.0
   espressif/esp_audio_codec: ~2.5.0

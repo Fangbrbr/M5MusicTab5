@@ -6,9 +6,9 @@ idf_component_register(SRCS "app_manager.c"
                        PRIV_REQUIRES service_rtc
                                      app_ai_agent
                                      app_chord_trainer
-                                     app_circle_of_fifths
+                                     app_recorder
                                      app_clock_calendar
-                                     app_drum_pad
+                                     app_sequencer
                                      app_ear_trainer
                                      app_midi_player
                                      app_metronome

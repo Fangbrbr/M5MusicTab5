@@ -20,6 +20,7 @@
 #include "sdkconfig.h"
 #include "board_hal.h"
 #include "driver/i2c_master.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_lcd_touch.h"
 #include "esp_sleep.h"
@@ -226,23 +227,16 @@ static void __attribute__((constructor(101))) service_power_c6_early_enable(void
     gpio_set_pull_mode(C6_IOEXP_SCL_GPIO, GPIO_PULLUP_ONLY);
     gpio_set_level(C6_IOEXP_SCL_GPIO, 1);
 
-    /* Why: C6 独立供电独立运行，任何 P4 复位（看门狗/软复位/烧录/深睡唤醒）
-     * 都不会重启它；一旦楔死在 hosted 半开会话（2026-08 开机卡 70% 事故），
-     * 链路永久不可用。每次启动无条件断电 200ms 再上电，强制 C6 与 esp_hosted
-     * 从零同步；代价仅 200ms，换来所有复位路径行为一致（不猜复位源）。
-     * 上电复位时轨本来就没电，此操作等效于延长放电稳定时间，无害。 */
-    c6_ioexp_write_reg(C6_IOEXP_REG_IO_DIR, 0xFE);   /* P0 = output */
-    c6_ioexp_write_reg(C6_IOEXP_REG_OUT_HZ, 0xFE);   /* P0 = push-pull */
-    c6_ioexp_write_reg(C6_IOEXP_REG_OUT, 0x00);      /* P0 = 0 断电 */
-    esp_rom_delay_us(200 * 1000);
-
-
+    /* Why: 合并曾引入"无条件断电 200ms 重启"以强同步 esp_hosted（修 warm reset
+     * 卡 70%），但本机 C6 固件旧，断电重启后 hosted SDIO 握手失败 → WiFi 永连不上
+     * （2026-08 合并回归）。恢复 feature/sequencer 已验证的简单上电：C6 常供电，
+     * hosted 链路自然建立，WiFi 正常。warm reset 场景由 esp_hosted 探测兜底。 */
     /* 先写输出寄存器，避免方向切换为输出时产生低电平毛刺 */
     bool ok = c6_ioexp_write_reg(C6_IOEXP_REG_OUT, 0x01);   /* P0 = 1 */
     ok &= c6_ioexp_write_reg(C6_IOEXP_REG_IO_DIR, 0xFE);    /* P0 = output */
     ok &= c6_ioexp_write_reg(C6_IOEXP_REG_OUT_HZ, 0xFE);    /* P0 = push-pull */
 
-    ESP_EARLY_LOGI(TAG, "C6 Wi-Fi power early enable (with reset): %s", ok ? "ok" : "failed");
+    ESP_EARLY_LOGI(TAG, "C6 Wi-Fi power early enable: %s", ok ? "ok" : "failed");
 }
 #endif /* CONFIG_BOARD_HAS_POWER_MGMT */
 
@@ -1020,7 +1014,13 @@ static void service_power_idle_screen_off(void)
     board_display_brightness_set(0);
     s_screen_off = true;
     s_screen_off_since_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
-    ESP_LOGI(TAG, "screen off");
+    /* internal 列：定位内部 RAM 消耗点（2026-09 ws 建栈失败排查，定位后移除）。
+     * idle_ms/timeout/idx：排查"触摸中误熄屏"——off 时的真实空闲与超时档位 */
+    ESP_LOGI(TAG, "screen off (internal=%u, idle_ms=%lu, timeout=%lu, idx=%u)",
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             (unsigned long)(s_screen_off_since_ms - s_last_activity_ms),
+             (unsigned long)s_idle_timeout_ms[s_idle_timeout_index],
+             (unsigned)s_idle_timeout_index);
 }
 
 static void service_power_idle_wake(void)
@@ -1033,7 +1033,8 @@ static void service_power_idle_wake(void)
     s_screen_off = false;
     board_display_brightness_set(s_screen_off_saved_brightness);
     s_last_activity_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
-    ESP_LOGI(TAG, "screen on");
+    ESP_LOGI(TAG, "screen on (internal=%u)",
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL));
 }
 
 void service_power_wake_screen(void)

@@ -10,8 +10,10 @@ idf_component_register(SRCS "main.c"
                                 service_page
                                 service_input
                                 service_sd
+                                service_timer
                                 service_rtc
                                 service_recorder
+                                service_wavrec
                                 service_ftp
                                 service_i2c
                                 service_wifi

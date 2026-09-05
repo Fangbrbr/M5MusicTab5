@@ -13,6 +13,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif.h"
+#include "esp_heap_caps.h"
 #include "nvs_flash.h"
 #include "esp_sntp.h"
 #include "esp_timer.h"
@@ -73,6 +74,13 @@ esp_err_t service_wifi_boot(void)
     esp_log_level_set("vhci_drv", ESP_LOG_ERROR);
     esp_log_level_set("H_SDIO_DRV", ESP_LOG_ERROR);
 
+    /* 诊断：WiFi/C6 SDIO 初始化前内部 RAM 余量（SDIO DMA buffer 需 MALLOC_CAP_DMA）
+     * 日志行格式：heap_diag wifi_boot internal=xx psram=xx dma=xx */
+    ESP_LOGI(TAG, "heap_diag wifi_boot internal=%u psram=%u dma=%u",
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_DMA));
+
     /* 按 NVS 保存的开关决定是否初始化 Wi-Fi 协议栈。关闭时仅跳过协议栈
      * 初始化（C6 电源由 service_power_init 开机统一供给，不在此控制）。 */
     if (!service_nvs_get_feature_flag(SERVICE_NVS_FLAG_WIFI_ENABLED)) {
@@ -108,11 +116,11 @@ esp_err_t service_wifi_init(void)
         return ESP_OK;
     }
 
-    /* Trap: hosted 链路（GPIO15 复位 C6 + SDIO 卡初始化 + 等待从机就绪）
-     * 只在 esp_wifi_init 内部发起，此前任何探测都必然报 link not yet up——
-     * 禁止用探测结果门控 esp_wifi_init（2026-08 曾因此彻底断网）。
-     * esp_wifi_init 有界（最长约 30s 后返回 ESP_FAIL），内部已处理降级。 */
-
+    /* Trap: hosted 链路（SDIO card init + C6 capability 握手）由 esp_wifi_init 内部
+     * 经 esp_hosted_reconfigure 自行建立，失败时有界返回（≤1.5s 卡探测 +
+     * ≤100×200ms 等待），不存在永久阻塞。严禁在 esp_wifi_init 之前用
+     * esp_hosted_get_coprocessor_app_desc 探测链路——链路只由 esp_wifi_init
+     * 建立，探测永远失败，WiFi 被永久跳过（2026-08 合并回归，WiFi 全灭）。 */
     esp_err_t ret = nvs_flash_init();
     if (ret != ESP_OK && ret != ESP_ERR_NVS_NO_FREE_PAGES &&
         ret != ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -156,6 +164,11 @@ esp_err_t service_wifi_init(void)
     ret = esp_wifi_init(&cfg);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "esp_wifi_init failed: %d", ret);
+        /* 诊断：init 失败时内部/DMA RAM 余量 */
+        ESP_LOGE(TAG, "heap_diag wifi_init_fail internal=%u psram=%u dma=%u",
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_DMA));
         return ret;
     }
 

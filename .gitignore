@@ -97,3 +97,6 @@ tools/SimpleFTPServer
 
 # JC4880P443 独立构建目录
 build-jc4880p443/
+
+# 音序器参考工程（内嵌 .git 的第三方仓库，不入库）
+tools/M5STACK-TAB5-SAMPLER-DRUM-MACHINE-2026/

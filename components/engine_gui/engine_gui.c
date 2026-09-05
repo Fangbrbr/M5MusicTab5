@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file engine_gui.c
  * @brief 图形引擎
  *
@@ -630,12 +630,6 @@ typedef struct {
 
 static touch_slot_t s_slots[MULTI_TOUCH_MAX_POINTS];
 
-/* 当前每个 finger 最近一次的 pressure（0=无触/已释放）。
- * 供 LVGL UI 按钮回调查询当前触摸力度（矩阵按钮布局绕过了 engine_gui 的
- * app_input_event 队列，需要从这里补拿 pressure）。
- * 由 multi_touch_read_cb 在 DOWN/MOVE 时更新、UP 时清零。 */
-static uint8_t s_finger_pressure[MULTI_TOUCH_MAX_POINTS];
-
 /* 熄屏唤醒拦截：首触仅点亮背光。手势标志吞掉当前整段手势（任意时长，
  * 全抬指才解除）；时间窗口兜底唤醒后的快速连点。 */
 #define TOUCH_WAKE_INTERCEPT_MS 500
@@ -681,14 +675,6 @@ bool engine_gui_get_touch_event(app_input_event_t *out)
     }
 
     return xQueueReceive(s_touch_event_queue, out, 0) == pdTRUE;
-}
-
-uint8_t engine_gui_get_finger_pressure(uint8_t finger_id)
-{
-    if (finger_id >= MULTI_TOUCH_MAX_POINTS) {
-        return 0;
-    }
-    return s_finger_pressure[finger_id];
 }
 
 typedef struct {
@@ -878,18 +864,22 @@ static inline void touch_to_logical(uint16_t raw_x, uint16_t raw_y,
     }
 }
 
-/* Force 2-level velocity: area >= 80 -> 127, else -> 80.
- * Simple on/off threshold, no curves, no adaptive peaks. */
-#define TOUCH_STRONG_THRESHOLD  80
-#define TOUCH_STRONG_VELOCITY   127
-#define TOUCH_SOFT_VELOCITY     80
-
 static uint8_t touch_strength_to_pressure(uint16_t strength)
 {
-    if (strength >= TOUCH_STRONG_THRESHOLD) {
-        return TOUCH_STRONG_VELOCITY;
+    static uint16_t s_str_max = 1;  /* 自适应峰值，单调递增（reset 时复位即可） */
+
+    if (strength > s_str_max) {
+        s_str_max = (uint16_t)(((uint32_t)s_str_max * 3 + strength) / 4);
     }
-    return TOUCH_SOFT_VELOCITY;
+
+    uint32_t p = ((uint32_t)strength * 127) / s_str_max;
+    if (p < 1) {
+        p = 1;   /* MIDI velocity 0 = note off，至少给 1 表“按下” */
+    }
+    if (p > 127) {
+        p = 127;
+    }
+    return (uint8_t)p;
 }
 
 static void multi_touch_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
@@ -921,20 +911,17 @@ static void multi_touch_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
             slot->prev_x = slot->x;
             slot->prev_y = slot->y;
             touch_to_logical(slot->x, slot->y, &log_x, &log_y);
-            uint8_t press = touch_strength_to_pressure(slot->strength);
-            gui_publish_touch(APP_INPUT_TOUCH_DOWN, log_x, log_y, (uint8_t)point_idx, press);
-            s_finger_pressure[point_idx] = press;
+            gui_publish_touch(APP_INPUT_TOUCH_DOWN, log_x, log_y, (uint8_t)point_idx,
+                              touch_strength_to_pressure(slot->strength));
         } else {
             touch_to_logical(slot->prev_x, slot->prev_y, &log_x, &log_y);
             gui_publish_touch(APP_INPUT_TOUCH_UP, log_x, log_y, (uint8_t)point_idx, 0);
-            s_finger_pressure[point_idx] = 0;
         }
     } else if (slot->active &&
                (slot->x != slot->prev_x || slot->y != slot->prev_y)) {
         touch_to_logical(slot->x, slot->y, &log_x, &log_y);
-        uint8_t press = touch_strength_to_pressure(slot->strength);
-        gui_publish_touch(APP_INPUT_TOUCH_MOVE, log_x, log_y, (uint8_t)point_idx, press);
-        s_finger_pressure[point_idx] = press;
+        gui_publish_touch(APP_INPUT_TOUCH_MOVE, log_x, log_y, (uint8_t)point_idx,
+                          touch_strength_to_pressure(slot->strength));
         slot->prev_x = slot->x;
         slot->prev_y = slot->y;
     }
@@ -949,7 +936,7 @@ static const char *gui_app_id_to_name(int app_id)
         case ENUM_APP_APP_CIRCLE_OF_FIFTHS: return "Circle Of Fifths";
         case ENUM_APP_APP_CHORD_TRAIN:      return "Chord Trainer";
         case ENUM_APP_APP_MIDI_PLAYER:      return "MIDI Player";
-        case ENUM_APP_APP_DRUM_PAD:         return "Drum Pad";
+        case ENUM_APP_APP_DRUM_PAD:         return "Sequencer";
         case ENUM_APP_APP_TINY_PIANO:       return "Tiny Piano";
         case ENUM_APP_APP_CLOCK_CALENDAR:   return "Clock Calendar";
         case ENUM_APP_APP_AI_AGENT:         return "AI Agent";
@@ -1644,9 +1631,9 @@ static ai_led_map_t s_ai_led_map[] = {
     { &objects.app_zen_mode,         "zen_led_ai",      NULL, false },
     { &objects.app_ear_train,        "ear_led_ai",      NULL, false },
     { &objects.app_chord_memory,     "chord_led_ai",    NULL, false },
-    { &objects.app_circle_of_fifths, "fifth_led_ai",    NULL, false },
+    { &objects.app_recorder,         "rec_led_ai",      NULL, false },
     { &objects.app_tiny_piano,       "piano_led_ai",    NULL, false },
-    { &objects.app_drum_pad,         "drum_led_ai",     NULL, false },
+    { &objects.app_sequencer,        "seq_led_ai",      NULL, false },
     { &objects.app_midi_player,      "midi_led_ai",     NULL, false },
     { &objects.app_xy_mode,          "xy_led_ai",       NULL, false },
     { &objects.app_metronome,        "metron_led_ai",   NULL, false },
@@ -1938,11 +1925,11 @@ int16_t engine_gui_screen_name_to_id(const char *name)
     if (strcmp(name, "app_ai_agent") == 0) {
         return SCREEN_ID_APP_AI_AGENT;
     }
-    if (strcmp(name, "app_drum_pad") == 0) {
-        return SCREEN_ID_APP_DRUM_PAD;
+    if (strcmp(name, "app_sequencer") == 0) {
+        return SCREEN_ID_APP_SEQUENCER;
     }
-    if (strcmp(name, "app_circle_of_fifths") == 0) {
-        return SCREEN_ID_APP_CIRCLE_OF_FIFTHS;
+    if (strcmp(name, "app_recorder") == 0) {
+        return SCREEN_ID_APP_RECORDER;
     }
     if (strcmp(name, "app_ear_train") == 0) {
         return SCREEN_ID_APP_EAR_TRAIN;
@@ -2108,9 +2095,9 @@ void engine_gui_on_screen_loaded(lv_obj_t *screen)
     if (screen == objects.app_zen_mode) screen_name = "app_zen_mode";
     else if (screen == objects.app_ear_train) screen_name = "app_ear_train";
     else if (screen == objects.app_chord_memory) screen_name = "app_chord_memory";
-    else if (screen == objects.app_circle_of_fifths) screen_name = "app_circle_of_fifths";
+    else if (screen == objects.app_recorder) screen_name = "app_recorder";
     else if (screen == objects.app_tiny_piano) screen_name = "app_tiny_piano";
-    else if (screen == objects.app_drum_pad) screen_name = "app_drum_pad";
+    else if (screen == objects.app_sequencer) screen_name = "app_sequencer";
     else if (screen == objects.app_midi_player) screen_name = "app_midi_player";
     else if (screen == objects.app_xy_mode) screen_name = "app_xy_mode";
     else if (screen == objects.app_metronome) screen_name = "app_metronome";
@@ -2220,9 +2207,9 @@ static void engine_gui_register_backlight_load_hooks(void)
         objects.app_zen_mode,
         objects.app_ear_train,
         objects.app_chord_memory,
-        objects.app_circle_of_fifths,
+        objects.app_recorder,
         objects.app_tiny_piano,
-        objects.app_drum_pad,
+        objects.app_sequencer,
         objects.app_midi_player,
         objects.app_xy_mode,
         objects.app_metronome,

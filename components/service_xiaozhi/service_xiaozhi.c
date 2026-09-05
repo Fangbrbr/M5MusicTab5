@@ -958,6 +958,14 @@ static esp_err_t xz_open_channel(void)
         (xTaskGetTickCount() - s_last_channel_fail) < pdMS_TO_TICKS(3000)) {
         return ESP_FAIL;
     }
+    /* Trap: wifi 未联网时 lwIP tcpip 线程可能尚未就绪（合并后 wifi 降级场景
+     * 曾整机崩溃 tcpip_send_msg_wait_sem Invalid mbox，2026-08）；ws 属于
+     * 上层网络依赖，无网先拒绝，避免触碰未初始化的 tcpip 栈。 */
+    if (!service_wifi_is_connected()) {
+        ESP_LOGW(TAG, "wifi not connected, hold channel open");
+        s_last_channel_fail = xTaskGetTickCount();
+        return ESP_FAIL;
+    }
     char ws_url[SERVICE_NVS_XZ_WS_URL_MAX_LEN];
     char ws_token[SERVICE_NVS_XZ_WS_TOKEN_MAX_LEN];
     service_nvs_get_xz_ws_url(ws_url, sizeof(ws_url));

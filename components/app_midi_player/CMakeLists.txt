@@ -7,4 +7,5 @@ idf_component_register(SRCS "app_midi_player.c"
                                 service_nvs
                                 service_player
                                 service_audio
+                                service_timer
                                 service_xiaozhi)

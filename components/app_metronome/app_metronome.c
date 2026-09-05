@@ -17,6 +17,7 @@
 #include "lvgl.h"
 #include "service_i18n.h"
 #include "service_nvs.h"
+#include "service_timer.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -123,7 +124,7 @@ typedef struct
     bool playing;
     uint8_t beat_idx;
     uint16_t bar_count;
-    int64_t next_beat_us;
+    service_timer_handle_t timer;
     int64_t tap_last_us;
     uint8_t active_note;
     int64_t note_off_us;
@@ -240,6 +241,11 @@ static void metron_set_bpm(int bpm)
     if ((uint16_t)bpm == s_metron.bpm)
         return;
     s_metron.bpm = (uint16_t)bpm;
+    /* 播放中同步 set_period */
+    if (s_metron.playing && s_metron.timer != NULL) {
+        uint64_t period_us = 60000000ULL / s_metron.bpm;
+        service_timer_set_period(s_metron.timer, period_us);
+    }
     metron_update_bpm_label();
 }
 
@@ -285,10 +291,34 @@ static void metron_save_params(void)
 
 /* -------------------- 播放控制 -------------------- */
 
+/* 节拍 hook（service_timer 上下文，高优先级非阻塞）：仅发声 + 推进节拍计数。
+ * Trap: 不触碰 LVGL（LED 亮度由 on_update 轮询刷新），不获取可能阻塞的锁。 */
+static void metron_beat_hook(void *arg)
+{
+    (void)arg;
+    if (!s_metron.playing) {
+        return;
+    }
+
+    /* 2/4 节奏型：重音每 2 拍循环（强-弱交替）；其余音色仅小节首拍重音 */
+    bool accent;
+    if (s_sounds[s_metron.sound].pattern_24) {
+        accent = (s_metron.beat_idx % 2) == 0;
+    } else {
+        accent = s_metron.beat_idx == 0;
+    }
+    metron_play_hit(accent);
+
+    s_metron.beat_idx++;
+    if (s_metron.beat_idx >= s_metron.sig_top) {
+        s_metron.beat_idx = 0;
+        s_metron.bar_count++;
+    }
+}
+
 static void metron_set_playing(bool play)
 {
     s_metron.playing = play;
-    // metron_set_button_icon(play);
 
     lvgl_port_lock(portMAX_DELAY);
     if (play)
@@ -311,34 +341,24 @@ static void metron_set_playing(bool play)
     {
         s_metron.beat_idx = 0;
         s_metron.bar_count = 0;
-        s_metron.next_beat_us = esp_timer_get_time();
+        /* 周期 hook：一拍 = 60e6/bpm us；立即补打首拍（原实现首拍立即触发） */
+        uint64_t period_us = 60000000ULL / s_metron.bpm;
+        service_timer_periodic_register(period_us, metron_beat_hook, NULL, &s_metron.timer);
+        metron_beat_hook(NULL);
     }
-    else if (s_metron.note_playing)
+    else
     {
-        metron_midi_note(s_metron.active_note, 0);
-        s_metron.note_playing = false;
+        if (s_metron.timer != NULL) {
+            service_timer_unregister(s_metron.timer);
+            s_metron.timer = NULL;
+        }
+        if (s_metron.note_playing)
+        {
+            metron_midi_note(s_metron.active_note, 0);
+            s_metron.note_playing = false;
+        }
     }
     metron_update_leds();
-}
-
-static void metron_fire_beat(void)
-{
-    /* 2/4 节奏型：重音每 2 拍循环（强-弱交替）；其余音色仅小节首拍重音 */
-    bool accent;
-    if (s_sounds[s_metron.sound].pattern_24) {
-        accent = (s_metron.beat_idx % 2) == 0;
-    } else {
-        accent = s_metron.beat_idx == 0;
-    }
-    metron_play_hit(accent);
-    metron_update_leds();
-
-    s_metron.beat_idx++;
-    if (s_metron.beat_idx >= s_metron.sig_top)
-    {
-        s_metron.beat_idx = 0;
-        s_metron.bar_count++;
-    }
 }
 
 static void metron_tap_tempo(void)
@@ -525,20 +545,15 @@ static void app_metronome_on_update(app_base_t *self)
         s_metron.tap_last_us = 0;
     }
 
-    /* 节拍调度 */
-    if (s_metron.playing && now >= s_metron.next_beat_us)
-    {
-        uint32_t period_us = 60000000UL / s_metron.bpm;
-        s_metron.next_beat_us += period_us;
-        metron_fire_beat();
-    }
-
-    /* 音符关闭 */
+    /* 音符关闭（60ms 粒度需求低，保留在低优先级 on_update） */
     if (s_metron.note_playing && now >= s_metron.note_off_us)
     {
         metron_midi_note(s_metron.active_note, 0);
         s_metron.note_playing = false;
     }
+
+    /* 节拍 LED 由 hook 更新计数后轮询刷新（hook 不碰 LVGL） */
+    metron_update_leds();
 
     /* 轮询滑块与下拉 */
     lvgl_port_lock(portMAX_DELAY);
@@ -553,6 +568,11 @@ static void app_metronome_on_update(app_base_t *self)
     if (slider != s_metron.bpm)
     {
         s_metron.bpm = (uint16_t)slider;
+        /* 播放中同步 set_period */
+        if (s_metron.playing && s_metron.timer != NULL) {
+            uint64_t period_us = 60000000ULL / s_metron.bpm;
+            service_timer_set_period(s_metron.timer, period_us);
+        }
         metron_update_bpm_label();
         changed = true;
     }
@@ -603,6 +623,12 @@ static void app_metronome_on_resume(app_base_t *self)
 static void app_metronome_on_destroy(app_base_t *self)
 {
     (void)self;
+    /* 注销周期 hook：on_pause 已 stop，但 destroy 兜底防泄漏 */
+    if (s_metron.timer != NULL) {
+        service_timer_unregister(s_metron.timer);
+        s_metron.timer = NULL;
+        s_metron.playing = false;
+    }
     if (s_metron.note_playing)
     {
         metron_midi_note(s_metron.active_note, 0);

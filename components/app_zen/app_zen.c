@@ -763,7 +763,10 @@ static bool zen_canvas_ensure_buffer(void)
     return true;
 }
 
-/* 在雨滴 canvas 内生成随机短墙，完全覆盖整个 canvas 区域 */
+/* 在雨滴 canvas 内生成随机短墙，完全覆盖整个 canvas 区域。
+ * Trap: 坐标必须按墙宽/墙高收口——`esp_random() % (cw-60-w_width)` 在画布收窄后
+ * 模数可 ≤0（uint32 取模溢出），墙会飞出画布（2026-09 用户调窄 canvas 后实测）；
+ * y 同理须扣墙高，否则末行墙底越出 canvas 下缘 */
 static void zen_init_drop_walls(void)
 {
     if (s_zen.canvas_w <= 0 || s_zen.canvas_h <= 0) {
@@ -771,15 +774,38 @@ static void zen_init_drop_walls(void)
         return;
     }
 
+    const int wall_h = 16;
     int cw = s_zen.canvas_w;
     int ch = s_zen.canvas_h;
 
+    /* 边距随画布收窄：可用净宽（含墙宽）始终非负 */
+    int margin_x = 30;
+    if (cw < 2 * margin_x + 60) {
+        margin_x = (cw - 60) / 2;
+        if (margin_x < 4) {
+            margin_x = 4;
+        }
+    }
+    int avail_w = cw - 2 * margin_x;
+    if (avail_w < 24) {           /* 画布过窄，放不下任何有意义短墙 */
+        s_zen.drop_wall_count = 0;
+        return;
+    }
+
+    /* 行高至少容纳墙高 + 随机空间，矮画布自动减行 */
     int rows = 3 + (int)(esp_random() % 3);       /* 3~5 行 */
+    int max_rows = ch / (wall_h + 20);
+    if (max_rows < 1) {
+        max_rows = 1;
+    }
+    if (rows > max_rows) {
+        rows = max_rows;
+    }
     int band = ch / rows;
     int n = 0;
 
-    /* 每行最大墙壁数根据画布宽度和最小间距估算 */
-    int max_per_row = (cw - 60) / (60 + 12);    /* 最小宽度60 + 间距12 */
+    /* 每行最大墙壁数根据画布净宽和最小间距估算 */
+    int max_per_row = avail_w / (60 + 12);    /* 最小宽度60 + 间距12 */
     if (max_per_row < 2) max_per_row = 2;
 
     for (int r = 0; r < rows && n < ZEN_DROP_WALL_MAX; r++) {
@@ -787,9 +813,10 @@ static void zen_init_drop_walls(void)
         struct { int x1, x2; } placed[ZEN_DROP_WALL_MAX];
         int placed_cnt = 0;
 
-        int row_top = r * band + 16;
-        int row_h = band - 16;
-        if (row_h < 4) row_h = 4;
+        /* 行内随机空间扣除墙高，墙底恒在画布内 */
+        int row_top = r * band + 8;
+        int row_h = band - 8 - wall_h;
+        if (row_h < 1) row_h = 1;
 
         /* 该行计划放置的墙壁数随机（但不超过容量），下限 4 保证密度；
          * Trap: max_per_row<=4 时取模基数会<=0， clamp 到 1 */
@@ -801,10 +828,13 @@ static void zen_init_drop_walls(void)
 
             /* 尝试生成不重叠的墙壁，最多重试10次 */
             int16_t w_width = 60 + (int16_t)(esp_random() % 81); /* 60~140，长墙接住更多雨滴 */
+            if (w_width > avail_w) w_width = (int16_t)avail_w;   /* 墙宽不超越净宽 */
             int x, y;
             bool ok = false;
             for (int retry = 0; retry < 10; retry++) {
-                x = 30 + (esp_random() % (cw - 60 - w_width));
+                /* span = 净宽 - 墙宽，恒 ≥0；x ∈ [margin_x, margin_x+span] 闭区间 */
+                int span = avail_w - w_width;
+                x = margin_x + (span > 0 ? (int)(esp_random() % (uint32_t)(span + 1)) : 0);
                 /* 与已放置墙壁重叠检测（最小间距12px） */
                 bool overlap = false;
                 for (int p = 0; p < placed_cnt; p++) {
@@ -822,12 +852,14 @@ static void zen_init_drop_walls(void)
             }
             if (!ok) continue;   /* 实在放不下，跳过一个 */
 
-            /* y在该行区间内随机 */
-            y = row_top + (int)(esp_random() % row_h);
+            /* y在该行区间内随机；双保险钳制墙底不出画布 */
+            y = row_top + (int)(esp_random() % (uint32_t)row_h);
+            if (y + wall_h > ch - 4) y = ch - 4 - wall_h;
+            if (y < 0) y = 0;
 
             zen_wall_t *wl = &s_zen.drop_walls[n];
             wl->w = w_width;
-            wl->h = 16;
+            wl->h = wall_h;
             wl->x = (int16_t)x;
             wl->y = (int16_t)y;
             wl->color_idx = s_ball_colors[n % 5];

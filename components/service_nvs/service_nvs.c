@@ -42,8 +42,9 @@ static const char *TAG = "service_nvs";
 #define SERVICE_NVS_KEY_AUTO_SLEEP      "auto_sleep"
 #define SERVICE_NVS_KEY_BOOT_SCREEN     "boot_screen"
 #define SERVICE_NVS_KEY_PIANO           "piano"
-#define SERVICE_NVS_KEY_DRUM            "drum_pad"
+#define SERVICE_NVS_KEY_SEQUENCER       "sequencer"
 #define SERVICE_NVS_KEY_ZEN             "zen"
+#define SERVICE_NVS_KEY_RECORDER        "recorder"
 #define SERVICE_NVS_KEY_SF2_SOURCE      "sf2_src"
 
 #define SERVICE_NVS_DIRTY_INIT      (1U << 0)
@@ -65,7 +66,7 @@ static const char *TAG = "service_nvs";
 #define SERVICE_NVS_DIRTY_AUTO_SLEEP    (1U << 21)
 #define SERVICE_NVS_DIRTY_BOOT_SCREEN   (1U << 22)
 #define SERVICE_NVS_DIRTY_PIANO         (1U << 23)
-#define SERVICE_NVS_DIRTY_DRUM          (1U << 24)
+#define SERVICE_NVS_DIRTY_SEQUENCER     (1U << 24)
 /* APP_FUN_MANA / MIDI_PLAYER 未走 s_dirty 延迟提交流程（setter 内部直写
  * nvs_set_blob+nvs_commit），对应 dirty bit 仅用作 factory reset 的语义位
  * 记录；真正的擦除在 reset_to_defaults 末尾通过显式 erase_key 完成。 */
@@ -75,6 +76,7 @@ static const char *TAG = "service_nvs";
 #define SERVICE_NVS_DIRTY_EAR_DIFF      (1U << 28)
 #define SERVICE_NVS_DIRTY_EAR_PRAC      (1U << 29)
 #define SERVICE_NVS_DIRTY_ZEN           (1U << 30)
+#define SERVICE_NVS_DIRTY_RECORDER      (1U << 31)
 
 static nvs_handle_t s_handle = 0;
 static SemaphoreHandle_t s_mutex = NULL;
@@ -125,8 +127,11 @@ static void service_nvs_set_defaults(void)
     system_parameters.auto_sleep_enabled = false;
     system_parameters.boot_screen_index = 0;   /* 默认 launcher */
     memset(&system_parameters.piano, 0, sizeof(system_parameters.piano));
-    memset(&system_parameters.drum, 0, sizeof(system_parameters.drum));
+    memset(&system_parameters.sequencer, 0, sizeof(system_parameters.sequencer));
+    system_parameters.sequencer.bpm = 120;   /* 默认 120 BPM */
+    system_parameters.sequencer.swing = 0;   /* 默认无摇摆 */
     memset(&system_parameters.zen, 0, sizeof(system_parameters.zen));
+    memset(&system_parameters.recorder, 0, sizeof(system_parameters.recorder));
     system_parameters.zen.speed_sel = 2;  /* 默认 3 档，与旧版禅模式默认一致 */
     system_parameters.clock_12h = false;
     system_parameters.clock_timer_s = 0;
@@ -402,17 +407,17 @@ static esp_err_t service_nvs_load_internal(void)
         return ret;
     }
 
-    /* piano/drum 参数为后加 key，缺失时保持默认值（read_blob 对 NOT_FOUND 返回 OK） */
+    /* piano/sequencer 参数为后加 key，缺失时保持默认值（read_blob 对 NOT_FOUND 返回 OK） */
     ret = service_nvs_read_blob(SERVICE_NVS_KEY_PIANO, &system_parameters.piano,
                                 sizeof(system_parameters.piano));
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "read piano failed: %d, use defaults", ret);
     }
 
-    ret = service_nvs_read_blob(SERVICE_NVS_KEY_DRUM, &system_parameters.drum,
-                                sizeof(system_parameters.drum));
+    ret = service_nvs_read_blob(SERVICE_NVS_KEY_SEQUENCER, &system_parameters.sequencer,
+                                sizeof(system_parameters.sequencer));
     if (ret != ESP_OK) {
-        ESP_LOGW(TAG, "read drum failed: %d, use defaults", ret);
+        ESP_LOGW(TAG, "read sequencer failed: %d, use defaults", ret);
     }
 
     s_dirty = 0;
@@ -421,6 +426,13 @@ static esp_err_t service_nvs_load_internal(void)
                                 sizeof(system_parameters.zen));
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "read zen failed: %d, use defaults", ret);
+    }
+
+    /* recorder 参数为后加 key，缺失时保持默认值 */
+    ret = service_nvs_read_blob(SERVICE_NVS_KEY_RECORDER, &system_parameters.recorder,
+                                sizeof(system_parameters.recorder));
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "read recorder failed: %d, use defaults", ret);
     }
 
     s_loaded = true;
@@ -664,9 +676,17 @@ esp_err_t service_nvs_commit(void)
         }
     }
 
-    if (s_dirty & SERVICE_NVS_DIRTY_DRUM) {
-        ret = service_nvs_write_blob(SERVICE_NVS_KEY_DRUM, &system_parameters.drum,
-                                     sizeof(system_parameters.drum));
+    if (s_dirty & SERVICE_NVS_DIRTY_SEQUENCER) {
+        ret = service_nvs_write_blob(SERVICE_NVS_KEY_SEQUENCER, &system_parameters.sequencer,
+                                     sizeof(system_parameters.sequencer));
+        if (ret != ESP_OK) {
+            goto commit_exit;
+        }
+    }
+
+    if (s_dirty & SERVICE_NVS_DIRTY_RECORDER) {
+        ret = service_nvs_write_blob(SERVICE_NVS_KEY_RECORDER, &system_parameters.recorder,
+                                     sizeof(system_parameters.recorder));
         if (ret != ESP_OK) {
             goto commit_exit;
         }
@@ -745,8 +765,9 @@ esp_err_t service_nvs_reset_to_defaults(void)
               SERVICE_NVS_DIRTY_AUTO_SLEEP |
               SERVICE_NVS_DIRTY_BOOT_SCREEN |
               SERVICE_NVS_DIRTY_PIANO |
-              SERVICE_NVS_DIRTY_DRUM |
-              SERVICE_NVS_DIRTY_ZEN;
+              SERVICE_NVS_DIRTY_SEQUENCER |
+              SERVICE_NVS_DIRTY_ZEN |
+              SERVICE_NVS_DIRTY_RECORDER;
 
     esp_err_t ret = service_nvs_commit();
 
@@ -1715,22 +1736,22 @@ esp_err_t service_nvs_set_piano(const service_nvs_piano_t *params)
     return ESP_OK;
 }
 
-void service_nvs_get_drum(service_nvs_drum_t *out)
+void service_nvs_get_sequencer(service_nvs_sequencer_t *out)
 {
     if (out == NULL) {
         return;
     }
 
     if (!service_nvs_take()) {
-        memset(out, 0, sizeof(service_nvs_drum_t));
+        memset(out, 0, sizeof(service_nvs_sequencer_t));
         return;
     }
 
-    memcpy(out, &system_parameters.drum, sizeof(service_nvs_drum_t));
+    memcpy(out, &system_parameters.sequencer, sizeof(service_nvs_sequencer_t));
     service_nvs_give();
 }
 
-esp_err_t service_nvs_set_drum(const service_nvs_drum_t *params)
+esp_err_t service_nvs_set_sequencer(const service_nvs_sequencer_t *params)
 {
     if (params == NULL) {
         return ESP_ERR_INVALID_ARG;
@@ -1740,8 +1761,8 @@ esp_err_t service_nvs_set_drum(const service_nvs_drum_t *params)
         return ESP_ERR_INVALID_STATE;
     }
 
-    memcpy(&system_parameters.drum, params, sizeof(service_nvs_drum_t));
-    s_dirty |= SERVICE_NVS_DIRTY_DRUM;
+    memcpy(&system_parameters.sequencer, params, sizeof(service_nvs_sequencer_t));
+    s_dirty |= SERVICE_NVS_DIRTY_SEQUENCER;
 
     service_nvs_give();
     return ESP_OK;
@@ -1774,6 +1795,38 @@ esp_err_t service_nvs_set_zen(const service_nvs_zen_t *params)
 
     memcpy(&system_parameters.zen, params, sizeof(service_nvs_zen_t));
     s_dirty |= SERVICE_NVS_DIRTY_ZEN;
+
+    service_nvs_give();
+    return ESP_OK;
+}
+
+void service_nvs_get_recorder(service_nvs_recorder_t *out)
+{
+    if (out == NULL) {
+        return;
+    }
+
+    if (!service_nvs_take()) {
+        memset(out, 0, sizeof(service_nvs_recorder_t));
+        return;
+    }
+
+    memcpy(out, &system_parameters.recorder, sizeof(service_nvs_recorder_t));
+    service_nvs_give();
+}
+
+esp_err_t service_nvs_set_recorder(const service_nvs_recorder_t *params)
+{
+    if (params == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (!service_nvs_take()) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    memcpy(&system_parameters.recorder, params, sizeof(service_nvs_recorder_t));
+    s_dirty |= SERVICE_NVS_DIRTY_RECORDER;
 
     service_nvs_give();
     return ESP_OK;

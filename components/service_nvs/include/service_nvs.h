@@ -94,12 +94,26 @@ typedef struct {
     uint8_t reserved[3];      /*!< 对齐保留 */
 } service_nvs_piano_t;
 
-/** @brief 鼓垫 App 参数 */
+/** @brief 音序器 App 参数 */
+#define SEQ_NVS_TRACK_NUM 8
+
 typedef struct {
-    uint8_t display;          /*!< 显示布局 0=虚拟鼓组，1=鼓垫矩阵 */
-    uint8_t sound;            /*!< GM 鼓组下拉索引 0~8（对应 program 0/8/16/24/25/32/40/48/56） */
-    uint8_t reserved[2];
-} service_nvs_drum_t;
+    uint16_t bpm;                          /*!< 全局 BPM 20~300 */
+    uint8_t swing;                         /*!< 摇摆量 0~100 */
+    /* 每轨持久化参数（按轨落盘，开机恢复）。
+     * 约定：track_velocity[t]==0 表示该轨"从未配置"（app 侧保持引擎常量默认）；
+     * 其余三个数组只在该轨 velocity!=0 时生效（note 0=None 为合法选择）。 */
+    uint8_t track_note[SEQ_NVS_TRACK_NUM];     /*!< 每轨鼓 note（0=None 或 GM 鼓 35-57） */
+    uint8_t track_rand_temp[SEQ_NVS_TRACK_NUM]; /*!< 每轨人性化 0-10 */
+    uint8_t track_velocity[SEQ_NVS_TRACK_NUM];  /*!< 每轨全局力度 1-127；0=未配置 */
+    uint8_t track_probability[SEQ_NVS_TRACK_NUM]; /*!< 每轨全局概率 0-100 */
+} service_nvs_sequencer_t;
+
+/** @brief 录音机 App 参数 */
+typedef struct {
+    uint8_t mode;             /*!< 录音模式：0 语音 / 1 乐器 / 2 环境 */
+    uint8_t reserved[3];
+} service_nvs_recorder_t;
 
 /** @brief 禅模式 App 参数 */
 typedef struct {
@@ -189,12 +203,13 @@ struct s_system_parameters {
     bool     ear_practice_mode;                          /*!< 练耳练习/挑战模式：true 练习 */
     service_nvs_metronome_t metronome;                   /*!< 节拍器参数 */
     service_nvs_piano_t piano;                           /*!< 小钢琴音色选择参数 */
-    service_nvs_drum_t drum;                             /*!< 鼓垫 App 参数 */
+    service_nvs_sequencer_t sequencer;                   /*!< 音序器 App 参数 */
     service_nvs_zen_t zen;                               /*!< 禅模式 App 参数 */
     bool     clock_12h;                                  /*!< 时钟 App 12h 制式 */
     uint32_t clock_timer_s;                              /*!< 时钟 App 定时器目标时长（秒） */
     service_nvs_app_fun_mana_t app_fun_mana;             /*!< 娱乐 App 蓝量 */
     service_nvs_midi_player_t midi_player;               /*!< MIDI 播放器状态 */
+    service_nvs_recorder_t recorder;                   /*!< 录音机 App 参数 */
 };
 
 /** @brief 全局系统参数实例，各模块可直接读取 */
@@ -401,17 +416,23 @@ void service_nvs_get_piano(service_nvs_piano_t *out);
  */
 esp_err_t service_nvs_set_piano(const service_nvs_piano_t *params);
 
-/** @brief 读取鼓垫 App 参数；未初始化或参数为 NULL 时输出默认值 */
-void service_nvs_get_drum(service_nvs_drum_t *out);
+/** @brief 读取音序器 App 参数；未初始化或参数为 NULL 时输出默认值 */
+void service_nvs_get_sequencer(service_nvs_sequencer_t *out);
 
-/** @brief 写入鼓垫 App 参数（标记脏，由 service_nvs_commit 统一落盘） */
-esp_err_t service_nvs_set_drum(const service_nvs_drum_t *params);
+/** @brief 写入音序器 App 参数（标记脏，由 service_nvs_commit 统一落盘） */
+esp_err_t service_nvs_set_sequencer(const service_nvs_sequencer_t *params);
 
 /** @brief 读取禅模式 App 参数；未初始化或参数为 NULL 时输出默认值 */
 void service_nvs_get_zen(service_nvs_zen_t *out);
 
 /** @brief 写入禅模式 App 参数（标记脏，由 service_nvs_commit 统一落盘） */
 esp_err_t service_nvs_set_zen(const service_nvs_zen_t *params);
+
+/** @brief 读取录音机 App 参数；未初始化或参数为 NULL 时输出默认值 */
+void service_nvs_get_recorder(service_nvs_recorder_t *out);
+
+/** @brief 写入录音机 App 参数（标记脏，由 service_nvs_commit 统一落盘） */
+esp_err_t service_nvs_set_recorder(const service_nvs_recorder_t *params);
 
 /** @brief SF2 音源文件名最大长度（与 engine_sf2 扫描缓存一致） */
 #define SERVICE_NVS_SF2_SOURCE_MAX_LEN 96

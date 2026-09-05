@@ -197,7 +197,7 @@ bool SF2Parser::parseSDTA() {
 }
 
 
-std::vector<SampleHeader>& SF2Parser::getSamples() {
+sf2_vector<SampleHeader>& SF2Parser::getSamples() {
     return samples;
 }
 
@@ -206,12 +206,12 @@ bool SF2Parser::parsePDTA() {
     seekTo(pdtaOffset);
     uint32_t pdtaEnd = pdtaOffset + pdtaSize;
 
-    std::vector<PHDR> phdrs;
-    std::vector<PBAG> pbags;
-    std::vector<PGEN> pgens;
-    std::vector<INST> insts;
-    std::vector<IBAG> ibags;
-    std::vector<IGEN> igens;
+    sf2_vector<PHDR> phdrs;
+    sf2_vector<PBAG> pbags;
+    sf2_vector<PGEN> pgens;
+    sf2_vector<INST> insts;
+    sf2_vector<IBAG> ibags;
+    sf2_vector<IGEN> igens;
 
     while (file.position() + 8 <= pdtaEnd) {
         // PATCH(P15): 移除上游未使用的 chunkStart（-Wunused-variable 告警）
@@ -401,8 +401,8 @@ bool SF2Parser::readSampleHeaders(uint32_t offset, uint32_t size) {
     return true;
 }
 
-std::vector<Zone> SF2Parser::getZonesForNote(uint8_t note, uint8_t velocity, uint16_t bank, uint16_t program) {
-    std::vector<Zone> resultZones;
+sf2_vector<Zone> SF2Parser::getZonesForNote(uint8_t note, uint8_t velocity, uint16_t bank, uint16_t program) {
+    sf2_vector<Zone> resultZones;
 
     for (const auto& preset : presets) {
         if (preset.bank != bank || preset.program != program) continue;
@@ -469,7 +469,7 @@ std::vector<Zone> SF2Parser::getZonesForNote(uint8_t note, uint8_t velocity, uin
 
 
 
-void SF2Parser::applyGenerators(const std::vector<Generator>& gens, Zone& zone) {
+void SF2Parser::applyGenerators(const sf2_vector<Generator>& gens, Zone& zone) {
     for (const auto& g : gens) {
         auto op = static_cast<GeneratorOperator>(g.oper);
         float val = g.amount.sAmount;

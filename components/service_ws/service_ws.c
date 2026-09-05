@@ -306,7 +306,12 @@ esp_err_t service_ws_connect(const char *uri, const char *headers,
 
     ret = esp_websocket_client_start(s_client);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "client start failed: %d", ret);
+        /* 建栈失败几乎必是内部 RAM 不足/碎片化：打出总量与最大连续块指认 */
+        ESP_LOGE(TAG, "client start failed: %d (internal free=%u largest=%u, need stack~%dB)",
+                 (int)ret,
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                 (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                 (int)SERVICE_WS_TASK_STACK);
         esp_websocket_client_destroy(s_client);
         s_client = NULL;
         service_ws_rx_buf_free();

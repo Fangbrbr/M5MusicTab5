@@ -324,6 +324,9 @@ void service_audio_process(void)
     /* 全双工路径（mic 与扬声器同采样率）：I2S TX/RX 并行，渲染继续。
      * 半双工路径（旧 16kHz mic）：扬声器 I2S 被占用，跳过渲染。 */
     if (s_mic_recording && !s_mic_full_duplex) {
+        /* 半双工录音期 TX 停摆、本函数空转：task_audio 节奏本由 I2S TX 阻塞
+         * 写定速，此时须主动让出 Core 1，否则最高优先级空转饿死同核任务 */
+        vTaskDelay(pdMS_TO_TICKS(2));
         return;
     }
 
@@ -734,7 +737,7 @@ esp_err_t service_audio_mic_open(uint32_t sample_rate, uint8_t channels)
     /* 必须在 esp_codec_dev_open 之后设置增益。
      * esp_codec_dev_open 内部会调用 _update_codec_setting()，若此前未设置有效增益
      * 会把 mic_gain 初始值 0 dB 写入 ES7210，导致录音电平极低。
-     * 32.0 dB 为经验值，可根据实际识别效果在 30~60 dB 之间调整。 */
+     * 32.0f 经 get_db() 3dB 步进量化实际落 30dB（上限 37.5dB，官方出厂 demo 录音即顶满 37.5dB）。 */
     ret = esp_codec_dev_set_in_gain(s_mic_codec, 32.0f);
     if (ret != 0) {
         ESP_LOGW(TAG, "mic set_in_gain failed: %d", ret);
@@ -806,6 +809,20 @@ void service_audio_mic_close(void)
     xSemaphoreGive(s_codec_mutex);
 
     ESP_LOGI(TAG, "mic closed%s", full_duplex ? " (full_duplex)" : ", speaker resume pending");
+}
+
+bool service_audio_mic_is_open(void)
+{
+    return s_mic_recording;
+}
+
+esp_err_t service_audio_mic_set_gain(float gain_db)
+{
+    if (s_mic_codec == NULL || !s_mic_recording) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    int ret = esp_codec_dev_set_in_gain(s_mic_codec, gain_db);
+    return (ret == 0) ? ESP_OK : ESP_FAIL;
 }
 
 static const audio_source_ops_t *service_audio_find_ops(audio_source_t source)

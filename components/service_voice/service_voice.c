@@ -79,6 +79,11 @@ static bool s_listening = false;
 static bool s_wake_enabled = false;
 static bool s_mic_open = false;
 static bool s_mic_error_posted = false;
+/* AFE 路径正在 task_audio 执行中：关闭 AFE 前必须等其静默（quiesce），
+ * 否则 Core 0 侧 destroy 会从 Core 1 的 AFE/重采样中段脚下抽空
+ * （真机：Core1 Saved PC 落在 fa_resample_process，Core 0 中断向量被
+ * 堆栈/堆破坏污染 → Instruction access fault） */
+static volatile bool s_afe_busy = false;
 
 static QueueHandle_t s_cmd_queue = NULL;
 static QueueHandle_t s_evt_queue = NULL;
@@ -112,6 +117,12 @@ static int s_last_vad = 0;
 static uint32_t s_mic_frames = 0;
 static uint32_t s_listen_warmup_samples = 0;
 
+/* 录音 tap（task_audio 上下文回调，仅允许 memcpy 级操作） */
+static service_voice_mic_tap_cb_t s_mic_tap_cb = NULL;
+static void *s_mic_tap_ctx = NULL;
+static bool s_mic_tap_aec = false;
+static int16_t s_mic_tap_raw_buf[SERVICE_VOICE_RS_OUT_MAX_FRAMES];
+
 /* --------------------------------------------------------------------------
  * 前向声明
  * ------------------------------------------------------------------------ */
@@ -126,6 +137,7 @@ static bool service_voice_open_resampler(int channels);
 static void service_voice_reset_resampler(void);
 static void service_voice_process_commands(void);
 static void service_voice_manage_mic(void);
+static void service_voice_process_afe_path_inner(void);
 static void service_voice_process_afe_path(void);
 static void service_voice_process_manual_path(void);
 static void service_voice_append_and_encode(const int16_t *pcm, uint32_t samples);
@@ -425,7 +437,7 @@ static void service_voice_manage_mic(void)
  * AFE 路径：44.1k mic/ref → 16k MR → AFE → 编码/唤醒
  * ------------------------------------------------------------------------ */
 
-static void service_voice_process_afe_path(void)
+static void service_voice_process_afe_path_inner(void)
 {
     /* 先保证参考信号有足够数据，再按同一长度读取 mic，确保 M/R 严格对齐 */
     uint32_t ref_avail = service_audio_aec_ref_available();
@@ -475,12 +487,29 @@ static void service_voice_process_afe_path(void)
     }
     s_dbg_mic_samples += (uint32_t)n;
     s_dbg_rs_frames += out_frames;
+
+    /* 录音 tap（原始路）：取重采样后 MR 的 M 通道去交错为 16k mono，
+     * 在 AFE 馈入前旁路——不携带 AEC 处理痕迹，但含扬声器串音 */
+    if (s_mic_tap_cb != NULL && !s_mic_tap_aec) {
+        uint32_t tap_n = (out_frames < SERVICE_VOICE_RS_OUT_MAX_FRAMES)
+                             ? out_frames : SERVICE_VOICE_RS_OUT_MAX_FRAMES;
+        for (uint32_t i = 0; i < tap_n; i++) {
+            s_mic_tap_raw_buf[i] = s_aec_out_tmp[i * 2];
+        }
+        s_mic_tap_cb(s_mic_tap_raw_buf, tap_n, s_mic_tap_ctx);
+    }
+
     service_voice_aec_push_and_feed(out_frames);
 
     /* 从独立 fetch 任务的结果队列非阻塞取（可能多帧积压，循环取尽） */
     service_voice_wake_result_t res;
     while (service_voice_wake_poll(&res)) {
         s_dbg_polled_samples += (uint32_t)res.samples;
+        /* 录音 tap（AEC 路）：AFE 输出即 AEC 后信号；res.data 为单缓冲，
+         * 必须在本轮 poll 内消费完（tap 契约已限定 memcpy 级） */
+        if (s_mic_tap_cb != NULL && s_mic_tap_aec) {
+            s_mic_tap_cb(res.data, (uint32_t)res.samples, s_mic_tap_ctx);
+        }
         if (s_listening) {
             /* 本地 VAD 边沿透传 App 做收音指示 */
             if (res.vad_state != s_last_vad) {
@@ -543,6 +572,18 @@ static void service_voice_process_afe_path(void)
         s_dbg_feed_fail = 0;
         s_dbg_window_us = esp_timer_get_time();
     }
+}
+
+/* AFE 路径包装：busy 标志 + active 双检（关停竞态防护，见 s_afe_busy 注释） */
+static void service_voice_process_afe_path(void)
+{
+    s_afe_busy = true;
+    __sync_synchronize();
+    if (s_afe_active) {
+        service_voice_process_afe_path_inner();
+    }
+    __sync_synchronize();
+    s_afe_busy = false;
 }
 
 /* --------------------------------------------------------------------------
@@ -692,18 +733,18 @@ esp_err_t service_voice_wake_open_deferred(void)
         return ESP_FAIL;
     }
 
-    s_afe_active = true;
     s_afe_feed_chunk = service_voice_wake_get_feed_chunk();
 
-    /* 切换到 MR 重采样器（2ch mic+ref，AEC 全双工） */
+    /* 先备好 MR 重采样器再发布 s_afe_active：反转顺序会让 task_audio 拿旧
+     * mono 重采样器跑 MR 输入（重开窗口期 Invalid parameter 红日志刷屏） */
     if (!service_voice_open_resampler(2)) {
-        ESP_LOGW(TAG, "MR resampler open failed, fallback to mono");
-        s_afe_active = false;
+        ESP_LOGW(TAG, "MR resampler open failed, fallback to manual");
         s_afe_feed_chunk = 0;
         service_voice_wake_close();
         return ESP_FAIL;
     }
 
+    s_afe_active = true;
     ESP_LOGI(TAG, "AFE 就绪，auto 连续对话可用（唤醒词 + AEC 全双工）");
     return ESP_OK;
 }
@@ -716,10 +757,19 @@ void service_voice_wake_close_deferred(void)
     if (!s_afe_active) {
         return;
     }
-    service_voice_wake_close();
+    /* 先撤活（task_audio 下一拍起不再进 AFE 路径），再等路径静默；
+     * 不经静默直接 destroy 会从 Core 1 处理中段脚下抽空（真机崩溃） */
     s_afe_active = false;
+    __sync_synchronize();
+    for (int i = 0; i < 100 && s_afe_busy; i++) {
+        vTaskDelay(pdMS_TO_TICKS(2));
+    }
+    if (s_afe_busy) {
+        ESP_LOGW(TAG, "afe busy timeout, force close");
+    }
+    service_voice_wake_close();
     s_afe_feed_chunk = 0;
-    /* 切回 mono 重采样器 */
+    /* 切回 mono 重采样器（此刻无并发使用者，安全） */
     service_voice_open_resampler(1);
     ESP_LOGI(TAG, "AFE 已关闭，释放内部 RAM");
 }
@@ -819,4 +869,21 @@ void service_voice_decoder_reset_phase(void)
 const char *service_voice_get_wake_word(void)
 {
     return service_voice_wake_get_word();
+}
+
+void service_voice_set_mic_tap(service_voice_mic_tap_cb_t cb, void *ctx, bool aec_processed)
+{
+    /* Trap: 先清回调再落参数，task_audio 侧始终看到一致的 (cb,ctx,aec) 三元组；
+     * 单字存储原子 + 屏障防重排，切换瞬间最多丢失一个 32ms 块 */
+    s_mic_tap_cb = NULL;
+    __sync_synchronize();
+    s_mic_tap_aec = aec_processed;
+    s_mic_tap_ctx = ctx;
+    __sync_synchronize();
+    s_mic_tap_cb = cb;
+}
+
+bool service_voice_is_afe_active(void)
+{
+    return s_afe_active;
 }

@@ -39,6 +39,7 @@ static const char *TAG = "engine_gui_res_vfs";
     X(ui_font_chinese_40)              \
     X(ui_font_clock_150)               \
     X(ui_font_clock_150_a)             \
+    X(ui_font_digi_30)                 \
     X(ui_font_icon_70)                 \
     X(ui_image_bg_day)                 \
     X(ui_image_bg_night)               \

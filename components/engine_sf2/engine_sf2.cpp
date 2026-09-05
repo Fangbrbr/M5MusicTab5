@@ -46,6 +46,11 @@ static SF2Parser           s_parser("");
 static Synth              *s_synth = nullptr;
 static bool                s_initialized = false;
 static SemaphoreHandle_t   s_sf2_mutex = nullptr;
+/* SD 目录扫描专用锁：setting rebuild(task_gui) 与 process 校验(task_app) 会并发
+ * 重扫，共享 s_sd_names/s_sd_count 静态态，不加锁时两段扫描交织会出现计数翻倍
+ * （2026-09 FTP 退出后真机日志 rescan 14→28→14）。独立于 s_sf2_mutex：
+ * 加载持锁数秒，扫描只互斥扫描本身，不阻塞/不被加载阻塞 */
+static SemaphoreHandle_t   s_sd_list_mutex = nullptr;
 
 static engine_sf2_progress_cb_t s_progress_cb = nullptr;
 static void                  *s_progress_user_data = nullptr;
@@ -107,6 +112,14 @@ esp_err_t engine_sf2_init(void)
         s_sf2_mutex = xSemaphoreCreateRecursiveMutex();
         if (s_sf2_mutex == nullptr) {
             ESP_LOGE(TAG, "failed to create mutex");
+            return ESP_ERR_NO_MEM;
+        }
+    }
+
+    if (s_sd_list_mutex == nullptr) {
+        s_sd_list_mutex = xSemaphoreCreateMutex();
+        if (s_sd_list_mutex == nullptr) {
+            ESP_LOGE(TAG, "failed to create sd list mutex");
             return ESP_ERR_NO_MEM;
         }
     }
@@ -257,10 +270,12 @@ bool engine_sf2_load_file(const char *path)
         uint32_t free_after = (uint32_t)heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
         uint64_t used = (uint64_t)free_before + (uint64_t)s_loaded_psram_bytes - (uint64_t)free_after;
         s_loaded_psram_bytes = (used > 0) ? (uint32_t)used : 0;
-        /* 每次导入后打印实际大小与 PSRAM 占用，供容量审计 */
-        ESP_LOGI(TAG, "load %s: ok, file=%llu bytes, psram=%u bytes, free_psram=%u",
+        /* 每次导入后打印实际大小与 PSRAM 占用，供容量审计；
+         * internal 列：定位音源切换路径的内部 RAM 泄漏（2026-09 ws 建栈失败） */
+        ESP_LOGI(TAG, "load %s: ok, file=%llu bytes, psram=%u bytes, free_psram=%u, internal=%u",
                  path, (unsigned long long)file_size, (unsigned)s_loaded_psram_bytes,
-                 (unsigned)free_after);
+                 (unsigned)free_after,
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL));
 
         /* 跟踪当前音源：SD 目录下记文件名，其余（内部预设）记空串 */
         if (strncmp(path, ENGINE_SF2_SD_DIR "/", strlen(ENGINE_SF2_SD_DIR) + 1) == 0) {
@@ -278,7 +293,8 @@ bool engine_sf2_load_file(const char *path)
     return ok;
 }
 
-int engine_sf2_sd_rescan(void)
+/* 扫描本体（调用方须已持 s_sd_list_mutex） */
+static int s_sd_rescan_locked(void)
 {
     s_sd_count = 0;
 
@@ -318,6 +334,40 @@ int engine_sf2_sd_rescan(void)
 
     ESP_LOGI(TAG, "sd rescan: %d soundfont(s)", s_sd_count);
     return s_sd_count;
+}
+
+int engine_sf2_sd_rescan(void)
+{
+    if (s_sd_list_mutex != nullptr) {
+        xSemaphoreTake(s_sd_list_mutex, portMAX_DELAY);
+    }
+    int count = s_sd_rescan_locked();
+    if (s_sd_list_mutex != nullptr) {
+        xSemaphoreGive(s_sd_list_mutex);
+    }
+    return count;
+}
+
+bool engine_sf2_sd_source_exists(void)
+{
+    if (s_sd_list_mutex != nullptr) {
+        xSemaphoreTake(s_sd_list_mutex, portMAX_DELAY);
+    }
+    bool exists = true;   /* 内部预设（空串）视为存在 */
+    if (s_current_source[0] != '\0') {
+        exists = false;
+        int count = s_sd_rescan_locked();
+        for (int i = 0; i < count; i++) {
+            if (strcmp(s_sd_names[i], s_current_source) == 0) {
+                exists = true;
+                break;
+            }
+        }
+    }
+    if (s_sd_list_mutex != nullptr) {
+        xSemaphoreGive(s_sd_list_mutex);
+    }
+    return exists;
 }
 
 const char *engine_sf2_sd_name_at(int index)

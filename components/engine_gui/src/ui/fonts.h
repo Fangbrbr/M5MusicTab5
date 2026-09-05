@@ -12,6 +12,7 @@ extern lv_font_t *ui_font_chinese_30;
 extern lv_font_t *ui_font_chinese_40;
 extern lv_font_t *ui_font_clock_150;
 extern lv_font_t *ui_font_clock_150_a;
+extern lv_font_t *ui_font_digi_30;
 
 #ifndef EXT_FONT_DESC_T
 #define EXT_FONT_DESC_T

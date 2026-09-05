@@ -252,6 +252,22 @@ int32_t service_audio_mic_read(int16_t *buffer, uint32_t frames);
  */
 void service_audio_mic_close(void);
 
+/**
+ * @brief 设置 mic 输入增益
+ *
+ * Why: mic_open 每次固定写 32dB 语音向增益；乐器等大声压场景需调低防削波。
+ * 必须在 mic_open 成功后调用（open 内部会重置增益）。
+ *
+ * @param[in] gain_db 增益 dB（ES7210 约 0~37.5dB）
+ * @return ESP_OK 成功；ESP_ERR_INVALID_STATE mic 未打开
+ */
+esp_err_t service_audio_mic_set_gain(float gain_db);
+
+/**
+ * @brief mic 是否处于打开状态（供独占重配前的释放等待）
+ */
+bool service_audio_mic_is_open(void);
+
 #ifdef __cplusplus
 }
 #endif

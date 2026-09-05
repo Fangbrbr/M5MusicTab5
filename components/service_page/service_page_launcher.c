@@ -28,11 +28,11 @@ typedef struct
 static const launcher_app_map_t s_app_map[] = {
     {&objects.launcher_zen, "app_zen_mode"},
     {&objects.launcher_ear, "app_ear_train"},
-    {&objects.launcher_fifth, "app_circle_of_fifths"},
+    {&objects.launcher_recorder, "app_recorder"},
     {&objects.launcher_chord, "app_chord_memory"},
     {&objects.launcher_midi, "app_midi_player"},
     {&objects.launcher_xy, "app_xy_mode"},
-    {&objects.launcher_drum, "app_drum_pad"},
+    {&objects.launcher_sequencer, "app_sequencer"},
     {&objects.launcher_piano, "app_tiny_piano"},
     {&objects.launcher_clock, "app_clock"},
     {&objects.launcher_ai, "app_ai_agent"},

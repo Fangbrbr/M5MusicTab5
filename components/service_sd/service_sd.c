@@ -17,6 +17,7 @@
 #include "sdmmc_cmd.h"
 #endif
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include "esp_vfs_fat.h"
 #include <string.h>
 #include <sys/stat.h>
@@ -28,7 +29,15 @@ static const char *TAG = "service_sd";
 #define CONFIG_BSP_SD_MOUNT_POINT "/sdcard"
 #endif
 
+/* PSRAM DMA 缓冲：SF2 大音源加载后内部 DMA RAM 近乎耗尽（实测仅剩 ~4KB），
+ * SDMMC 驱动对未对齐/PSRAM 缓冲的读写需临时 DMA 缓冲且只认内部 MALLOC_CAP_DMA，
+ * 届时 allocate_dma_buf 必失败。P4 SDMMC 外设本身支持 PSRAM DMA
+ * （SOC_SDMMC_PSRAM_DMA_CAPABLE=1），故预分配 64B cache 对齐的 PSRAM 缓冲注入
+ * host.dma_aligned_buffer，驱动读写全部复用该缓冲，不再向内部 RAM 申请。 */
+#define SERVICE_SD_DMA_BUF_BYTES (16 * 1024)
+
 static service_sd_state_t s_state = SERVICE_SD_STATE_UNMOUNTED;
+static void *s_dma_buf = NULL;
 
 /* 内部辅助：构建绝对路径 */
 static esp_err_t s_build_abs_path(char *out, uint32_t out_len, const char *relative)
@@ -80,6 +89,22 @@ esp_err_t service_sd_init(void)
     bsp_sdcard_get_sdmmc_host(SDMMC_HOST_SLOT_0, &host);
     host.max_freq_khz = SDMMC_FREQ_DEFAULT; /* 20 MHz */
 
+    /* 见 SERVICE_SD_DMA_BUF_BYTES 注释：预分配 PSRAM DMA 缓冲供 SDMMC 驱动复用。
+     * 64B 对齐满足 cache msync 要求；heap_caps_get_allocated_size 仍可返回真实块大小。 */
+    if (s_dma_buf == NULL) {
+        s_dma_buf = heap_caps_aligned_alloc(64, SERVICE_SD_DMA_BUF_BYTES,
+                                            MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    }
+    if (s_dma_buf != NULL) {
+        host.dma_aligned_buffer = s_dma_buf;
+        host.unaligned_multi_block_rw_max_chunk_size =
+            SERVICE_SD_DMA_BUF_BYTES / 512;
+        ESP_LOGI(TAG, "SD dma buffer: %zu bytes @ PSRAM",
+                 (size_t)heap_caps_get_allocated_size(s_dma_buf));
+    } else {
+        ESP_LOGW(TAG, "PSRAM dma buffer alloc failed, fallback to internal DMA");
+    }
+
     bsp_sdcard_sdmmc_get_slot(SDMMC_HOST_SLOT_0, &slot);
     slot.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
 
@@ -92,6 +117,10 @@ esp_err_t service_sd_init(void)
     esp_err_t ret = bsp_sdcard_sdmmc_mount(&cfg);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "SD card mount failed: %s", esp_err_to_name(ret));
+        if (s_dma_buf != NULL) {
+            heap_caps_free(s_dma_buf);
+            s_dma_buf = NULL;
+        }
         s_state = SERVICE_SD_STATE_ERROR;
         return ret;
     }
@@ -108,6 +137,11 @@ esp_err_t service_sd_init(void)
 
     s_state = SERVICE_SD_STATE_MOUNTED;
     ESP_LOGI(TAG, "SD card mounted successfully");
+    /* 诊断：挂载成功后内部/DMA RAM 余量（与 wifi_boot 处对比，判断内存消耗点） */
+    ESP_LOGI(TAG, "heap_diag sd_mounted internal=%u psram=%u dma=%u",
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_DMA));
     return ESP_OK;
 #endif /* CONFIG_BOARD_HAS_SD */
 }
@@ -124,6 +158,10 @@ void service_sd_deinit(void)
         ESP_LOGE(TAG, "SD card unmount failed: %s", esp_err_to_name(ret));
     } else {
         ESP_LOGI(TAG, "SD card unmounted");
+    }
+    if (s_dma_buf != NULL) {
+        heap_caps_free(s_dma_buf);
+        s_dma_buf = NULL;
     }
 #endif
     s_state = SERVICE_SD_STATE_UNMOUNTED;

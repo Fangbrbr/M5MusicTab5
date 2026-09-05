@@ -4,6 +4,7 @@ idf_component_register(SRCS "task_app.c"
                                 service_power
                                 service_rtc
                                 service_recorder
+                                service_wavrec
                                 service_wifi
                                 service_nvs
                                 service_xiaozhi
