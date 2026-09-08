@@ -151,9 +151,16 @@ typedef struct {
     SemaphoreHandle_t sem;
     esp_err_t err;
     int http_status;
+    int id;           /* 当前 job id：迟到回调按 id 不符丢弃（防旧 job 唤醒新等待） */
 } ota_sync_ctx_t;
 
 static SemaphoreHandle_t s_ota_sync_sem = NULL;
+
+/* 同步上下文静态化：HTTP 完成回调（task_app 分发）可能晚于等待方超时返回，
+ * 栈版 ctx 超时后帧销毁，迟到回调写悬空栈 + give 垃圾句柄 → 野指针/堆破坏
+ *（2026-09-08 两次真机崩溃同根因，前兆均为 ota sync wait timeout）。
+ * Contract: 仅 task_ai 单线程调用 xiaozhi_ota_post，静态实例无并发竞争。 */
+static ota_sync_ctx_t s_ota_sync_ctx;
 
 static void xiaozhi_ota_http_callback(int req_id, esp_err_t err, int http_status,
                                       const char *resp, size_t resp_len, void *user_data)
@@ -162,6 +169,11 @@ static void xiaozhi_ota_http_callback(int req_id, esp_err_t err, int http_status
     (void)resp;
     (void)resp_len;
     ota_sync_ctx_t *ctx = (ota_sync_ctx_t *)user_data;
+    if (ctx->id != req_id) {
+        /* 旧 job 的迟到完成（等待方已超时并提交了新 job）：丢弃，不扰动当前等待 */
+        ESP_LOGW(TAG, "drop stale ota completion: id=%d (current=%d)", req_id, ctx->id);
+        return;
+    }
     ctx->err = err;
     ctx->http_status = http_status;
     xSemaphoreGive(ctx->sem);
@@ -199,14 +211,13 @@ static int xiaozhi_ota_post(const char *url, const char *body,
         {"Accept-Language", SERVICE_XIAOZHI_ACCEPT_LANGUAGE},
     };
 
-    ota_sync_ctx_t ctx = {
-        .sem = s_ota_sync_sem,
-        .err = ESP_FAIL,
-        .http_status = -1,
-    };
+    ota_sync_ctx_t *ctx = &s_ota_sync_ctx;
+    ctx->sem = s_ota_sync_sem;   /* 静态实例零初始化，sem 必须每次显式挂上 */
+    ctx->err = ESP_FAIL;
+    ctx->http_status = -1;
 
     /* 确保信号量空，防止上次残留 */
-    xSemaphoreTake(ctx.sem, 0);
+    xSemaphoreTake(ctx->sem, 0);
 
     service_http_client_req_t req = {
         .method = SERVICE_HTTP_METHOD_POST,
@@ -219,7 +230,7 @@ static int xiaozhi_ota_post(const char *url, const char *body,
         .resp_buf_len = resp_len,
         .timeout_ms = SERVICE_XIAOZHI_HTTP_TIMEOUT_MS,
         .callback = xiaozhi_ota_http_callback,
-        .user_data = &ctx,
+        .user_data = ctx,
     };
 
     int id = service_http_client_submit(&req);
@@ -227,19 +238,22 @@ static int xiaozhi_ota_post(const char *url, const char *body,
         ESP_LOGE(TAG, "ota submit failed");
         return -1;
     }
+    ctx->id = id;
+    /* 提交与记 id 之间可能漏进旧 job 的迟到 give：记 id 后再清一次信号量 */
+    xSemaphoreTake(ctx->sem, 0);
 
     /* Trap: done 回调经 task_app 分发，done 队列满会丢回调（或 task_app 卡死），
      * portMAX_DELAY 会让 task_ai 永久挂起、AI 子系统静默死亡；超时兜底 =
-     * HTTP 超时(15s) + 分发余量 */
-    if (xSemaphoreTake(ctx.sem, pdMS_TO_TICKS(SERVICE_XIAOZHI_HTTP_TIMEOUT_MS + 5000)) != pdTRUE) {
+     * HTTP 超时(15s) + 分发余量。超时返回后迟到回调写静态 ctx 无害。 */
+    if (xSemaphoreTake(ctx->sem, pdMS_TO_TICKS(SERVICE_XIAOZHI_HTTP_TIMEOUT_MS + 5000)) != pdTRUE) {
         ESP_LOGW(TAG, "ota sync wait timeout");
         return -1;
     }
 
-    if (ctx.err != ESP_OK) {
-        return (ctx.http_status > 0) ? ctx.http_status : -1;
+    if (ctx->err != ESP_OK) {
+        return (ctx->http_status > 0) ? ctx->http_status : -1;
     }
-    return ctx.http_status;
+    return ctx->http_status;
 }
 
 /**

@@ -20,4 +20,5 @@ idf_component_register(SRCS "service_page.c"
                                 service_xiaozhi
                                 service_power
                                 espressif__esp_lvgl_port
+                                heap
                                 board_config)

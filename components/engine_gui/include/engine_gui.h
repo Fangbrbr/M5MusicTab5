@@ -209,6 +209,17 @@ static inline lv_obj_t *engine_gui_find_obj(const char *name)
 }
 
 /**
+ * @brief 取 DSI 物理帧缓冲（截图直读用）
+ * @param[out] phy_w    物理宽（像素），可为 NULL
+ * @param[out] phy_h    物理高（像素），可为 NULL
+ * @param[out] rotation 当前 LVGL 显示旋转，可为 NULL
+ * @return RGB565 帧缓冲指针；无 DSI 帧缓冲（非 DSI 板）返回 NULL
+ * @note 读取内容期间须持 LVGL 锁（防 flush 半程撕裂）
+ */
+const void *engine_gui_get_dsi_fb(int32_t *phy_w, int32_t *phy_h,
+                                  lv_display_rotation_t *rotation);
+
+/**
  * @brief 屏幕名转 EEZ SCREEN_ID
  * @param[in] name 屏幕名，如 "app_chord_memory"
  * @return SCREEN_ID，未找到返回 -1

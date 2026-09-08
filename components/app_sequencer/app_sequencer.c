@@ -1553,6 +1553,78 @@ static void seq_grid_invalidate_all_stub(void)
     }
 }
 
+/* -------------------- 音色试听（audition） --------------------
+ * 点轨道行/下拉换音色/恢复默认时发一次 note：note_on 即发，note_off 由
+ * on_update 到期补发（同 chord_note_slot 范式，不新增定时器）。
+ * 直发总线、不听 mute/solo——试听目标是"这条轨的音色"本身。 */
+#define SEQ_AUDITION_GATE_MS 250
+
+typedef struct {
+    bool active;
+    uint8_t ch;
+    uint8_t note;
+    int64_t off_at_us;
+} seq_audition_t;
+
+static seq_audition_t s_audition[SEQ_TRACK_COUNT];
+
+static void seq_audition_midi_note(uint8_t ch, uint8_t note, uint8_t vel)
+{
+    engine_midi_event_t evt = {0};
+    evt.type = (vel > 0) ? ENGINE_MIDI_MSG_NOTE_ON : ENGINE_MIDI_MSG_NOTE_OFF;
+    evt.channel = ch;
+    evt.data1 = note;
+    evt.data2 = vel;
+    evt.source_port = ENGINE_MIDI_PORT_APP;
+    engine_midi_publish(&evt, 0);
+}
+
+/* 试听指定轨道当前音色（当前槽为真源）；note=0（None）轨无可听音色直接跳过 */
+static void seq_audition_track(int track)
+{
+    if (track < 0 || track >= SEQ_TRACK_COUNT) {
+        return;
+    }
+    const seq_slot_t *slot = engine_seq_slot_get(engine_seq_pattern_current());
+    if (slot == NULL) {
+        return;
+    }
+    const seq_track_t *tr = &slot->pattern.tracks[track];
+    if (tr->midi_note == 0) {
+        return;
+    }
+    /* 重触发先关旧音：同一轨两次点按之间音色可能已被下拉换掉 */
+    if (s_audition[track].active) {
+        seq_audition_midi_note(s_audition[track].ch, s_audition[track].note, 0);
+    }
+    seq_audition_midi_note(tr->midi_ch, tr->midi_note, tr->velocity);
+    s_audition[track].active = true;
+    s_audition[track].ch = tr->midi_ch;
+    s_audition[track].note = tr->midi_note;
+    s_audition[track].off_at_us = esp_timer_get_time() + SEQ_AUDITION_GATE_MS * 1000;
+}
+
+static void seq_audition_process(void)
+{
+    int64_t now = esp_timer_get_time();
+    for (int t = 0; t < SEQ_TRACK_COUNT; t++) {
+        if (s_audition[t].active && now >= s_audition[t].off_at_us) {
+            seq_audition_midi_note(s_audition[t].ch, s_audition[t].note, 0);
+            s_audition[t].active = false;
+        }
+    }
+}
+
+static void seq_audition_stop_all(void)
+{
+    for (int t = 0; t < SEQ_TRACK_COUNT; t++) {
+        if (s_audition[t].active) {
+            seq_audition_midi_note(s_audition[t].ch, s_audition[t].note, 0);
+            s_audition[t].active = false;
+        }
+    }
+}
+
 /* -------------------- 请求消化（on_update，task_app 锁内） -------------------- */
 
 static void seq_drain_requests(void)
@@ -1574,15 +1646,17 @@ static void seq_drain_requests(void)
             seq_sync_track_rows();
             seq_sync_track_sliders();
             seq_sync_param_panel_ui();
+            seq_audition_track(t);   /* 点轨道行即试听当前音色 */
             break;
         }
         case SEQ_REQ_TRACK_PARAM:
             if (req.p1 >= 0 && req.p1 < SEQ_TRACK_COUNT) {
                 engine_seq_track_set_param((uint8_t)req.p1, (uint8_t)req.p2, (uint8_t)req.p3);
                 if ((uint8_t)req.p2 == 5) {
-                    /* note 变化：刷新两侧轨道名 + 网格（音色名同步） */
+                    /* note 变化：刷新两侧轨道名 + 网格（音色名同步），试听新音色 */
                     seq_sync_track_names();
                     seq_grid_invalidate_all_stub();
+                    seq_audition_track(req.p1);
                 }
                 /* 改动即存：note（p2==5）低频立即落盘；滑块（0/1/2）限频防 flash 磨损 */
                 seq_persist_track_prefs(req.p2 == 5);
@@ -1595,6 +1669,7 @@ static void seq_drain_requests(void)
                 seq_sync_track_names();
                 seq_grid_invalidate_all_stub();
                 seq_sync_param_panel_ui();
+                seq_audition_track(req.p1);   /* 试听恢复后的默认音色 */
                 /* restore 也是修改：立即落盘 */
                 seq_persist_track_prefs(true);
             }
@@ -2378,6 +2453,7 @@ static void app_sequencer_on_update(app_base_t *self)
 
     seq_status_fallback();
     seq_drain_requests();
+    seq_audition_process();   /* 试听 note_off 到期补发 */
     seq_sync_slots();
     seq_sync_save_btn();      /* 空白槽 DISABLE 保存按钮（编辑/清空/切槽后随周期刷新） */
     seq_sync_track_rows();   /* M/S 状态与选中高亮随 mute/solo 变化即时刷新 */
@@ -2399,6 +2475,7 @@ static void app_sequencer_on_pause(app_base_t *self)
     (void)self;
 
     seq_stop_play();
+    seq_audition_stop_all();   /* 防退出瞬间卡音 */
 
     if (s_seq.recording_self) {
         app_manager_record_stop();
@@ -2426,6 +2503,7 @@ static void app_sequencer_on_destroy(app_base_t *self)
     (void)self;
 
     seq_stop_play();
+    seq_audition_stop_all();
 
     lvgl_port_lock(portMAX_DELAY);
     if (s_seq_ui.btn_home != NULL) {

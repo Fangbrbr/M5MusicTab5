@@ -467,6 +467,10 @@ static esp_err_t wifi_do_sync_rtc(void)
             ESP_LOGI(TAG, "RTC synced: %04d-%02d-%02d %02d:%02d:%02d",
                      timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
                      timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+        } else if (ret == ESP_ERR_INVALID_STATE) {
+            /* RTC 未就绪属正常启动时序（rtc_init 在大 SF2 加载之后，SNTP 先到）：
+             * 静默重试，RTC ready 后自会成功，不刷告警 */
+            ESP_LOGD(TAG, "rtc not ready yet, retry later");
         } else {
             ESP_LOGW(TAG, "set rtc failed: %d", ret);
         }

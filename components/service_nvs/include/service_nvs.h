@@ -91,7 +91,8 @@ typedef struct {
     uint8_t scale;            /*!< 音阶索引 0~5（大调/小调/中国五声/埃及调式/多利亚/日本调式） */
     uint8_t root_oct;         /*!< 根音符八度 0~6 */
     uint8_t pitch;            /*!< 键盘根音音名 0~11（0=C，1=C#，…，11=B） */
-    uint8_t reserved[3];      /*!< 对齐保留 */
+    uint8_t sustain;          /*!< 延音开关 0=关 1=开（原 reserved[0]，旧数据恒 0=关） */
+    uint8_t reserved[2];      /*!< 对齐保留 */
 } service_nvs_piano_t;
 
 /** @brief 音序器 App 参数 */

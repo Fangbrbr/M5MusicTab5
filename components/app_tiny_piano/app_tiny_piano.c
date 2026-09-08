@@ -69,6 +69,7 @@ typedef struct {
     lv_obj_t *scale_type;
     lv_obj_t *pitch;     /* 键盘根音音名下拉框（C~B + 高八度 C） */
     lv_obj_t *sound_type;  /* 新增：钢琴音色选择下拉框 */
+    lv_obj_t *switch_sustain;  /* 延音开关（类 Cave 有界尾音） */
     lv_obj_t *btn_home;
     lv_obj_t *btn_rec;
     lv_obj_t *btn_set;
@@ -102,6 +103,7 @@ static const widget_binding_t s_piano_bindings[] = {
     WIDGET_BIND(ui_screen_piano_t, scale_type,   "piano_scale_type",   WIDGET_KIND_DROPDOWN),
     WIDGET_BIND(ui_screen_piano_t, pitch,        "piano_pitch",        WIDGET_KIND_DROPDOWN),
     WIDGET_BIND(ui_screen_piano_t, sound_type,   "piano_sound_type",   WIDGET_KIND_DROPDOWN),
+    WIDGET_BIND(ui_screen_piano_t, switch_sustain, "piano_switch_sustain", WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_piano_t, btn_home,     "piano_btn_home",     WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_piano_t, btn_rec,      "piano_btn_rec",      WIDGET_KIND_ANY),
     WIDGET_BIND(ui_screen_piano_t, btn_set,      "piano_btn_set",      WIDGET_KIND_ANY),
@@ -116,6 +118,7 @@ typedef struct {
     uint8_t root_oct;   /* 0~6，默认 3（C3） */
     uint8_t pitch;      /* 键盘根音音名 0~12，默认 0（C），12=高八度 C */
     uint8_t sound_type; /* 0~15，钢琴音色选择 */
+    bool sustain;           /* 延音开关：开=抬手后每音保留 ~1.8s 有界尾音 */
     uint8_t finger_note[PIANO_TOUCH_MAX_FINGERS];
     int8_t finger_pad[PIANO_TOUCH_MAX_FINGERS];   /* 各手指当前命中的矩阵垫，-1 无 */
     lv_area_t pad_area[PIANO_PAD_COUNT];          /* 矩阵垫屏幕坐标缓存 */
@@ -205,6 +208,8 @@ static void piano_load_params(void)
     if (s_piano.sound_type > 15) {
         s_piano.sound_type = 0;
     }
+
+    s_piano.sustain = (params.sustain != 0);
 }
 
 static void piano_save_params(void)
@@ -215,6 +220,7 @@ static void piano_save_params(void)
         .root_oct = s_piano.root_oct,
         .pitch = s_piano.pitch,
         .sound_type = s_piano.sound_type,
+        .sustain = s_piano.sustain ? 1 : 0,
     };
     service_nvs_set_piano(&params);
 }
@@ -236,6 +242,66 @@ static uint8_t piano_velocity(uint8_t pressure)
     return (pressure > 0) ? pressure : PIANO_DEFAULT_VELOCITY;
 }
 
+/* -------------------- 延音（类 Cave：有界尾音，非踏板） --------------------
+ * 开启后抬手不立即 note_off，每个音独立保留一段尾音再关——多音尾音交叠出
+ * "空灵"感，但有界（每音到期必关），不像延音踏板无限混叠需人为踩放。
+ * 同音重触发先取消挂起 off，防旧尾音的 off 误杀新音。 */
+#define PIANO_SUSTAIN_GATE_MS 1800
+
+static int64_t s_sustain_off_at[128];   /* 每 MIDI 音一格，0=无挂起 off */
+static int s_sustain_pending;
+
+/* 发音入口：note_on 前取消同音挂起 off */
+static void piano_note_on(uint8_t note, uint8_t velocity)
+{
+    if (note < 128 && s_sustain_off_at[note] != 0) {
+        s_sustain_off_at[note] = 0;
+        s_sustain_pending--;
+    }
+    piano_midi_note(note, velocity);
+}
+
+/* 收音入口：延音开→挂起到期 off；延音关→立即 off（与原行为一致） */
+static void piano_note_off(uint8_t note)
+{
+    if (s_piano.sustain && note < 128) {
+        if (s_sustain_off_at[note] == 0) {
+            s_sustain_pending++;
+        }
+        s_sustain_off_at[note] = esp_timer_get_time() + (int64_t)PIANO_SUSTAIN_GATE_MS * 1000;
+    } else {
+        piano_midi_note(note, 0);
+    }
+}
+
+/* on_update 周期调用：到期补发 note_off */
+static void piano_sustain_process(void)
+{
+    if (s_sustain_pending <= 0) {
+        return;
+    }
+    int64_t now = esp_timer_get_time();
+    for (int n = 0; n < 128 && s_sustain_pending > 0; n++) {
+        if (s_sustain_off_at[n] != 0 && now >= s_sustain_off_at[n]) {
+            piano_midi_note((uint8_t)n, 0);
+            s_sustain_off_at[n] = 0;
+            s_sustain_pending--;
+        }
+    }
+}
+
+/* 立即清空全部挂起尾音（关开关/退出/暂停/切布局） */
+static void piano_sustain_flush(void)
+{
+    for (int n = 0; n < 128; n++) {
+        if (s_sustain_off_at[n] != 0) {
+            piano_midi_note((uint8_t)n, 0);
+            s_sustain_off_at[n] = 0;
+        }
+    }
+    s_sustain_pending = 0;
+}
+
 /* 全部滑行音符立即 note-off（退出/暂停/切布局时调用） */
 static void piano_glide_stop_all(void)
 {
@@ -247,6 +313,7 @@ static void piano_glide_stop_all(void)
         s_piano.finger_pad[f] = -1;
     }
     s_piano.glide_pad_mask = 0;
+    piano_sustain_flush();
 }
 
 /* -------------------- 矩阵垫 -------------------- */
@@ -350,7 +417,7 @@ static void piano_matrix_touch(const app_input_event_t *evt)
 
     if (evt->type == APP_INPUT_TOUCH_UP) {
         if (old_note != 0) {
-            piano_midi_note(old_note, 0);
+            piano_note_off(old_note);
             s_piano.finger_note[evt->finger_id] = 0;
         }
         s_piano.finger_pad[evt->finger_id] = -1;
@@ -362,12 +429,12 @@ static void piano_matrix_touch(const app_input_event_t *evt)
     uint8_t new_note = (pad >= 0) ? piano_pad_note(pad) : 0;
 
     if (new_note != old_note) {
-        /* 滑入新垫发音、划走/滑出立即 note-off，按住不动则音符延续 */
+        /* 滑入新垫发音、划走/滑出收音（延音开时留尾音），按住不动则音符延续 */
         if (old_note != 0) {
-            piano_midi_note(old_note, 0);
+            piano_note_off(old_note);
         }
         if (new_note != 0) {
-            piano_midi_note(new_note, piano_velocity(evt->pressure));
+            piano_note_on(new_note, piano_velocity(evt->pressure));
         }
         s_piano.finger_note[evt->finger_id] = new_note;
     }
@@ -589,6 +656,8 @@ static bool app_tiny_piano_on_init(app_base_t *self, void *screen_ctx)
 
     memset(&s_piano, 0, sizeof(s_piano));
     memset(s_piano.finger_pad, -1, sizeof(s_piano.finger_pad));
+    memset(s_sustain_off_at, 0, sizeof(s_sustain_off_at));
+    s_sustain_pending = 0;
     s_piano.display = 0;
     s_piano.scale = 0;
     s_piano.root_oct = 3;
@@ -597,9 +666,9 @@ static bool app_tiny_piano_on_init(app_base_t *self, void *screen_ctx)
 
     /* 从 NVS 恢复参数并校验 */
     piano_load_params();
-    ESP_LOGI(TAG, "loaded: display=%d, scale=%d, root=C%d, pitch=%d, sound=%d",
+    ESP_LOGI(TAG, "loaded: display=%d, scale=%d, root=C%d, pitch=%d, sound=%d, sustain=%d",
              s_piano.display, s_piano.scale, s_piano.root_oct, s_piano.pitch,
-             s_piano.sound_type);
+             s_piano.sound_type, s_piano.sustain ? 1 : 0);
 
     lvgl_port_lock(portMAX_DELAY);
 
@@ -618,6 +687,13 @@ static bool app_tiny_piano_on_init(app_base_t *self, void *screen_ctx)
     }
     if (s_piano_ui.sound_type != NULL) {
         lv_dropdown_set_selected(s_piano_ui.sound_type, s_piano.sound_type);
+    }
+    if (s_piano_ui.switch_sustain != NULL) {
+        if (s_piano.sustain) {
+            lv_obj_add_state(s_piano_ui.switch_sustain, LV_STATE_CHECKED);
+        } else {
+            lv_obj_clear_state(s_piano_ui.switch_sustain, LV_STATE_CHECKED);
+        }
     }
 
     if (s_piano_ui.btn_home != NULL) {
@@ -656,7 +732,7 @@ static void piano_canvas_touch(const app_input_event_t *evt)
 
     if (evt->type == APP_INPUT_TOUCH_UP) {
         if (old_note != 0) {
-            piano_midi_note(old_note, 0);
+            piano_note_off(old_note);
             s_piano.finger_note[evt->finger_id] = 0;
         }
         return;
@@ -667,10 +743,10 @@ static void piano_canvas_touch(const app_input_event_t *evt)
     }
 
     if (old_note != 0) {
-        piano_midi_note(old_note, 0);
+        piano_note_off(old_note);
     }
     if (new_note != 0) {
-        piano_midi_note(new_note, piano_velocity(evt->pressure));
+        piano_note_on(new_note, piano_velocity(evt->pressure));
     }
     s_piano.finger_note[evt->finger_id] = new_note;
 }
@@ -835,6 +911,12 @@ static void app_tiny_piano_on_update(app_base_t *self)
         sound_type = lv_dropdown_get_selected(s_piano_ui.sound_type);
     }
 
+    /* 延音开关：与下拉同一轮询收敛范式 */
+    bool sustain = s_piano.sustain;
+    if (s_piano_ui.switch_sustain != NULL) {
+        sustain = lv_obj_has_state(s_piano_ui.switch_sustain, LV_STATE_CHECKED);
+    }
+
     if (s_piano.recording_stop_pending && !app_manager_record_is_recording()) {
         char path[256];
         if (app_manager_record_get_last_path(path, sizeof(path))) {
@@ -858,6 +940,8 @@ static void app_tiny_piano_on_update(app_base_t *self)
         }
     }
     lvgl_port_unlock();
+
+    piano_sustain_process();   /* 延音尾音到期补发 note_off */
 
     bool changed = false;
     if (disp != s_piano.display) {
@@ -889,6 +973,14 @@ static void app_tiny_piano_on_update(app_base_t *self)
         s_piano.sound_type = (uint8_t)sound_type;
         ESP_LOGI(TAG, "sound_type changed %d -> %d", old_type, (int)sound_type);
         piano_set_sound_type(sound_type);
+        changed = true;
+    }
+    if (sustain != s_piano.sustain) {
+        s_piano.sustain = sustain;
+        ESP_LOGI(TAG, "sustain=%d", sustain ? 1 : 0);
+        if (!sustain) {
+            piano_sustain_flush();   /* 关延音=立即收掉全部尾音（等效抬踏板） */
+        }
         changed = true;
     }
 

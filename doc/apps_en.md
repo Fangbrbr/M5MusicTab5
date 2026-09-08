@@ -1,5 +1,7 @@
 # App User Guide
 
+> Global gesture: **long-press the title bar text of any screen to take a screenshot** — saved as a BMP under `/screenshot/` on the SD card.
+
 ### 1. Zen Mode
 
 A focus & relaxation tool where bouncing marbles or falling raindrops trigger notes.
@@ -83,6 +85,7 @@ A music-theory visualization: keys, chords, and modulation relationships at a gl
   - **Scale**: major / minor / Chinese pentatonic / Egyptian / Dorian / Japanese
   - **Root note**: 13 positions
   - **Instrument**: 16 SF2 sounds
+  - **Sustain switch**: when on, each note keeps a ~1.8 s natural tail after release (Cave-like ambience, bounded — no endless smearing)
   - **Start octave**: C0 ~ C6 roller
 - Tap the record button to record your performance
 
@@ -94,7 +97,7 @@ An 8-track drum step sequencer with a 16/32-step grid, one-tap Euclidean rhythm 
 
 **Usage:**
 - **Grid editing**: short-press a cell to toggle the step; long-press a cell to open per-step settings (velocity / trigger probability / CC lock)
-- **Tracks**: tap one of the 8 track rows on the left to select it; the parameter panel offers 23 GM percussion sounds, mute / solo, velocity, trigger probability, and timing randomization (humanize)
+- **Tracks**: tap one of the 8 track rows on the left to select it (tapping also auditions its current sound); the parameter panel offers 23 GM percussion sounds (auditioned on change / restore-to-default), mute / solo, velocity, trigger probability, and timing randomization (humanize)
 - **Steps & pages**: long-press the page button to switch 16/32-step mode; short-press flips between pages A/B in 32-step mode; the clear button clears the current page
 - **Playback**: BPM slider (20~300), play/stop button, live playhead cursor in the grid
 - **Randomize**: one-tap rhythm generation (Euclidean algorithm) styled per each track's selected sound
@@ -153,7 +156,7 @@ A professional metronome with multiple tempo-input methods and sounds.
 - 16 beat lights, one per beat, accented first beat
 - Settings (top right):
   - **BPM range**: 20 ~ 300
-  - **Time signature**: numerator 1~16 / denominator 4/6/8/16/32
+  - **Time signature**: numerator 1~16 (beats per bar — drives the accent cycle and beat-light count) / denominator 1/2/4/8/16 (beat unit, e.g. 4 = quarter-note beat, 8 = eighth-note beat)
   - **Sound**: 7 options (standard / tick / woodblock / drum kit / percussion / haptic-style / 2-4 accent)
 - BPM / time signature / sound auto-saved
 

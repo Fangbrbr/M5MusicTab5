@@ -1038,7 +1038,8 @@ static void gui_sysex_consumer(const engine_midi_event_t *evt, void *user_data)
                     break;
 
                 case ENUM_FUNC_SYSTEM_FUNC_SYSTEM_SCREENSHOT:
-                    service_page_take_screenshot();
+                    /* 重活移交 task_app（SD 写秒级，不得在 task_gui 同步执行） */
+                    service_page_screenshot_request();
                     break;
 
                 case ENUM_FUNC_SYSTEM_FUNC_SYSTEM_CHANGE_LANGUAGE: {
@@ -1812,6 +1813,9 @@ bool engine_gui_get_display_inverted(void)
     return s_disp_inverted;
 }
 
+/* 长按截屏的换屏轮询注册，定义在下方"长按 *_head 标题截屏"段 */
+static void screenshot_head_tick(void);
+
 void engine_gui_tick(void)
 {
     engine_gui_brightness_settle();
@@ -1820,6 +1824,7 @@ void engine_gui_tick(void)
     lvgl_port_lock(0);
     ui_tick();
     engine_gui_ai_led_tick();
+    screenshot_head_tick();
     lvgl_port_unlock();
 }
 
@@ -1889,6 +1894,111 @@ lv_obj_t *engine_gui_find_widget(const char *name)
     }
 
     return NULL;
+}
+
+/* 截屏直读用：DSI 单帧缓冲（RGB565 物理竖屏）。非 DSI 板（JC）未初始化，返回 NULL */
+const void *engine_gui_get_dsi_fb(int32_t *phy_w, int32_t *phy_h,
+                                  lv_display_rotation_t *rotation)
+{
+    if (phy_w != NULL) {
+        *phy_w = BOARD_LCD_H_RES;
+    }
+    if (phy_h != NULL) {
+        *phy_h = BOARD_LCD_V_RES;
+    }
+    if (rotation != NULL) {
+        *rotation = (s_disp != NULL) ? lv_display_get_rotation(s_disp)
+                                     : LV_DISPLAY_ROTATION_0;
+    }
+    return s_dsi_fb;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 长按 *_head 标题截屏（统一注册，同 ai_led 懒解析范式）                        */
+/* -------------------------------------------------------------------------- */
+
+/* 屏根对象 → *_head 控件名。按名运行时装配而非引用 objects 成员：EEZ 重导出
+ * 丢控件时仅该屏无截屏入口，构建不随前端导出漂移破裂（同 ai_led 的教训） */
+typedef struct {
+    lv_obj_t * const *screen;
+    const char       *head_name;
+    bool              registered;   /* EEZ 屏终身缓存，控件级 once 注册 */
+} screenshot_head_map_t;
+
+static screenshot_head_map_t s_shot_head_map[] = {
+    { &objects.launcher,         "launcher_head", false },
+    { &objects.setting,          "setting_head",  false },
+    { &objects.about,            "about_head",    false },
+    { &objects.app_zen_mode,     "zen_head",      false },
+    { &objects.app_ear_train,    "ear_head",      false },
+    { &objects.app_chord_memory, "chord_head",    false },
+    { &objects.app_recorder,     "rec_head",      false },
+    { &objects.app_tiny_piano,   "piano_head",    false },
+    { &objects.app_sequencer,    "seq_head",      false },
+    { &objects.app_midi_player,  "player_head",   false },
+    { &objects.app_xy_mode,      "xy_head",       false },
+    { &objects.app_metronome,    "metron_head",   false },
+    { &objects.app_ai_agent,     "ai_head",       false },
+    { &objects.app_clock,        "clock_head",    false },
+    { &objects.app_fun,          "fun_head",      false },
+};
+
+/* 触发方式：长按 *_head 触发截屏。不采用双击——LVGL 的 DOUBLE_CLICKED 依赖
+ * indev 连击窗（scroll_limit=10px 位移 + 400ms 间隔），大屏手指双击点位移
+ * 常超 10px 真机永不触发；LONG_PRESSED（400ms 按住）无位移约束、稳定可靠，
+ * 且对截屏这种刻意动作更防误触（CLICKED 不响应，单击/滑过均不误触发）。 */
+static void screenshot_head_cb(lv_event_t *e)
+{
+    if (lv_event_get_code(e) != LV_EVENT_LONG_PRESSED) {
+        return;
+    }
+    ESP_LOGI(TAG, "head long-press: screenshot requested");
+    /* 本回调跑在 task_gui：只登记请求，SD 写由 task_app 消化 */
+    service_page_screenshot_request();
+}
+
+static void screenshot_head_register_for_screen(lv_obj_t *screen)
+{
+    for (uint32_t i = 0; i < sizeof(s_shot_head_map) / sizeof(s_shot_head_map[0]); i++) {
+        if (*s_shot_head_map[i].screen != screen) {
+            continue;
+        }
+        if (s_shot_head_map[i].registered) {
+            return;
+        }
+        /* 锁递归可重入（on_screen_loaded 经 LV_EVENT_SCREEN_LOADED 触发时已持锁） */
+        lvgl_port_lock(portMAX_DELAY);
+        lv_obj_t *head = engine_gui_find_widget(s_shot_head_map[i].head_name);
+        if (head != NULL) {
+            /* label 默认不吃点击：EEZ 未勾选 CLICKABLE 时运行期补齐（幂等） */
+            lv_obj_add_flag(head, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_event_cb(head, screenshot_head_cb, LV_EVENT_LONG_PRESSED, NULL);
+            s_shot_head_map[i].registered = true;
+            ESP_LOGI(TAG, "screenshot long-press registered: %s",
+                     s_shot_head_map[i].head_name);
+        }
+        lvgl_port_unlock();
+        if (head == NULL) {
+            /* 不置 registered：控件未创建/导出丢失时下次换屏重试 */
+            ESP_LOGW(TAG, "screenshot head widget missing: %s", s_shot_head_map[i].head_name);
+        }
+        return;
+    }
+}
+
+/* 换屏检测走轮询而非 on_screen_loaded：EEZ 的 SCREEN_LOADED 只在 flow 自己
+ * 切屏时派发，launcher 图标/App 管理器等编程式切屏不经过它（2026-09 真机：
+ * 挂 on_screen_loaded 时整链不触发）。轮询 lv_screen_active 全路径覆盖。 */
+static lv_obj_t *s_shot_screen = NULL;
+
+static void screenshot_head_tick(void)
+{
+    lv_obj_t *screen = lv_screen_active();
+    if (screen == s_shot_screen) {
+        return;
+    }
+    s_shot_screen = screen;
+    screenshot_head_register_for_screen(screen);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -56,7 +56,11 @@ static const metron_sound_t s_sounds[] = {
 };
 #define METRON_SOUND_COUNT (sizeof(s_sounds) / sizeof(s_sounds[0]))
 
-static const uint8_t s_sig_bot_values[] = {4, 6, 8, 16, 32};
+/* 分母选项 = 拍单位音符（1 全音符/2 二分/4 四分/8 八分/16 十六分）。
+ * Trap: 旧表 {4,6,8,16,32} 中的 6 不是合法拍号分母（分母必须是 2 的幂）；
+ * NVS 存的是索引，换表后旧索引语义漂移，属可接受的修复代价 */
+static const uint8_t s_sig_bot_values[] = {1, 2, 4, 8, 16};
+#define METRON_SIG_BOT_DEFAULT  2   /* 索引 2 = 4 分音符 */
 
 typedef struct
 {
@@ -123,6 +127,7 @@ typedef struct
     uint8_t sound;   /* 0~5 */
     bool playing;
     uint8_t beat_idx;
+    uint8_t beat_shown;  /* 正在发声的拍：hook 发声瞬间记录，LED 显示用（hook 内 beat_idx 已先行推进） */
     uint16_t bar_count;
     service_timer_handle_t timer;
     int64_t tap_last_us;
@@ -222,7 +227,7 @@ static void metron_update_leds(void)
         if (i < s_metron.sig_top)
         {
             lv_obj_clear_flag(led, LV_OBJ_FLAG_HIDDEN);
-            lv_led_set_brightness(led, (s_metron.playing && i == s_metron.beat_idx) ? 255 : 0);
+            lv_led_set_brightness(led, (s_metron.playing && i == s_metron.beat_shown) ? 255 : 0);
         }
         else
         {
@@ -230,6 +235,14 @@ static void metron_update_leds(void)
         }
     }
     lvgl_port_unlock();
+}
+
+/* 一拍时值（us）：BPM 语义 = 每分钟拍数，拍单位 = 拍号分母音符。
+ * 四分音符期 = 60e6/bpm；一拍 = 四分期 x 4/分母（4/4→四分、6/8→八分…） */
+static uint64_t metron_beat_period_us(void)
+{
+    uint8_t denom = s_sig_bot_values[s_metron.sig_bot];
+    return 60000000ULL * 4 / ((uint64_t)s_metron.bpm * denom);
 }
 
 static void metron_set_bpm(int bpm)
@@ -243,8 +256,7 @@ static void metron_set_bpm(int bpm)
     s_metron.bpm = (uint16_t)bpm;
     /* 播放中同步 set_period */
     if (s_metron.playing && s_metron.timer != NULL) {
-        uint64_t period_us = 60000000ULL / s_metron.bpm;
-        service_timer_set_period(s_metron.timer, period_us);
+        service_timer_set_period(s_metron.timer, metron_beat_period_us());
     }
     metron_update_bpm_label();
 }
@@ -268,7 +280,7 @@ static void metron_load_params(void)
 
     s_metron.sig_bot = params.sig_bot;
     if (s_metron.sig_bot > 4) {
-        s_metron.sig_bot = 0;
+        s_metron.sig_bot = METRON_SIG_BOT_DEFAULT;
     }
 
     s_metron.sound = params.sound;
@@ -308,6 +320,9 @@ static void metron_beat_hook(void *arg)
         accent = s_metron.beat_idx == 0;
     }
     metron_play_hit(accent);
+    /* LED 显示以"正在发声的拍"为准：beat_idx 随即推进到下一拍（调度态），
+     * 直接显示 beat_idx 会领先声音一拍（service_timer 迁移引入的 off-by-one） */
+    s_metron.beat_shown = s_metron.beat_idx;
 
     s_metron.beat_idx++;
     if (s_metron.beat_idx >= s_metron.sig_top) {
@@ -340,10 +355,10 @@ static void metron_set_playing(bool play)
     if (play)
     {
         s_metron.beat_idx = 0;
+        s_metron.beat_shown = 0;
         s_metron.bar_count = 0;
-        /* 周期 hook：一拍 = 60e6/bpm us；立即补打首拍（原实现首拍立即触发） */
-        uint64_t period_us = 60000000ULL / s_metron.bpm;
-        service_timer_periodic_register(period_us, metron_beat_hook, NULL, &s_metron.timer);
+        /* 周期 hook：一拍时长随拍号分母（metron_beat_period_us）；立即补打首拍（原实现首拍立即触发） */
+        service_timer_periodic_register(metron_beat_period_us(), metron_beat_hook, NULL, &s_metron.timer);
         metron_beat_hook(NULL);
     }
     else
@@ -417,7 +432,7 @@ static bool app_metronome_on_init(app_base_t *self, void *screen_ctx)
     }
     if (ui->timesig_bot)
     {
-        lv_dropdown_set_options(ui->timesig_bot, "4\n6\n8\n16\n32");
+        lv_dropdown_set_options(ui->timesig_bot, "1\n2\n4\n8\n16");
         lv_dropdown_set_selected(ui->timesig_bot, s_metron.sig_bot);
     }
 
@@ -570,8 +585,7 @@ static void app_metronome_on_update(app_base_t *self)
         s_metron.bpm = (uint16_t)slider;
         /* 播放中同步 set_period */
         if (s_metron.playing && s_metron.timer != NULL) {
-            uint64_t period_us = 60000000ULL / s_metron.bpm;
-            service_timer_set_period(s_metron.timer, period_us);
+            service_timer_set_period(s_metron.timer, metron_beat_period_us());
         }
         metron_update_bpm_label();
         changed = true;
@@ -583,6 +597,12 @@ static void app_metronome_on_update(app_base_t *self)
         s_metron.sig_bot = (uint8_t)bot;
         if (s_metron.beat_idx >= s_metron.sig_top)
             s_metron.beat_idx = 0;
+        if (s_metron.beat_shown >= s_metron.sig_top)
+            s_metron.beat_shown = 0;
+        /* 分母决定拍单位：播放中立即按新拍号重设周期（分子只影响重音循环/LED 数） */
+        if (s_metron.playing && s_metron.timer != NULL) {
+            service_timer_set_period(s_metron.timer, metron_beat_period_us());
+        }
         metron_update_timesig_label();
         metron_update_leds();
         changed = true;

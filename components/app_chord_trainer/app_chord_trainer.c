@@ -98,10 +98,14 @@ static const chord_type_t s_chord_types[] = {
 /* 和弦类型按钮数组：索引与 s_chord_types[] 严格对齐 */
 static chord_type_btn_t s_chord_type_buttons[CHORD_TYPE_COUNT] = {0};
 
-/* 与 chord_key_key 按键矩阵顺序一致的根音名 */
+/* 音级(0=C) → 根音名：拼写与 chord_key_key 按钮标签一致（五度圈拼写，Db/Eb 而非 C#/D#） */
 static const char * const s_root_names[12] = {
-    "C", "C#", "D", "D#", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"
+    "C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"
 };
+
+/* chord_key_key 按钮索引 → 音级：矩阵按五度圈序排列（C G D A E B F# Db Ab Eb Bb F），
+ * s_chord.root 是音级（参与半音运算），不得直接存按钮索引 */
+static const uint8_t s_root_btn_pc[12] = {0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5};
 
 /* 白键/黑键的音名映射（单八度内） */
 static const int8_t s_white_pc[7] = {0, 2, 4, 5, 7, 9, 11};
@@ -675,10 +679,10 @@ static void chord_key_check(uint32_t btn)
 
 static void chord_select_root(uint32_t btn)
 {
-    if (btn >= 12 || btn == s_chord.root) {
+    if (btn >= 12 || s_root_btn_pc[btn] == s_chord.root) {
         return;
     }
-    s_chord.root = (uint8_t)btn;
+    s_chord.root = s_root_btn_pc[btn];
     chord_key_check(btn);
     ESP_LOGD(TAG, "root=%s", s_root_names[s_chord.root]);
     chord_refresh_labels();

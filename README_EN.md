@@ -29,6 +29,7 @@ A music exploration terminal built from scratch on the M5Stack Tab5 (ESP32-P4).
 - **Standard MIDI recording & playback** — records output directly as .mid / SMF; copy to any DAW
 - **Global MIDI bus** — USB Host, Bluetooth, and UART MIDI inputs with decoupled producers/consumers
 - **FTP wireless file management** — manage the entire SD card over LAN, no cable needed
+- **One-gesture screenshots** — long-press any screen's title bar to save the current frame as a BMP on the SD card
 - **EEZ Studio visual UI** — fully isolated frontend/backend, WYSIWYG
 - **Xiaozhi AI voice + MCP device control** — voice chat + device control
 - **RTC + online features** — weather / news / lunar calendar / timer
@@ -103,6 +104,7 @@ Each feature uses conventional directories on the SD card. **They are not auto-c
 | `/record/` | Performance recordings (.mid, standard SMF) | Created by the recorder service on init |
 | `/wav/` | Voice/instrument recordings (.wav) from the Recorder app | On first recording |
 | `/sequencer/` | Sequencer pattern files (.m5p) | On first pattern save |
+| `/screenshot/` | Screenshot files (.bmp) (long-press a screen's title bar) | On first screenshot |
 | `/soundfonts/` | Custom SF2 soundfonts (read by Settings → Soundfont) | Manually (FTP) |
 | `/ai_chat.txt` | AI chat log (appended when "chat logging" is enabled) | On first enable |
 | `/sys/src/` | Overrides firmware-embedded UI assets (fonts/images; same-named files on SD take priority) | Manually (FTP) |

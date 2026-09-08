@@ -11,6 +11,7 @@ doc/agent_prompt.md
 doc/build_prompt.md
 doc/xiaozhi-esp32-core-analysis.md
 # 内部开发工具/文档：含私有机器路径或仅服务内部工作流，公仓用户无构建依赖
+doc/v3_promo_copy.md
 doc/app_nvs_pattern.md
 tools/flash_all.ps1
 tools/gen_arch.py
