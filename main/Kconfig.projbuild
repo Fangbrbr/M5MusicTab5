@@ -1,0 +1,9 @@
+# Trap: espressif 在注册表端更新了 esp_video 2.0.x 的 manifest，新增按
+# CONFIG_ESP_VIDEO_USE_CUSTOMIZED_ESP_H264_VERSION 条件选择 esp_h264 的规则；
+# 本项目锁定的 esp_video 版本 Kconfig 未定义该选项，组件管理器求值规则时
+# 报 "Missing required kconfig option after retry" 使全新构建/CI 必然失败。
+# 在此显式定义（默认 n = 维持既有解析结果，不改变任何组件版本）。
+# 注意：必须带 prompt，无 prompt 的 symbol kconfgen 不写入 sdkconfig.json。
+config ESP_VIDEO_USE_CUSTOMIZED_ESP_H264_VERSION
+    bool "Use customized esp_h264 version (esp_video registry rule compat)"
+    default n
