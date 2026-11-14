@@ -188,5 +188,11 @@ void app_main(void)
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         sys_monitor_tick++;
+
+        /* 内部预设 → SD 镜像（有卡时后续开机加载提速一个量级）：
+         * 内部幂等自保护，60s 周期调用覆盖 SD 后插卡场景 */
+        if (sys_monitor_tick % 60 == 5) {
+            engine_sf2_mirror_default_to_sd_async();
+        }
     }
 }

@@ -256,7 +256,7 @@ curl -X GET 'https://uapis.cn/api/v1/misc/'	curl -X GET 'https://uapis.cn/api
 三条生命已用完，游戏即将重新开始	三条生命已用完，游戏即将重新开始	All 3 lives used, restarting the game
 内存不足，禅模式无法打开（音源过大时请换小音源）	内存不足，禅模式无法打开（音源过大时请换小音源）	Out of memory - Zen Mode unavailable (try a smaller soundfont)
 内部预设音色加载失败	内部预设音色加载失败	Failed to load internal preset
-回答正确！	回答正确！	Correct!
+回答正确!	回答正确!	Correct!
 对话写入 SD 卡失败	对话写入 SD 卡失败	Failed to save chat to SD card
 已切换为内部预设音色	已切换为内部预设音色	Switched to internal preset
 已经是最后一首	已经是最后一首	Already the last track
@@ -457,3 +457,5 @@ SD 卡不可用	SD 卡不可用	SD card unavailable
 暂无录音文件	暂无录音文件	No recordings yet
 已用: %lu.%luGB / 剩余: %lu.%luGB	已用: %lu.%luGB / 剩余: %lu.%luGB	Used: %lu.%luGB / Free: %lu.%luGB
 延音效果：	延音效果：	Sustain:
+今年已过%d天，剩余%d天，剩余%d%%。	今年已过%d天，剩余%d天，剩余%d%%。	This year: %d days passed, %d days left (%d%% remaining).
+语音，单声道，省空间\n乐器，立体声，高码率\n环境，双麦 AEC 开启	语音，单声道，省空间\n乐器，立体声，高码率\n环境，双麦 AEC 开启	Voice, mono, space-saving\nInstrument, stereo, high bitrate\nAmbient, dual-mic AEC on

@@ -279,6 +279,14 @@ bool SF2Parser::parsePDTA() {
                 return false;
             }
         }
+        else if (strncmp(id, "pmod", 4) == 0 || strncmp(id, "imod", 4) == 0) {
+            // PATCH(P25): pmod/imod 是 SF2 规范必备的 modulator 子块（PDTA 固定
+            // 9 子块之二），任何合规文件必含；modulator（力度曲线/CC 路由等）
+            // 未实现，按块长跳过。上游走「未知块」分支打 WARN，对所有文件必现，
+            // 属误报级噪音；真正未知的块仍保留下方 WARN
+            ESP_LOGD(TAG, "modulator chunk %.4s not supported, skipping", id);
+            file.seek(size, SeekCur);
+        }
         else {
             ESP_LOGW(TAG, "Unknown PDTA chunk id: %.4s, skipping", id);
             file.seek(size, SeekCur);
@@ -385,7 +393,9 @@ bool SF2Parser::readSampleHeaders(uint32_t offset, uint32_t size) {
         file.readBytes((char*)&sample, 46);
 
         if (sample.start == 0 && sample.end == 0 && sample.sampleRate == 0) {
-            ESP_LOGW(TAG, "Invalid sample EOS: start=0 end=0 rate=0");
+            // PATCH(P25): 全零记录是 SF2 规范要求的 shdr 终止哨兵（46 字节零
+            // 记录），每个合规文件恰有一条——非采样损坏，降为 DEBUG
+            ESP_LOGD(TAG, "sample EOS sentinel (zero record), skipped");
             continue;
         }
 

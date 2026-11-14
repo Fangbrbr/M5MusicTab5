@@ -236,10 +236,19 @@ static void piano_midi_note(uint8_t note, uint8_t velocity)
     engine_midi_publish(&midi, 0);
 }
 
-/* 触摸力度带往 MIDI velocity；无力度事件（pressure=0）回退默认值保手感 */
+/* 触摸力度→MIDI velocity：触点面积原始归一值轻触时过低（ST7123 面积采样小、
+ * 引擎自适应峰值随按压历史漂移），力度分层音源（低力度层高衰减）上整体偏小。
+ * 线性重映射进 [PIANO_VELOCITY_FLOOR, 127] 窗口：最轻触兜底 mf 响度，重触
+ * 仍到 127，保留 ~40 点动态；无力度事件（pressure=0）回退默认值保手感 */
+#define PIANO_VELOCITY_FLOOR 88
+
 static uint8_t piano_velocity(uint8_t pressure)
 {
-    return (pressure > 0) ? pressure : PIANO_DEFAULT_VELOCITY;
+    if (pressure == 0) {
+        return PIANO_DEFAULT_VELOCITY;
+    }
+    return (uint8_t)(PIANO_VELOCITY_FLOOR +
+                     ((uint32_t)pressure * (127 - PIANO_VELOCITY_FLOOR)) / 127);
 }
 
 /* -------------------- 延音（类 Cave：有界尾音，非踏板） --------------------

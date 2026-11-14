@@ -17,6 +17,11 @@ idf_component_register(SRCS "engine_sf2.cpp"
                        REQUIRES service_audio
                                 engine_midi)
 
+# 版本号统一由顶层 CMakeLists 计算（FW_VERSION 缓存变量），
+# 此处仅注入编译宏（SD 镜像 .meta 的固件版本校验用）
+target_compile_definitions(${COMPONENT_LIB} PRIVATE
+    FIRMWARE_VERSION="${FW_VERSION}")
+
 # 上游代码沿用原工程的性能假设（.ino 中的 -O3/-ffast-math pragma），
 # 仅作用于上游源文件；同时抑制移植已知的次要警告。
 set_source_files_properties(${ENGINE_SF2_UPSTREAM_SRCS}

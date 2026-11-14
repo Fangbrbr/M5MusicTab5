@@ -22,14 +22,20 @@
 #include "esp_heap_caps.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "freertos/task.h"
 #include "math.h"
 #include "string.h"
 #include "stdio.h"
 #include "dirent.h"
+#include "errno.h"
 #include "strings.h"
 #include "sys/stat.h"
 
 static const char *TAG = "engine_sf2";
+
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION "unknown"
+#endif
 
 /** @brief 主增益（float 混音域），限幅收口在 service_audio
  *
@@ -81,6 +87,37 @@ static uint32_t            s_loaded_psram_bytes = 0;
 
 static void s_midi_handler(const engine_midi_event_t *evt, void *user_data);
 static bool s_load_default_soundfont(void);
+static bool s_sd_mirror_valid(void);
+static bool s_mirror_copy_blocking(void);
+static void s_mirror_task(void *arg);
+
+/* -------------------- 内部预设 SD 镜像 --------------------
+ *
+ * Why: SPIFFS 是全系统最慢读取路径（无卡基线 10s+），SD 快一个量级。
+ * 镜像放 /sdcard/sys/soundfonts/ 而非 ENGINE_SF2_SD_DIR：不进设置页音源
+ * 下拉扫描、current_source 仍记内部预设——镜像是同一份内容的透明缓存。
+ * 有效性 = 镜像大小 == SPIFFS 源大小 && .meta 记录的固件版本 == 当前版本
+ * （default.sf2 随固件烧录，版本变即内容可能变）；不做全量 CRC——
+ * 校验读一遍 SPIFFS 会把省下的时间还回去 */
+#define SF2_INTERNAL_PATH      "/sys_int/soundfonts/default.sf2"
+#define SF2_SD_MIRROR_DIR      "/sdcard/sys/soundfonts"
+#define SF2_SD_MIRROR_PATH     SF2_SD_MIRROR_DIR "/default.sf2"
+#define SF2_SD_MIRROR_TMP      SF2_SD_MIRROR_DIR "/.default.sf2.tmp"
+#define SF2_SD_MIRROR_META     SF2_SD_MIRROR_DIR "/default.sf2.meta"
+/* 64KB：前半作 src 的 stdio 缓冲，后半作 fread/fwrite 传输缓冲；写侧用默认缓冲 */
+#define SF2_MIRROR_BUF_SIZE    (64 * 1024)
+#define SF2_MIRROR_TASK_STACK  4096
+
+typedef enum {
+    MIRROR_IDLE = 0,   /* 未尝试（SD 后插卡可重试） */
+    MIRROR_RUNNING,
+    MIRROR_DONE,       /* 已有效（或本次拷贝成功） */
+    MIRROR_FAILED,     /* 拷贝失败，本次开机不再重试（防 SD 满等场景刷日志） */
+} mirror_state_t;
+
+static volatile mirror_state_t s_mirror_state = MIRROR_IDLE;
+static StackType_t *s_mirror_stack = NULL;
+static StaticTask_t  s_mirror_tcb;
 
 static esp_err_t source_init(void);
 static void      source_deinit(void);
@@ -395,8 +432,7 @@ void engine_sf2_set_boot_source(const char *sd_name)
 
 bool engine_sf2_load_internal(void)
 {
-    static const char *SPIFFS_SF2_DEFAULT = "/sys_int/soundfonts/default.sf2";
-    return engine_sf2_load_file(SPIFFS_SF2_DEFAULT);
+    return engine_sf2_load_file(SF2_INTERNAL_PATH);
 }
 
 /* 大音源加载后需保留给 App（Zen/Drum canvas 等）的最小 PSRAM 余量 */
@@ -435,6 +471,49 @@ bool engine_sf2_load_sd(const char *sd_name)
     char path[ENGINE_SF2_SD_NAME_MAX_LEN + 32];
     snprintf(path, sizeof(path), "%s/%s", ENGINE_SF2_SD_DIR, sd_name);
     return engine_sf2_load_file(path);
+}
+
+void engine_sf2_mirror_default_to_sd_async(void)
+{
+    if (s_mirror_state != MIRROR_IDLE) {
+        return;
+    }
+    if (s_sd_mirror_valid()) {
+        s_mirror_state = MIRROR_DONE;
+        return;
+    }
+    struct stat st;
+    if (stat(SF2_INTERNAL_PATH, &st) != 0) {
+        s_mirror_state = MIRROR_FAILED;   /* 内部预设缺失，无源可镜像 */
+        return;
+    }
+    /* 无卡时 /sdcard 未挂载：保持 IDLE，供后插卡重试 */
+    if (stat("/sdcard", &st) != 0) {
+        return;
+    }
+
+    /* 栈落 PSRAM（照 task_gui 模式）：本任务只读 SPIFFS、写 SD，
+     * 不触碰 SPI flash 写路径，PSRAM 栈安全 */
+    if (s_mirror_stack == NULL) {
+        s_mirror_stack = (StackType_t *)heap_caps_malloc(SF2_MIRROR_TASK_STACK,
+                                                         MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    }
+    s_mirror_state = MIRROR_RUNNING;
+    bool created;
+    if (s_mirror_stack != NULL) {
+        created = xTaskCreateStaticPinnedToCore(s_mirror_task, "sf2_mirror",
+                                                SF2_MIRROR_TASK_STACK, NULL,
+                                                tskIDLE_PRIORITY + 1,
+                                                s_mirror_stack, &s_mirror_tcb, 0) != NULL;
+    } else {
+        created = xTaskCreatePinnedToCore(s_mirror_task, "sf2_mirror",
+                                          SF2_MIRROR_TASK_STACK, NULL,
+                                          tskIDLE_PRIORITY + 1, NULL, 0) == pdPASS;
+    }
+    if (!created) {
+        ESP_LOGW(TAG, "mirror task create failed");
+        s_mirror_state = MIRROR_FAILED;
+    }
 }
 
 esp_err_t engine_sf2_register_source(void)
@@ -530,7 +609,137 @@ static bool s_file_exists(const char *path)
     return true;
 }
 
-/* 开机音色加载顺序：NVS 指定的 SD 音源 → 内部预设 → 遗留 SD 探测兜底。
+static bool s_sd_mirror_valid(void)
+{
+    struct stat st_src, st_m;
+    if (stat(SF2_INTERNAL_PATH, &st_src) != 0) {
+        return false;
+    }
+    if (stat(SF2_SD_MIRROR_PATH, &st_m) != 0) {
+        return false;   /* 无卡/无镜像 */
+    }
+    if ((uint64_t)st_src.st_size != (uint64_t)st_m.st_size) {
+        return false;
+    }
+
+    char meta[96];
+    FILE *f = fopen(SF2_SD_MIRROR_META, "r");
+    if (f == NULL) {
+        return false;
+    }
+    size_t n = fread(meta, 1, sizeof(meta) - 1, f);
+    fclose(f);
+    meta[n] = '\0';
+
+    char expect[96];
+    snprintf(expect, sizeof(expect), "%s %llu",
+             FIRMWARE_VERSION, (unsigned long long)st_src.st_size);
+    return strncmp(meta, expect, strlen(expect)) == 0;
+}
+
+/* 拷贝提交顺序：tmp 全文落盘 → rename 为正式名 → 最后写 meta（提交点）。
+ * 任何中途断电/拔卡至多留下 tmp 或缺 meta，s_sd_mirror_valid 均判无效 */
+static bool s_mirror_copy_blocking(void)
+{
+    uint8_t *buf = (uint8_t *)heap_caps_malloc(SF2_MIRROR_BUF_SIZE,
+                                               MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (buf == NULL) {
+        ESP_LOGE(TAG, "mirror: no PSRAM for copy buffer");
+        return false;
+    }
+    uint8_t *work = buf + SF2_MIRROR_BUF_SIZE / 2;   /* 前半给 src stdio，后半做传输 */
+
+    bool ok = false;
+    FILE *src = NULL;
+    FILE *dst = NULL;
+    struct stat st;
+
+    do {
+        if (stat(SF2_INTERNAL_PATH, &st) != 0) {
+            break;
+        }
+        if ((mkdir("/sdcard/sys", 0777) != 0 && errno != EEXIST) ||
+            (mkdir(SF2_SD_MIRROR_DIR, 0777) != 0 && errno != EEXIST)) {
+            break;
+        }
+        src = fopen(SF2_INTERNAL_PATH, "rb");
+        if (src == NULL) {
+            break;
+        }
+        setvbuf(src, (char *)buf, _IOFBF, SF2_MIRROR_BUF_SIZE / 2);
+        dst = fopen(SF2_SD_MIRROR_TMP, "wb");
+        if (dst == NULL) {
+            break;
+        }
+
+        uint64_t total = 0;
+        size_t n;
+        bool io_ok = true;
+        while ((n = fread(work, 1, SF2_MIRROR_BUF_SIZE / 2, src)) > 0) {
+            if (fwrite(work, 1, n, dst) != n) {
+                io_ok = false;
+                break;
+            }
+            total += n;
+            /* 每 32KB 让出 CPU：防 IDLE0 饿死，且拷贝期间 UI 保持流畅 */
+            vTaskDelay(pdMS_TO_TICKS(2));
+        }
+        if (!io_ok || ferror(src) || fflush(dst) != 0 || total != (uint64_t)st.st_size) {
+            break;
+        }
+        if (fclose(dst) != 0) {
+            dst = NULL;
+            break;
+        }
+        dst = NULL;
+        fclose(src);
+        src = NULL;
+
+        /* FAT rename 不覆盖已存在目标，先删 */
+        remove(SF2_SD_MIRROR_PATH);
+        if (rename(SF2_SD_MIRROR_TMP, SF2_SD_MIRROR_PATH) != 0) {
+            break;
+        }
+
+        FILE *meta = fopen(SF2_SD_MIRROR_META, "w");
+        if (meta == NULL) {
+            break;
+        }
+        fprintf(meta, "%s %llu\n", FIRMWARE_VERSION, (unsigned long long)st.st_size);
+        fclose(meta);
+        ok = true;
+    } while (0);
+
+    if (src != NULL) {
+        fclose(src);
+    }
+    if (dst != NULL) {
+        fclose(dst);
+    }
+    if (!ok) {
+        remove(SF2_SD_MIRROR_TMP);
+    }
+    heap_caps_free(buf);
+    return ok;
+}
+
+static void s_mirror_task(void *arg)
+{
+    (void)arg;
+    int64_t t0 = esp_timer_get_time();
+    bool ok = s_mirror_copy_blocking();
+    s_mirror_state = ok ? MIRROR_DONE : MIRROR_FAILED;
+    if (ok) {
+        ESP_LOGI(TAG, "mirrored default.sf2 to SD in %lld ms, next boot loads from SD",
+                 (long long)((esp_timer_get_time() - t0) / 1000));
+    } else {
+        ESP_LOGW(TAG, "mirror copy failed, fallback stays SPIFFS (no retry this boot)");
+    }
+    vTaskDelete(NULL);
+}
+
+/* 开机音色加载顺序：NVS 指定的 SD 音源 → SD 镜像（内部预设的透明加速缓存）
+ * → 内部预设 → 遗留 SD 探测兜底。
  * 兜底存在的意义：SPIFFS 镜像损坏时仍允许用 SD 出声，不静默死机 */
 static bool s_load_default_soundfont(void)
 {
@@ -542,6 +751,15 @@ static bool s_load_default_soundfont(void)
             return true;
         }
         ESP_LOGW(TAG, "boot source %s unavailable, fallback to internal", s_boot_source);
+    }
+
+    if (s_sd_mirror_valid()) {
+        if (engine_sf2_load_file(SF2_SD_MIRROR_PATH)) {
+            return true;
+        }
+        /* 校验通过但加载失败（内容损坏）：删镜像待后台重建 */
+        remove(SF2_SD_MIRROR_PATH);
+        remove(SF2_SD_MIRROR_META);
     }
 
     if (engine_sf2_load_internal()) {

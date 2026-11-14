@@ -14,6 +14,7 @@
 #include "esp_timer.h"
 #include "lvgl.h"
 #include "service_http_client.h"
+#include "service_i18n.h"
 #include "service_nvs.h"
 #include "service_rtc.h"
 #include "service_wifi.h"
@@ -561,7 +562,8 @@ static void clock_prepare_calendar(clock_display_state_t *st)
     int remain = total_days - doy;
 
     snprintf(st->cal_progress, sizeof(st->cal_progress),
-             "%d年第%d天，还剩%d天", year, doy, remain);
+             _("今年已过%d天，剩余%d天，剩余%d%%。"), doy, remain,
+             (remain * 100) / total_days);
     st->cal_progress_pct = (doy * 100) / total_days;
 
     cnlunar_t lunar;

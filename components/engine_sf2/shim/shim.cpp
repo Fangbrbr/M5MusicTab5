@@ -10,9 +10,17 @@
 #include "SD_MMC.h"
 #include <string.h>
 #include <sys/stat.h>
+#include "esp_heap_caps.h"
 
 fs::FS LittleFS;
 fs::FS SD_MMC;
+
+/* SF2 加载 IO 加速：newlib 默认 stdio 缓冲为 KB 级，3MB 采样数据逐样本
+ * fread 在 SPIFFS 上耗时 10s+；换 32KB PSRAM 缓冲后接近 flash 直读速度。
+ * Contract: 上游 SF2Parser 只有单个 file 成员，且 engine_sf2 加载全程持
+ * s_sf2_mutex 串行——任一时刻至多一个打开文件，共享缓冲无并发冲突 */
+#define SHIM_IO_BUF_SIZE  (32 * 1024)
+static char *s_io_buf = NULL;   /* PSRAM，首次 open 分配并常驻 */
 
 namespace fs {
 
@@ -138,6 +146,13 @@ File FS::open(const char *path, const char *mode)
 
     out.m_file = fopen(path, mode);
     if (out.m_file != nullptr) {
+        if (s_io_buf == NULL) {
+            s_io_buf = (char *)heap_caps_malloc(SHIM_IO_BUF_SIZE,
+                                                MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        }
+        if (s_io_buf != NULL) {
+            setvbuf(out.m_file, s_io_buf, _IOFBF, SHIM_IO_BUF_SIZE);
+        }
         out.m_size = (stat(path, &st) == 0) ? (uint32_t)st.st_size : 0;
         const char *base = strrchr(path, '/');
         strncpy(out.m_name, base != nullptr ? base + 1 : path, sizeof(out.m_name) - 1);

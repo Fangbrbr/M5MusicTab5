@@ -39,6 +39,8 @@
 | P19 | `synth.cpp` | `findWorstVoice()` / `findWeakestVoiceOnNote()` | 复音耗尽诊断日志：所有 voice 活跃仍分配 → 打 WARN「polyphony exhausted」；同 note 超 `MAX_VOICES_PER_NOTE` 复用 → 打 WARN「voice reuse same-note」。用于确认大型音源连击轻音是否复音池耗尽导致 |
 | P20 | `SF2Parser.cpp` | `loadSampleDataToMemory()` / `clear()` | 采样分配失败时绑定共享静音缓冲（静态 4 字节零样本），而非上游 fallback 别名让大量 zone 共享同一波形 → 复音相位重叠产生刺耳噪音。静音绑定后该 zone 静音发声、2 帧即止 |
 | P21 | `synth.cpp` | `noteOn()` poly 分支 | 同音 re-trigger 清理：同 channel 同 note 且已松开（noteHeld==false、release 余音）的旧 voice 先 kill 再启动新声。**必须 kill()（END_NOW+active=false）而非 die()**：die() 只进快释放、active 仍 true，尾音 voice 持续占槽位；大型音源一个键映射多个 zone（力度分层），快速连击时余音 voice 不释放会把 64 复音池塞满，新 noteOn 被迫 steal score=0 的 voice 而被掐音（只剩尾音）。kill 立即释放槽位根治。配合 R1 声部数回退 64 |
+| P24 | `synth.cpp` | `noteOn()` poly 分支 / `findWeakestVoiceOnNote()` | 根治同音 re-trigger 塌缩：P21 只清 !noteHeld 余音，延音场景（app 延音闸门/踏板/鼓 one-shot 未收 note_off）同音 noteHeld voice 全量残留，count 顶到 MAX_VOICES_PER_NOTE 后每个 zone 复用同一「刚 startNew、score=0」的 voice——一音多 zone（力度分层）塌缩成 1 声、旧 voice 持续占位（2026-09 真机：自定义 SF2 + 快速连击不出声+WARN 刷屏）。修复：同 channel 同 note 旧 voice 不分按住与否全部收场（余音 kill() 立即释放槽位，按住 die() 0.5ms 淡出防咔哒）；`findWeakestVoiceOnNote` 把 `samplesRun==0`（本次 noteOn 突发内新建、尚未渲染）与 `!noteHeld`（淡出/余音）voice 排除出计数与复用资格 |
+| P25 | `SF2Parser.cpp` | `parsePDTA()` chunk 分发 / `readSampleHeaders()` | pmod/imod 与 EOS 假告警降级：pmod/imod 是 SF2 规范 PDTA 固定 9 子块中的 modulator 表（任何合规文件必含，未实现按块长跳过即可），上游走「未知块」WARN 对所有文件必现；shdr 末尾 46 字节全零记录是规范规定的终止哨兵，上游 WARN「Invalid sample EOS」同样必现。pmod/imod 显式识别 + DEBUG 跳过，EOS 哨兵降 DEBUG，真正未知块仍 WARN（2026-09 用户换十余个 SF2 均触发，确认为误报而非文件损坏） |
 | P23 | `SF2Parser.h` / `SF2Parser.cpp` | 全部 STL 容器声明（samples/zones/presets/instruments/嵌套 generators、sampleMap/startPosMap、parsePDTA 局部表、getZonesForNote 返回） | 新增 `Sf2PsramAllocator`（`sf2_vector`/`sf2_map` 别名）把解析/预设结构从内部 RAM 迁到 PSRAM。Why：sdkconfig `SPIRAM_MALLOC_ALWAYSINTERNAL=4096` 使 ≤4KB STL 小块全落内部；全 GM 音源上千小 vector+map 节点常驻 ~100KB+ 内部 RAM（随当前音源保持，非泄漏），ws 任务建栈失败、AI 断连（2026-09 真机 internal free=3.8KB）。解析/zone 查询不在音频热路径（渲染只读采样数据，本就在 PSRAM）。Arduino `String`（preset/instrument 名）不支持分配器，未迁（量小） |
 
 ## 性能优化补丁
@@ -64,3 +66,4 @@
 3. **FX（reverb/chorus/delay）与滤波默认关闭**：渲染遥测确认负载余量后逐项启用
 4. **`misc.h` 内 Xtensa 汇编 `one_div`/`fdiv`**：RISC-V 不兼容但全工程无调用，未实例化不影响；上游同步时留意勿新增调用
 5. **`ChannelState::reset()` 把 pan 复位为 0.0（初始值 0.5）**：上游 quirk，CC121 后声像偏左，待验证后修
+6. **pmod/imod modulator 未实现**：SF2 自定义力度曲线/CC 路由不生效，用 generator 默认值发声（P25 起显式识别跳过、DEBUG 级）；如需完整表现力需实现 modulator 解析与运行时调制链

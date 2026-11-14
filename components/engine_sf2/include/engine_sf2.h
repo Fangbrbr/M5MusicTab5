@@ -25,8 +25,9 @@ extern "C" {
  * @brief 初始化 SF2 引擎
  *
  * 创建合成器实例、订阅 MIDI 总线（NOTE_ON/OFF/CC/PC/BEND/SysEx），
- * 并按默认路径探测加载音色（SD 优先、SPIFFS 兜底）；
- * 音色缺失不视为失败，引擎就绪但渲染静默。
+ * 并按默认链探测加载音色：NVS 指定 SD 音源 → 内部预设的 SD 镜像
+ * （/sdcard/sys/soundfonts/default.sf2，校验通过才用）→ 内部 SPIFFS 预设
+ * → SD 探测兜底；音色缺失不视为失败，引擎就绪但渲染静默。
  *
  * @return ESP_OK 成功
  */
@@ -149,6 +150,21 @@ typedef void (*engine_sf2_progress_cb_t)(int percent, void *user_data);
  * @param[in] user_data 传给回调的用户数据
  */
 void engine_sf2_set_progress_callback(engine_sf2_progress_cb_t cb, void *user_data);
+
+/**
+ * @brief 后台把内部预设镜像到 SD（/sdcard/sys/soundfonts/default.sf2）
+ *
+ * Why: SPIFFS 是全系统最慢读取路径，SD 快一个量级；镜像建立后后续开机
+ * 直接从 SD 加载默认音色。镜像仅为内部预设的透明加速缓存，不进设置页
+ * 音源下拉、不改变 NVS 音源选择语义，无卡/失败静默降级。
+ *
+ * 幂等：镜像已有效或任务进行中时为空操作；拷贝失败本次开机不再重试。
+ * 临时文件 + rename 原子提交，中途断电/拔卡不会留下半个镜像。
+ * 固件版本变化（default.sf2 随固件更新）后镜像自动失效并重建。
+ *
+ * @note 适合开机完成后周期调用（内部状态机自保护，重复调用零成本）
+ */
+void engine_sf2_mirror_default_to_sd_async(void);
 
 /**
  * @brief 调试信息快照

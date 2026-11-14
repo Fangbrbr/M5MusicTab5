@@ -133,14 +133,23 @@ void Synth::noteOn(uint8_t ch, uint8_t note, uint8_t vel) {
         }
     } else {
         // Polyphonic: start new voices normally
-        // PATCH(P21): 同音 re-trigger 清理——同 channel 同 note 且已松开（noteHeld==false、
-        // release 余音）的旧 voice 先 kill 再启动新声。必须用 kill()（END_NOW+active=false）
-        // 而非 die()：die() 只进快释放、active 仍 true，尾音 voice 持续占槽位。大型音源
-        // 一个键映射 6 个 zone（力度分层），快速连击时余音 voice 不释放会把 64 复音池塞满，
-        // 新 noteOn 被迫 steal score=0 的 voice 而被掐音（只剩尾音）。kill 立即释放槽位根治此问题
+        // PATCH(P21+P24): 同音 re-trigger 清理——同 channel 同 note 的旧 voice 不分
+        // 按住与否全部先收场再启动新声（retrigger = 重置该音；钢琴复击琴键即切断
+        // 弦的原有振动）。已松开（release 余音）的 kill() 立即释放槽位（P21 原行为）；
+        // 仍 noteHeld（app 延音/踏板/鼓 one-shot 未收 note_off）的 die() 走 0.5ms
+        // 快释放淡出——硬 kill 满幅长音会咔哒。淡出的旧 voice 由
+        // findWeakestVoiceOnNote 排除计数，不占同音名额。
+        // Why P24：P21 只清 !noteHeld，延音场景同音 noteHeld voice 全量残留，
+        // count 顶到 MAX_VOICES_PER_NOTE 后每个 zone 复用同一「刚 startNew、
+        // score=0」的 voice——一音多 zone 塌缩成 1 声且旧 voice 持续占位，
+        // 快速连击即不出声+WARN 刷屏（2026-09 真机，自定义 SF2 + app 延音）
         for (Voice& v : voices) {
-            if (v.active && v.channel == ch && v.note == note && !v.noteHeld) {
-                v.kill();
+            if (v.active && v.channel == ch && v.note == note) {
+                if (v.noteHeld) {
+                    v.die();
+                } else {
+                    v.kill();
+                }
             }
         }
         for (auto& zone : zones) {
@@ -577,6 +586,15 @@ Voice* Synth::findWeakestVoiceOnNote(uint8_t ch, uint8_t note, float newScore, u
                 v.die(); // Kill voices of the same class
             }
             if (v.note == note) {
+                // PATCH(P24): 两类 voice 不计入同音名额、也不可被选中复用——
+                // 1) samplesRun==0：本次 noteOn 突发内刚 startNew、尚未渲染出
+                //    一个样本的 voice（包络 x_=0 → score=0，不排除会被后续 zone
+                //    反复选中，一音多 zone 塌缩成单 voice）；
+                // 2) !noteHeld：release 余音或刚被 die() 快释放淡出的旧 voice，
+                //    复用它们等于掐断正在收的尾音
+                if (v.samplesRun == 0 || !v.noteHeld) {
+                    continue;
+                }
                 count++;
                 v.updateScore();
                 if (v.score < weakestScore) {

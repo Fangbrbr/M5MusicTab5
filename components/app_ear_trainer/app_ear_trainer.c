@@ -569,7 +569,7 @@ static void ear_handle_answer(bool correct, const char *answer_text)
      * 直到点对匹配按钮本轮才结束；答对短暂展示后进入下一题 */
     if (s_state.practice_mode) {
         if (correct) {
-            app_manager_show_notification_timeout(_("回答正确！"), EAR_RESULT_MS);
+            app_manager_show_notification_timeout(_("回答正确!"), EAR_RESULT_MS);
             ear_set_play_enabled(false);
             s_state.result_pending = true;
             s_state.result_until_us = esp_timer_get_time() + (int64_t)EAR_RESULT_MS * 1000;
@@ -581,7 +581,7 @@ static void ear_handle_answer(bool correct, const char *answer_text)
 
     if (correct) {
         s_state.score++;
-        app_manager_show_notification_timeout(_("回答正确！"), EAR_RESULT_MS);
+        app_manager_show_notification_timeout(_("回答正确!"), EAR_RESULT_MS);
         ear_check_best();
     } else {
         char buf[64];
